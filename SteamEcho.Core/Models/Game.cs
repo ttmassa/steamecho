@@ -10,4 +10,9 @@ public class Game(string name, string executablePath)
     {
         Achievements.Add(achievement);
     }
+
+    public Achievement? GetAchievementById(string id)
+    {
+        return Achievements.Find(a => a.Id == id);
+    }
 }
