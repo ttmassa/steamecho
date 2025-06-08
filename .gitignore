@@ -1,0 +1,9 @@
+# .NET build files
+bin/
+obj/
+
+# Visual Studio files
+.vs/
+
+# Logs
+*.log
