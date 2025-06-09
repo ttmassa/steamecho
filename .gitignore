@@ -7,3 +7,6 @@ obj/
 
 # Logs
 *.log
+
+# Config files
+appsettings.json
