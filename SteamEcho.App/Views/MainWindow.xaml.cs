@@ -1,6 +1,6 @@
-﻿using System.Windows;
+using System.Windows;
 
-namespace SteamEcho.App;
+namespace SteamEcho.App.Views;
 
 public partial class MainWindow : Window
 {
