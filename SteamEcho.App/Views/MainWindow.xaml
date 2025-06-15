@@ -15,17 +15,27 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Menu -->
-        <ListBox Grid.Column="0" ItemsSource="{Binding Games}" Background="#2B2B2C">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <StackPanel Orientation="Horizontal" Margin="5">
-                        <Image Source="{Binding IconPath}" Width="32" Margin="0,0,10,0"/>
-                        <TextBlock Text="{Binding Title}" VerticalAlignment="Center" FontWeight="Bold"/>
-                    </StackPanel>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+        <!-- Menu Column -->
+        <StackPanel Grid.Column="0" Background="#2B2B2C">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Image Source="/SteamEcho.App;component/Assets/menu_icon.png" Width="25" Margin="10"/>
+                <TextBlock Text="Jeux Vidéos" Foreground="#F0F0F0" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
+                <Button Command="{Binding AddGameCommand}" Background="Transparent" BorderThickness="0" Padding="0" Margin="10,0,0,0">
+                    <Image Source="/SteamEcho.App;component/Assets/add_icon.png" Width="16"/>
+                </Button>
+            </StackPanel>
+            <!-- Menu List -->
+            <ListBox ItemsSource="{Binding Games}" Background="#2B2B2C" BorderThickness="0">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" Margin="5">
+                            <Image Source="{Binding IconPath}" Width="32" Margin="0,0,10,0"/>
+                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Foreground="#F0F0F0" FontSize="14" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </StackPanel>
 
         <!-- Main Content Area -->
         <Grid Grid.Column="1">

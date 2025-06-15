@@ -1,9 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\SteamEcho.Core\SteamEcho.Core.csproj" />
-  </ItemGroup>
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0-windows</TargetFramework>
@@ -12,8 +8,10 @@
     <UseWPF>true</UseWPF>
     <UserSecretsId>aa461756-b3c9-47be-9587-c8451a31924a</UserSecretsId>
   </PropertyGroup>
-
+  
   <ItemGroup>
+    <Resource Include="Assets\*" />
+    <ProjectReference Include="..\SteamEcho.Core\SteamEcho.Core.csproj" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.5" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.5" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.5" />
