@@ -1,10 +1,12 @@
 namespace SteamEcho.Core.Models;
 
-public class Achievement(string id, string name, string description)
+public class Achievement(string id, string name, string description, string? icon = null, string? grayIcon = null)
 {
     public string Id { get; set; } = id;
     public string Name { get; set; } = name;
     public string Description { get; set; } = description;
+    public string? Icon { get; set; } = icon;
+    public string? GrayIcon { get; set; } = grayIcon;
     public bool IsUnlocked { get; set; } = false;
     public DateTime? UnlockDate { get; set; } = null;
 
