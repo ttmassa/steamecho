@@ -57,7 +57,9 @@
         <!-- Main Content Area -->
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
+                <!-- Game Title -->
                 <RowDefinition Height="Auto"/>
+                <!-- Content Area -->
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
@@ -67,7 +69,9 @@
             <!-- Content Area -->
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
+                    <!-- Achievement Section -->
                     <ColumnDefinition Width="3*"/>
+                    <!-- Other Sections -->
                     <ColumnDefinition Width="2*"/>
                 </Grid.ColumnDefinitions>
 
@@ -75,27 +79,40 @@
                 <Border Grid.Column="0" Background="#E63946" Margin="10" CornerRadius="12">
                     <Grid Margin="10">
                         <Grid.RowDefinitions>
+                            <!-- Achievement Section Header -->
                             <RowDefinition Height="Auto"/>
+                            <!-- Achievement List -->
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
+
                         <!-- Achievement Section Header -->
                         <StackPanel Orientation="Horizontal" Grid.Row="0">
                             <!-- Achievement Trophy Icon -->
                             <Image Source="/SteamEcho.App;component/Assets/achievement_icon.png" Width="25" VerticalAlignment="Center" Margin="0,0,10,0"/>
                             <TextBlock Text="Succès" Foreground="#F0F0F0" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         </StackPanel>
+
                         <!-- Achievement List -->
-                        <ListBox Grid.Row="1" ItemsSource="{Binding SelectedGame.Achievements}" Background="#E63946" BorderThickness="0" Margin="0,10,0,0">
+                        <ListBox Grid.Row="1" ItemsSource="{Binding SelectedGame.Achievements}" Background="#E63946" BorderThickness="0" Margin="0,10,0,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
+                                    <Grid Margin="0">
+                                        <Grid.ColumnDefinitions>
+                                            <!-- Achievement Icon -->
+                                            <ColumnDefinition Width="auto"/>
+                                            <!-- Achievement Details -->
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Achievement Icon -->
                                         <Image x:Name="AchievementIcon" Source="{Binding Icon}" VerticalAlignment="Center" Width="34" Margin="0,0,10,0"/>
-                                        <StackPanel Orientation="Vertical" Margin="0,0,10,0">
-                                            <TextBlock x:Name="AchievementName" Text="{Binding Name}" Foreground="#F0F0F0" FontSize="12" FontWeight="Regular"/>
-                                            <TextBlock x:Name="AchievementDesc" Text="{Binding Description}" Foreground="#F0F0F0" FontSize="10" FontWeight="Light"/>
+                                        <!-- Achievement Details -->
+                                        <StackPanel Orientation="Vertical" Margin="0,0,10,0" Grid.Column="1">
+                                            <TextBlock x:Name="AchievementName" Text="{Binding Name}" Foreground="#F0F0F0" FontSize="12" FontWeight="Regular" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Stretch"/>
+                                            <TextBlock x:Name="AchievementDesc" Text="{Binding Description}" Foreground="#F0F0F0" FontSize="10" FontWeight="Light" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" HorizontalAlignment="Stretch" Grid.Row="1"/>
                                         </StackPanel>
-                                    </StackPanel>
-                                    <!-- Change color and icon depending on achievement's completude -->
+                                    </Grid>
+                                    <!-- Change color and icon based on achievement's completude -->
                                     <DataTemplate.Triggers>
                                         <DataTrigger Binding="{Binding IsUnlocked}" Value="False">
                                             <Setter TargetName="AchievementIcon" Property="Source" Value="{Binding GrayIcon}"/>
@@ -108,7 +125,6 @@
                         </ListBox>
                     </Grid>
                 </Border>
-
             </Grid>
         </Grid>
     </Grid>
