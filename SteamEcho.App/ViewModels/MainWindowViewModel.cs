@@ -5,6 +5,7 @@ using Microsoft.Win32;
 using SteamEcho.Core.Models;
 using SteamEcho.App.Services;
 using System.Text.Json;
+using SteamEcho.App.DTOs;
 
 namespace SteamEcho.App.ViewModels;
 
@@ -33,26 +34,10 @@ public class MainWindowViewModel
             var fileName = Path.GetFileNameWithoutExtension(dialog.FileName);
 
             // Use SteamService to resolve Steam ID
-            string? searchResult = await _steamService.ResolveSteamIdAsync(fileName);
-            if (string.IsNullOrEmpty(searchResult))
-            {
-                Console.WriteLine("Failed to resolve Steam ID for the game.");
-                return;
-            }
-
-            // Get first result from search
-            using var doc = JsonDocument.Parse(searchResult);
-            var items = doc.RootElement.GetProperty("items");
-            if (items.GetArrayLength() == 0)
-            {
-                Console.WriteLine("No Steam game with that name exists.");
-                return;   
-            }
-
-            // Get steam ID from the first game
-            var firstGame = items[0];
-            string steamId = firstGame.GetProperty("id").GetInt32().ToString() ?? throw new InvalidDataException("Steam ID not found in search result.");
-            string gameName = firstGame.GetProperty("name").GetString() ?? "Unknown Name";
+            GameInfo gameInfo = await _steamService.ResolveSteamIdAsync(fileName);
+            string steamId = gameInfo.SteamId;
+            string gameName = gameInfo.Name;
+            string iconUrl = gameInfo.IconUrl;
 
             // Game already exists
             if (Games.Any(g => g.SteamId == steamId))
@@ -65,7 +50,7 @@ public class MainWindowViewModel
             List<Achievement> achievements = await _steamService.GetAchievementsAsync(steamId);
 
             // Create game instance
-            Game game = new(steamId, gameName, dialog.FileName);
+            Game game = new(steamId, gameName, dialog.FileName, iconUrl);
             game.AddAchievements(achievements);
 
             // Add the game to the collection
