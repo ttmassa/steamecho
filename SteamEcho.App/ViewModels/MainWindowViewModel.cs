@@ -4,16 +4,30 @@ using System.Windows.Input;
 using Microsoft.Win32;
 using SteamEcho.Core.Models;
 using SteamEcho.App.Services;
-using System.Text.Json;
 using SteamEcho.App.DTOs;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace SteamEcho.App.ViewModels;
 
-public class MainWindowViewModel
+public class MainWindowViewModel : INotifyPropertyChanged
 {
     public ObservableCollection<Game> Games { get; } = [];
     public ICommand AddGameCommand { get; }
     private readonly SteamService _steamService;
+    private Game? _selectedGame;
+    public Game? SelectedGame
+    {
+        get => _selectedGame;
+        set
+        {
+            if (_selectedGame != value)
+            {
+                _selectedGame = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     public MainWindowViewModel()
     {
@@ -60,6 +74,11 @@ public class MainWindowViewModel
 
             // Add the game to the collection
             Games.Add(game);
+            SelectedGame = game;
         }
     }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }
