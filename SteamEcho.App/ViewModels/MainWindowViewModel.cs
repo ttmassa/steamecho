@@ -34,7 +34,12 @@ public class MainWindowViewModel
             var fileName = Path.GetFileNameWithoutExtension(dialog.FileName);
 
             // Use SteamService to resolve Steam ID
-            GameInfo gameInfo = await _steamService.ResolveSteamIdAsync(fileName);
+            GameInfo? gameInfo = await _steamService.ResolveSteamIdAsync(fileName);
+            if (gameInfo == null)
+            {
+                Console.WriteLine("Error resolving Steam ID. Please check the game name or try again later.");
+                return;
+            }
             string steamId = gameInfo.SteamId;
             string gameName = gameInfo.Name;
             string iconUrl = gameInfo.IconUrl;

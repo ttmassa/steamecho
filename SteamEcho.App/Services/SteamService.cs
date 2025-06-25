@@ -16,7 +16,7 @@ public class SteamService : ISteamService
         _steamApiKey = AppConfig.Load().SteamAPI.Key;
     }
 
-    public async Task<GameInfo> ResolveSteamIdAsync(string gameName)
+    public async Task<GameInfo?> ResolveSteamIdAsync(string gameName)
     {
         HttpClient client = new();
         string url = $"https://store.steampowered.com/api/storesearch/?term={gameName}&cc=us&l=en";
@@ -29,7 +29,8 @@ public class SteamService : ISteamService
             string content = await response.Content.ReadAsStringAsync();
             if (string.IsNullOrEmpty(content))
             {
-                throw new InvalidDataException("No content received from Steam API.");
+                Console.WriteLine("No content returned from Steam API.");
+                return null;
             }
 
             // Get first result from
@@ -38,7 +39,7 @@ public class SteamService : ISteamService
             if (items.GetArrayLength() == 0)
             {
                 Console.WriteLine("No Steam game with that name exists.");
-                throw new InvalidDataException("No Steam game found with the specified name.");
+                return null;
             }
 
             // Get steam ID from the first game
@@ -53,7 +54,7 @@ public class SteamService : ISteamService
         catch (HttpRequestException e)
         {
             Console.WriteLine("Error: " + e.Message);
-            throw new InvalidOperationException("Failed to resolve Steam ID.", e);
+            return null;
         }
     }
 
