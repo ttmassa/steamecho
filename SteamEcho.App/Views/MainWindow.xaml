@@ -11,7 +11,7 @@
 >
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="250"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
@@ -29,8 +29,9 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal" Margin="5">
-                            <Image Source="{Binding IconPath}" Width="32" Margin="0,0,10,0"/>
-                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Foreground="#F0F0F0" FontSize="14" FontWeight="SemiBold"/>
+                            <Image Source="{Binding IconUrl}" VerticalAlignment="Center" Width="28" Margin="0,0,10,0"/>
+                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Foreground="#F0F0F0" FontSize="14" FontWeight="SemiBold" Margin="0,0,10,0"/>
+                            <TextBlock Text="{Binding AchievementsSummary}" VerticalAlignment="Center" Foreground="#F0F0F0" FontSize="12" FontWeight="Regular"/>
                         </StackPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
