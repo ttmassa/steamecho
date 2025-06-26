@@ -14,6 +14,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 {
     public ObservableCollection<Game> Games { get; } = [];
     public ICommand AddGameCommand { get; }
+    public ICommand DeleteGameCommand { get; }
     private readonly SteamService _steamService;
     private Game? _selectedGame;
     public Game? SelectedGame
@@ -33,6 +34,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     {
         _steamService = new SteamService();
         AddGameCommand = new RelayCommand(AddGame);
+        DeleteGameCommand = new RelayCommand<Game>(DeleteGame);
     }
 
     private async void AddGame()
@@ -76,6 +78,13 @@ public class MainWindowViewModel : INotifyPropertyChanged
             Games.Add(game);
             SelectedGame = game;
         }
+    }
+
+    private void DeleteGame(Game game)
+    {
+        Games.Remove(game);
+        if (SelectedGame == game)
+            SelectedGame = Games.FirstOrDefault();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
