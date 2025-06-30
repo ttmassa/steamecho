@@ -16,6 +16,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand AddGameCommand { get; }
     public ICommand DeleteGameCommand { get; }
     private readonly SteamService _steamService;
+    private readonly StorageService _storageService;
     private Game? _selectedGame;
     public Game? SelectedGame
     {
@@ -33,8 +34,19 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public MainWindowViewModel()
     {
         _steamService = new SteamService();
+        _storageService = new StorageService(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\SteamEcho\\steam_echo.db");
         AddGameCommand = new RelayCommand(AddGame);
         DeleteGameCommand = new RelayCommand<Game>(DeleteGame);
+
+        // Load games from the database
+        List<Game> gamesFromDb = _storageService.LoadGames();
+        foreach (var game in gamesFromDb)
+        {
+            Games.Add(game);
+        }
+
+        // Set the first game as selected if available
+        SelectedGame = Games.FirstOrDefault();
     }
 
     private async void AddGame()
@@ -74,8 +86,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
             Game game = new(steamId, gameName, dialog.FileName, iconUrl);
             game.AddAchievements(achievements);
 
-            // Add the game to the collection
+            // Add the game to the collection and save to database
             Games.Add(game);
+            _storageService.SaveGame(long.Parse(steamId), gameName, dialog.FileName, achievements, iconUrl);
             SelectedGame = game;
         }
     }
@@ -83,6 +96,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     private void DeleteGame(Game game)
     {
         Games.Remove(game);
+        _storageService.DeleteGame(long.Parse(game.SteamId));
         if (SelectedGame == game)
             SelectedGame = Games.FirstOrDefault();
     }
