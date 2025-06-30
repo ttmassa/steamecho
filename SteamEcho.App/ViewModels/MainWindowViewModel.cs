@@ -4,9 +4,10 @@ using System.Windows.Input;
 using Microsoft.Win32;
 using SteamEcho.Core.Models;
 using SteamEcho.App.Services;
-using SteamEcho.App.DTOs;
+using SteamEcho.Core.DTOs;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using SteamEcho.Core.Services;
 
 namespace SteamEcho.App.ViewModels;
 
@@ -15,7 +16,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ObservableCollection<Game> Games { get; } = [];
     public ICommand AddGameCommand { get; }
     public ICommand DeleteGameCommand { get; }
-    private readonly SteamService _steamService;
+    private readonly ISteamService _steamService;
     private readonly StorageService _storageService;
     private Game? _selectedGame;
     public Game? SelectedGame
@@ -98,10 +99,15 @@ public class MainWindowViewModel : INotifyPropertyChanged
         Games.Remove(game);
         _storageService.DeleteGame(long.Parse(game.SteamId));
         if (SelectedGame == game)
+        {
             SelectedGame = Games.FirstOrDefault();
+        }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
-    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 }

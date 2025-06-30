@@ -1,8 +1,9 @@
 using System.IO;
 using System.Net.Http;
 using System.Text.Json;
-using SteamEcho.App.DTOs;
+using SteamEcho.Core.DTOs;
 using SteamEcho.Core.Models;
+using SteamEcho.Core.Services;
 
 namespace SteamEcho.App.Services;
 

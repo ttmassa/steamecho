@@ -1,7 +1,7 @@
-using SteamEcho.App.DTOs;
+using SteamEcho.Core.DTOs;
 using SteamEcho.Core.Models;
 
-namespace SteamEcho.App.Services;
+namespace SteamEcho.Core.Services;
 
 public interface ISteamService
 {
