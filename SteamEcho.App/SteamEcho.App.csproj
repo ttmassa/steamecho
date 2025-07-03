@@ -10,7 +10,10 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <Resource Include="Assets\*" />
+    <Resource Include="Assets\Images\*" />
+    <Content Include="Assets\Sound\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <ProjectReference Include="..\SteamEcho.Core\SteamEcho.Core.csproj" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.5" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.5" />

@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using SteamEcho.Core.Services;
 using System.Windows;
+using System.Media;
 
 namespace SteamEcho.App.ViewModels;
 
@@ -20,6 +21,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     private readonly ISteamService _steamService;
     private readonly StorageService _storageService;
     private readonly AchievementListenerService _achievementListenerService;
+    private readonly SoundPlayer _soundPlayer;
     private Game? _selectedGame;
     public Game? SelectedGame
     {
@@ -39,6 +41,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         _steamService = new SteamService();
         _storageService = new StorageService(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\SteamEcho\\steam_echo.db");
         _achievementListenerService = new AchievementListenerService();
+        _soundPlayer = new SoundPlayer("Assets/Sound/notification.wav");
         AddGameCommand = new RelayCommand(AddGame);
         DeleteGameCommand = new RelayCommand<Game>(DeleteGame);
 
@@ -112,7 +115,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
     private void OnAchievementUnlocked(string achievementApiName)
     {
-        Console.WriteLine($"OnAchievementUnlocked event handler triggered with: {achievementApiName}");
         Application.Current.Dispatcher.Invoke(() =>
         {
             bool achievementFound = false;
@@ -124,7 +126,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
                     achievementFound = true;
                     achievement.Unlock();
 
-                    Console.WriteLine($"Achievement '{achievement.Name}' unlocked for game '{game.Name}' at {achievement.UnlockDate}");
+                    // Play notification sound
+                    _soundPlayer.Play();
+
                     // Update the game in the database
                     _storageService.UpdateAchievement(long.Parse(game.SteamId), achievement.Id, true, achievement.UnlockDate);
 
