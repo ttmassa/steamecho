@@ -1,0 +1,10 @@
+# Build artifacts
+*.dll
+*.obj
+*.lib
+*.exp
+*.pdb
+*.exe
+
+# Intermediate files
+*.txt
