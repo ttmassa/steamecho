@@ -90,9 +90,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
             // Get achievements for the game
             List<Achievement> achievements = await _steamService.GetAchievementsAsync(steamId);
 
-            // Create game instance
-            Game game = new(steamId, gameName, dialog.FileName, iconUrl);
-            game.AddAchievements(achievements);
+            // Create game instance using the correct constructor
+            Game game = new(steamId, gameName, dialog.FileName, achievements, iconUrl);
 
             // Add the game to the collection and save to database
             Games.Add(game);
@@ -129,9 +128,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
                     // Update the game in the database
                     _storageService.UpdateAchievement(long.Parse(game.SteamId), achievement.Id, true, achievement.UnlockDate);
 
-                    // Notify UI about the change
-                    OnPropertyChanged(nameof(Games));
-                    break; // Found and processed, no need to check other games
+                    break;
                 }
             }
             if (!achievementFound)

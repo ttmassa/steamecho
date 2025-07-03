@@ -11,8 +11,34 @@ public class Achievement(string id, string name, string description, string? ico
     public string? Icon { get; set; } = icon;
     public string? GrayIcon { get; set; } = grayIcon;
     public double? GlobalPercentage { get; set; } = globalPercentage;
-    public bool IsUnlocked { get; set; } = false;
-    public DateTime? UnlockDate { get; set; } = null;
+
+    private bool _isUnlocked;
+    public bool IsUnlocked
+    {
+        get => _isUnlocked;
+        set
+        {
+            if (_isUnlocked != value)
+            {
+                _isUnlocked = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    private DateTime? _unlockDate;
+    public DateTime? UnlockDate
+    {
+        get => _unlockDate;
+        set
+        {
+            if (_unlockDate != value)
+            {
+                _unlockDate = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     public void Unlock()
     {
