@@ -43,6 +43,7 @@ public class StorageService
                 GrayIcon TEXT,
                 GlobalPercentage REAL,
                 IsUnlocked BOOLEAN NOT NULL DEFAULT 0,
+                UnlockDate DATETIME,
                 FOREIGN KEY (GameId) REFERENCES Games(Id)
             );
         ";
@@ -133,7 +134,7 @@ public class StorageService
 
         // Load achievements
         using var achievementsCommand = connection.CreateCommand();
-        achievementsCommand.CommandText = "SELECT GameId, Id, Name, Description, Icon, GrayIcon, GlobalPercentage, IsUnlocked FROM Achievements";
+        achievementsCommand.CommandText = "SELECT GameId, Id, Name, Description, Icon, GrayIcon, GlobalPercentage, IsUnlocked, UnlockDate FROM Achievements";
 
         using var achievementsReader = achievementsCommand.ExecuteReader();
         while (achievementsReader.Read())
@@ -146,10 +147,12 @@ public class StorageService
             string? grayIcon = achievementsReader.IsDBNull(5) ? null : achievementsReader.GetString(5);
             double? globalPercentage = achievementsReader.IsDBNull(6) ? null : achievementsReader.GetDouble(6);
             bool isUnlocked = achievementsReader.GetBoolean(7);
+            DateTime? unlockDate = achievementsReader.IsDBNull(8) ? null : (DateTime?)achievementsReader.GetDateTime(8);
 
             var achievement = new Achievement(id, name, description, icon, grayIcon, globalPercentage)
             {
-                IsUnlocked = isUnlocked
+                IsUnlocked = isUnlocked,
+                UnlockDate = unlockDate
             };
 
             // Find the game and add the achievement

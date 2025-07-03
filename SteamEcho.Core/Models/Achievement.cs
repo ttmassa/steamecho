@@ -1,6 +1,9 @@
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
 namespace SteamEcho.Core.Models;
 
-public class Achievement(string id, string name, string description, string? icon = null, string? grayIcon = null, double? globalPercentage = null)
+public class Achievement(string id, string name, string description, string? icon = null, string? grayIcon = null, double? globalPercentage = null) : INotifyPropertyChanged
 {
     public string Id { get; set; } = id;
     public string Name { get; set; } = name;
@@ -15,5 +18,12 @@ public class Achievement(string id, string name, string description, string? ico
     {
         IsUnlocked = true;
         UnlockDate = DateTime.Now;
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

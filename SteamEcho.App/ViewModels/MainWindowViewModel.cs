@@ -8,6 +8,7 @@ using SteamEcho.Core.DTOs;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using SteamEcho.Core.Services;
+using System.Windows;
 
 namespace SteamEcho.App.ViewModels;
 
@@ -18,6 +19,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand DeleteGameCommand { get; }
     private readonly ISteamService _steamService;
     private readonly StorageService _storageService;
+    private readonly AchievementListenerService _achievementListenerService;
     private Game? _selectedGame;
     public Game? SelectedGame
     {
@@ -36,6 +38,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     {
         _steamService = new SteamService();
         _storageService = new StorageService(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\SteamEcho\\steam_echo.db");
+        _achievementListenerService = new AchievementListenerService();
         AddGameCommand = new RelayCommand(AddGame);
         DeleteGameCommand = new RelayCommand<Game>(DeleteGame);
 
@@ -48,6 +51,10 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         // Set the first game as selected if available
         SelectedGame = Games.FirstOrDefault();
+
+        // Start the achievement listener
+        _achievementListenerService.AchievementUnlocked += OnAchievementUnlocked;
+        _achievementListenerService.StartListening();
     }
 
     private async void AddGame()
@@ -102,6 +109,36 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             SelectedGame = Games.FirstOrDefault();
         }
+    }
+
+    private void OnAchievementUnlocked(string achievementApiName)
+    {
+        Console.WriteLine($"OnAchievementUnlocked event handler triggered with: {achievementApiName}");
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            bool achievementFound = false;
+            foreach (var game in Games)
+            {
+                var achievement = game.GetAchievementById(achievementApiName);
+                if (achievement != null && !achievement.IsUnlocked)
+                {
+                    achievementFound = true;
+                    achievement.Unlock();
+
+                    Console.WriteLine($"Achievement '{achievement.Name}' unlocked for game '{game.Name}' at {achievement.UnlockDate}");
+                    // Update the game in the database
+                    _storageService.UpdateAchievement(long.Parse(game.SteamId), achievement.Id, true, achievement.UnlockDate);
+
+                    // Notify UI about the change
+                    OnPropertyChanged(nameof(Games));
+                    break; // Found and processed, no need to check other games
+                }
+            }
+            if (!achievementFound)
+            {
+                Console.WriteLine($"Received achievement '{achievementApiName}', but it was not found in any loaded game or was already unlocked.");
+            }
+        });
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
