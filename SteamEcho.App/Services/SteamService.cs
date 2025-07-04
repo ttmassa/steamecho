@@ -44,7 +44,7 @@ public class SteamService : ISteamService
             }
 
             // Get steam ID from the first game
-            var firstGame = items[0];
+            var firstGame = items[1];
             string steamId = firstGame.GetProperty("id").GetInt32().ToString() ?? throw new InvalidDataException("Steam ID not found in search result.");
             string name = firstGame.GetProperty("name").GetString() ?? "Unknown Name";
             string? iconUrl = $"https://cdn.cloudflare.steamstatic.com/steam/apps/{steamId}/library_600x900.jpg";

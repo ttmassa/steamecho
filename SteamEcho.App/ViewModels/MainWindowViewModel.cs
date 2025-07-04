@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using SteamEcho.Core.Services;
 using System.Windows;
 using System.Media;
+using System.Diagnostics;
 
 namespace SteamEcho.App.ViewModels;
 
@@ -18,10 +19,12 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ObservableCollection<Game> Games { get; } = [];
     public ICommand AddGameCommand { get; }
     public ICommand DeleteGameCommand { get; }
+    public ICommand BrowseFilesCommand { get; }
     private readonly ISteamService _steamService;
     private readonly StorageService _storageService;
     private readonly AchievementListenerService _achievementListenerService;
     private readonly SoundPlayer _soundPlayer;
+    private readonly NotificationService _notificationService;
     private Game? _selectedGame;
     public Game? SelectedGame
     {
@@ -42,8 +45,10 @@ public class MainWindowViewModel : INotifyPropertyChanged
         _storageService = new StorageService(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\SteamEcho\\steam_echo.db");
         _achievementListenerService = new AchievementListenerService();
         _soundPlayer = new SoundPlayer("Assets/Sound/notification.wav");
+        _notificationService = new NotificationService();
         AddGameCommand = new RelayCommand(AddGame);
         DeleteGameCommand = new RelayCommand<Game>(DeleteGame);
+        BrowseFilesCommand = new RelayCommand<Game>(BrowseFiles);
 
         // Load games from the database
         List<Game> gamesFromDb = _storageService.LoadGames();
@@ -113,6 +118,37 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    private void BrowseFiles(Game game)
+    {
+        if (game == null || string.IsNullOrEmpty(game.ExecutablePath))
+        {
+            Console.WriteLine("Selected game is null or does not have an executable path.");
+            return;
+        }
+
+        try
+        {
+            string? directoryPath = Path.GetDirectoryName(game.ExecutablePath);
+            if (directoryPath != null && Directory.Exists(directoryPath))
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "explorer.exe",
+                    Arguments = directoryPath,
+                    UseShellExecute = true
+                });
+            }
+            else
+            {
+                Console.WriteLine("Directory does not exist: " + directoryPath);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error opening file explorer: " + ex.Message);
+        }
+    }
+
     private void OnAchievementUnlocked(string achievementApiName)
     {
         Application.Current.Dispatcher.Invoke(() =>
@@ -128,6 +164,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
                     // Play notification sound
                     _soundPlayer.Play();
+
+                    // Show on-screen notification
+                    _notificationService.ShowNotification(achievement);
 
                     // Update the game in the database
                     _storageService.UpdateAchievement(long.Parse(game.SteamId), achievement.Id, true, achievement.UnlockDate);
