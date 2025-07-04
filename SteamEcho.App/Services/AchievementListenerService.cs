@@ -32,13 +32,12 @@ public class AchievementListenerService : IAchievementListenerService
 
                 if (!string.IsNullOrEmpty(achievementApiName))
                 {
-                    // Raise the event with the achievement API name
+                    // Raise the event with the achievement API name (API id in db)
                     AchievementUnlocked?.Invoke(achievementApiName);
                 }
             }
             catch (Exception ex)
             {
-                // Optional: Log any exceptions that occur.
                 Console.WriteLine($"Pipe listener error: {ex.Message}");
             }
         }

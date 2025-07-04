@@ -4,12 +4,12 @@ using System.Runtime.CompilerServices;
 
 namespace SteamEcho.Core.Models;
 
-public class Game(string steamId, string name, string executablePath, string? iconUrl = null) : INotifyPropertyChanged
+public class Game(string steamId, string name, string executablePath, string? iconUrl) : INotifyPropertyChanged
 {
     public string SteamId { get; set; } = steamId;
     public string Name { get; set; } = name;
     public string ExecutablePath { get; set; } = executablePath;
-    public string? IconUrl { get; set; } = iconUrl;
+    public string IconUrl { get; set; } = iconUrl ?? "/SteamEcho.App;component/Assets/Images/library_placeholder.png";
 
     public ObservableCollection<Achievement> Achievements { get; } = new();
 

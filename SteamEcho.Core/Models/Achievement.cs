@@ -3,13 +3,13 @@ using System.Runtime.CompilerServices;
 
 namespace SteamEcho.Core.Models;
 
-public class Achievement(string id, string name, string description, string? icon = null, string? grayIcon = null, double? globalPercentage = null) : INotifyPropertyChanged
+public class Achievement(string id, string name, string description, string? icon, string? grayIcon, double? globalPercentage) : INotifyPropertyChanged
 {
     public string Id { get; set; } = id;
     public string Name { get; set; } = name;
     public string Description { get; set; } = description;
-    public string? Icon { get; set; } = icon;
-    public string? GrayIcon { get; set; } = grayIcon;
+    public string Icon { get; set; } = icon ?? "/SteamEcho.App;component/Assets/Images/achievement_unlocked_icon.png";
+    public string GrayIcon { get; set; } = grayIcon ?? "/SteamEcho.App;component/Assets/Images/achievement_locked_icon.png";
     public double? GlobalPercentage { get; set; } = globalPercentage;
 
     private bool _isUnlocked;

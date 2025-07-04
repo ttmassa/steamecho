@@ -81,7 +81,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
             string steamId = gameInfo.SteamId;
             string gameName = gameInfo.Name;
-            string iconUrl = gameInfo.IconUrl;
+            string? iconUrl = gameInfo.IconUrl;
 
             // Game already exists
             if (Games.Any(g => g.SteamId == steamId))

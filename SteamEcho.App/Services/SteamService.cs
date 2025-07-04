@@ -47,7 +47,15 @@ public class SteamService : ISteamService
             var firstGame = items[0];
             string steamId = firstGame.GetProperty("id").GetInt32().ToString() ?? throw new InvalidDataException("Steam ID not found in search result.");
             string name = firstGame.GetProperty("name").GetString() ?? "Unknown Name";
-            string iconUrl = $"https://cdn.cloudflare.steamstatic.com/steam/apps/{steamId}/library_600x900.jpg";
+            string? iconUrl = $"https://cdn.cloudflare.steamstatic.com/steam/apps/{steamId}/library_600x900.jpg";
+
+            // Check if the icon URL is valid
+            using var request = new HttpRequestMessage(HttpMethod.Head, iconUrl);
+            HttpResponseMessage iconResponse = await client.SendAsync(request);
+            if (!iconResponse.IsSuccessStatusCode)
+            {
+                iconUrl = null;
+            }
 
             // Create and return GameInfo object
             return new GameInfo(steamId, name, iconUrl);
