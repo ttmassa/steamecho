@@ -5,11 +5,15 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:SteamEcho.App"
+    xmlns:converters="clr-namespace:SteamEcho.App.Converters"
+    xmlns:componentModel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
     mc:Ignorable="d"
     Title="SteamEcho" Height="450" Width="800"
     Background="#323234"
 >
     <Window.Resources>
+        <converters:AchievementRarityConverter x:Key="RarityConverter"/>
         <!-- Style for buttons -->
         <Style TargetType="Button" x:Key="NoHoverButton">
             <Setter Property="Background" Value="Transparent"/>
@@ -89,6 +93,18 @@
 
                 <!-- Achievement Section -->
                 <Border Grid.Column="0" Background="#E63946" Margin="10" CornerRadius="12">
+                    <Border.Resources>
+                        <CollectionViewSource x:Key="SortedAchievements" Source="{Binding SelectedGame.Achievements}" IsLiveSortingRequested="True">
+                            <CollectionViewSource.SortDescriptions>
+                                <componentModel:SortDescription PropertyName="IsUnlocked" Direction="Descending"/>
+                                <componentModel:SortDescription PropertyName="UnlockDate" Direction="Descending"/>
+                            </CollectionViewSource.SortDescriptions>
+                            <CollectionViewSource.LiveSortingProperties>
+                                <sys:String>IsUnlocked</sys:String>
+                                <sys:String>UnlockDate</sys:String>
+                            </CollectionViewSource.LiveSortingProperties>
+                        </CollectionViewSource>
+                    </Border.Resources>
                     <Grid Margin="10">
                         <Grid.RowDefinitions>
                             <!-- Achievement Section Header -->
@@ -105,7 +121,13 @@
                         </StackPanel>
 
                         <!-- Achievement List -->
-                        <ListBox Grid.Row="1" ItemsSource="{Binding SelectedGame.Achievements}" Background="#E63946" BorderThickness="0" Margin="0,10,0,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch">
+                        <ListBox Grid.Row="1" ItemsSource="{Binding Source={StaticResource SortedAchievements}}" Background="#E63946" BorderThickness="0" Margin="0,10,0,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="ClipToBounds" Value="False"/>
+                                    <Setter Property="Padding" Value="5,5,0,5"/>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
                             <ListBox.Resources>
                                 <!-- Style for the scroll bar -->
                                 <Style TargetType="ScrollBar">
@@ -150,12 +172,18 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <!-- Achievement Icon -->
-                                        <Image x:Name="AchievementIcon"
-                                               Source="{Binding Icon}"
-                                               VerticalAlignment="Center"
-                                               Width="34"
-                                               Margin="0,0,10,0"/>
+                                        <!-- Container for Icon and Glow Effect -->
+                                        <Grid Width="34" Height="34" Margin="0,0,10,0" ClipToBounds="False">
+                                            <!-- Glow Effect Border -->
+                                            <Border x:Name="GlowBorder" CornerRadius="5" />
+                                            
+                                            <!-- Achievement Icon -->
+                                            <Image x:Name="AchievementIcon"
+                                                   Source="{Binding Icon}"
+                                                   VerticalAlignment="Center"
+                                                   Width="34"/>
+                                        </Grid>
+                                        
                                         <!-- Achievement Details -->
                                         <StackPanel Orientation="Vertical"
                                                     Margin="0,0,10,0"
@@ -174,6 +202,69 @@
                                             <Setter TargetName="AchievementDesc" Property="Foreground" Value="#4A4A4D"/>
                                             <Setter TargetName="AchievementGlobalPercentage" Property="Foreground" Value="#4A4A4D"/>
                                         </DataTrigger>
+
+                                        <!-- Uncommon Achievement Glow -->
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding IsUnlocked}" Value="True" />
+                                                <Condition Binding="{Binding GlobalPercentage, Converter={StaticResource RarityConverter}}" Value="Uncommon" />
+                                            </MultiDataTrigger.Conditions>
+                                            <MultiDataTrigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="AchievementIcon" Storyboard.TargetProperty="Effect">
+                                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                                <DiscreteObjectKeyFrame.Value>
+                                                                    <DropShadowEffect ShadowDepth="0" Color="#00FFFF" Opacity="1" BlurRadius="15" />
+                                                                </DiscreteObjectKeyFrame.Value>
+                                                            </DiscreteObjectKeyFrame>
+                                                        </ObjectAnimationUsingKeyFrames>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </MultiDataTrigger.EnterActions>
+                                        </MultiDataTrigger>
+
+                                        <!-- Rare Achievement Glow -->
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding IsUnlocked}" Value="True" />
+                                                <Condition Binding="{Binding GlobalPercentage, Converter={StaticResource RarityConverter}}" Value="Rare" />
+                                            </MultiDataTrigger.Conditions>
+                                            <MultiDataTrigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="AchievementIcon" Storyboard.TargetProperty="Effect">
+                                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                                <DiscreteObjectKeyFrame.Value>
+                                                                    <DropShadowEffect ShadowDepth="0" Color="#BF00FF" Opacity="1" BlurRadius="20" />
+                                                                </DiscreteObjectKeyFrame.Value>
+                                                            </DiscreteObjectKeyFrame>
+                                                        </ObjectAnimationUsingKeyFrames>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </MultiDataTrigger.EnterActions>
+                                        </MultiDataTrigger>
+
+                                        <!-- Ultra Rare Glow -->
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding IsUnlocked}" Value="True" />
+                                                <Condition Binding="{Binding GlobalPercentage, Converter={StaticResource RarityConverter}}" Value="UltraRare" />
+                                            </MultiDataTrigger.Conditions>
+                                            <MultiDataTrigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="AchievementIcon" Storyboard.TargetProperty="Effect">
+                                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                                <DiscreteObjectKeyFrame.Value>
+                                                                    <DropShadowEffect ShadowDepth="0" Color="#FFFF00" Opacity="1" BlurRadius="30" />
+                                                                </DiscreteObjectKeyFrame.Value>
+                                                            </DiscreteObjectKeyFrame>
+                                                        </ObjectAnimationUsingKeyFrames>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </MultiDataTrigger.EnterActions>
+                                        </MultiDataTrigger>
                                     </DataTemplate.Triggers>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>

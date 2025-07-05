@@ -11,7 +11,7 @@ public class Game(string steamId, string name, string executablePath, string? ic
     public string ExecutablePath { get; set; } = executablePath;
     public string IconUrl { get; set; } = iconUrl ?? "/SteamEcho.App;component/Assets/Images/library_placeholder.png";
 
-    public ObservableCollection<Achievement> Achievements { get; } = new();
+    public ObservableCollection<Achievement> Achievements { get; } = [];
 
     public string AchievementsSummary => $"{Achievements.Count(a => a.IsUnlocked)}/{Achievements.Count}";
 
