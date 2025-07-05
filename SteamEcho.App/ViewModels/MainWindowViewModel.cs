@@ -20,6 +20,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand AddGameCommand { get; }
     public ICommand DeleteGameCommand { get; }
     public ICommand BrowseFilesCommand { get; }
+    public ICommand LockAchievementCommand { get; }
+    public ICommand UnlockAchievementCommand { get; }
     private readonly ISteamService _steamService;
     private readonly StorageService _storageService;
     private readonly AchievementListenerService _achievementListenerService;
@@ -42,27 +44,23 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public MainWindowViewModel()
     {
         _steamService = new SteamService();
-        _storageService = new StorageService(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\SteamEcho\\steam_echo.db");
+        string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steamecho.db");
+        _storageService = new StorageService(dbPath);
+        _storageService.InitializeDatabase();
         _achievementListenerService = new AchievementListenerService();
-        _soundPlayer = new SoundPlayer("Assets/Sound/notification.wav");
+        _achievementListenerService.AchievementUnlocked += OnAchievementUnlocked;
+        _achievementListenerService.StartListening();
+        _soundPlayer = new SoundPlayer();
         _notificationService = new NotificationService();
+
+        Games = new ObservableCollection<Game>(_storageService.LoadGames());
+        SelectedGame = Games.FirstOrDefault();
+
         AddGameCommand = new RelayCommand(AddGame);
         DeleteGameCommand = new RelayCommand<Game>(DeleteGame);
         BrowseFilesCommand = new RelayCommand<Game>(BrowseFiles);
-
-        // Load games from the database
-        List<Game> gamesFromDb = _storageService.LoadGames();
-        foreach (var game in gamesFromDb)
-        {
-            Games.Add(game);
-        }
-
-        // Set the first game as selected if available
-        SelectedGame = Games.FirstOrDefault();
-
-        // Start the achievement listener
-        _achievementListenerService.AchievementUnlocked += OnAchievementUnlocked;
-        _achievementListenerService.StartListening();
+        LockAchievementCommand = new RelayCommand<Achievement>(LockAchievement);
+        UnlockAchievementCommand = new RelayCommand<Achievement>(UnlockAchievement);
     }
 
     private async void AddGame()
@@ -146,6 +144,25 @@ public class MainWindowViewModel : INotifyPropertyChanged
         catch (Exception ex)
         {
             Console.WriteLine("Error opening file explorer: " + ex.Message);
+        }
+    }
+
+    private void LockAchievement(Achievement achievement)
+    {
+        if (achievement != null && achievement.IsUnlocked && SelectedGame != null)
+        {
+            achievement.IsUnlocked = false;
+            achievement.UnlockDate = null;
+            _storageService.UpdateAchievement(long.Parse(SelectedGame.SteamId), achievement.Id, false, null);
+        }
+    }
+
+    private void UnlockAchievement(Achievement achievement)
+    {
+        if (achievement != null && !achievement.IsUnlocked && SelectedGame != null)
+        {
+            achievement.Unlock();
+            _storageService.UpdateAchievement(long.Parse(SelectedGame.SteamId), achievement.Id, true, achievement.UnlockDate);
         }
     }
 
