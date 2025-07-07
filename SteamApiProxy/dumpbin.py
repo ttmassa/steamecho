@@ -14,15 +14,26 @@ with open(dumpbin_file, "r", encoding="utf-8") as f:
 
 exports = []
 for line in lines:
-    match = re.match(r"\s*(\d+)\s+[0-9A-F]+\s+[0-9A-F]+\s+(\S+)", line)
-    if match:
-        ordinal = match.group(1)
-        name = match.group(2)
-        exports.append((ordinal, name))
+    # Match for exports with names
+    match_named = re.match(r"\s*(\d+)\s+[0-9A-F]+\s+[0-9A-F]+\s+(\S+)", line)
+    # Match for exports by ordinal only (no name)
+    match_unnamed = re.match(r"\s*(\d+)\s+[0-9A-F]+\s+[0-9A-F]+\s+\[NONAME\]", line)
+    
+    if match_named:
+        ordinal = match_named.group(1)
+        name = match_named.group(2)
+        exports.append((ordinal, name, True))
+    elif match_unnamed:
+        ordinal = match_unnamed.group(1)
+        exports.append((ordinal, None, False))
+
 
 with open(def_file, "w", encoding="utf-8") as f:
     f.write("EXPORTS\n")
     f.write("    SteamAPI_ISteamUserStats_SetAchievement\n")
-    for ordinal, name in exports:
-        if name != "SteamAPI_ISteamUserStats_SetAchievement":
-            f.write(f"    {name} = {dll_name}.{name} @{ordinal}\n")
+    for ordinal, name, has_name in exports:
+        if has_name:
+            if name != "SteamAPI_ISteamUserStats_SetAchievement":
+                f.write(f"    {name} = {dll_name}.{name} @{ordinal}\n")
+        else:
+            f.write(f"    NONAME_{ordinal} = {dll_name}.#{ordinal} @{ordinal} NONAME\n")
