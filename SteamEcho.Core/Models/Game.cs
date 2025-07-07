@@ -10,6 +10,19 @@ public class Game(string steamId, string name, string executablePath, string? ic
     public string Name { get; set; } = name;
     public string ExecutablePath { get; set; } = executablePath;
     public string IconUrl { get; set; } = iconUrl ?? "/SteamEcho.App;component/Assets/Images/library_placeholder.png";
+    private bool _isRunning;
+    public bool IsRunning
+    {
+        get => _isRunning;
+        set
+        {
+            if (_isRunning != value)
+            {
+                _isRunning = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     public ObservableCollection<Achievement> Achievements { get; } = [];
 

@@ -22,11 +22,13 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand BrowseFilesCommand { get; }
     public ICommand LockAchievementCommand { get; }
     public ICommand UnlockAchievementCommand { get; }
+    public ICommand TogglePlayStateCommand { get; }
     private readonly ISteamService _steamService;
     private readonly StorageService _storageService;
     private readonly AchievementListenerService _achievementListenerService;
     private readonly SoundPlayer _soundPlayer;
     private readonly NotificationService _notificationService;
+    private readonly GameProcessService _gameProcessService;
     private Game? _selectedGame;
     public Game? SelectedGame
     {
@@ -50,17 +52,22 @@ public class MainWindowViewModel : INotifyPropertyChanged
         _achievementListenerService = new AchievementListenerService();
         _achievementListenerService.AchievementUnlocked += OnAchievementUnlocked;
         _achievementListenerService.StartListening();
-        _soundPlayer = new SoundPlayer();
+        _soundPlayer = new SoundPlayer("Assets/Sound/notification.wav");
         _notificationService = new NotificationService();
 
         Games = new ObservableCollection<Game>(_storageService.LoadGames());
         SelectedGame = Games.FirstOrDefault();
+
+        // Initialize game process service
+        _gameProcessService = new GameProcessService(Games);
+        _gameProcessService.Start();
 
         AddGameCommand = new RelayCommand(AddGame);
         DeleteGameCommand = new RelayCommand<Game>(DeleteGame);
         BrowseFilesCommand = new RelayCommand<Game>(BrowseFiles);
         LockAchievementCommand = new RelayCommand<Achievement>(LockAchievement);
         UnlockAchievementCommand = new RelayCommand<Achievement>(UnlockAchievement);
+        TogglePlayStateCommand = new RelayCommand<Game>(TogglePlayState);
     }
 
     private async void AddGame()
@@ -102,6 +109,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             // Add the game to the collection and save to database
             Games.Add(game);
             _storageService.SaveGame(long.Parse(steamId), gameName, dialog.FileName, achievements, iconUrl);
+
             SelectedGame = game;
         }
     }
@@ -196,6 +204,38 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 Console.WriteLine($"Received achievement '{achievementApiName}', but it was not found in any loaded game or was already unlocked.");
             }
         });
+    }
+
+    private void TogglePlayState(Game game)
+    {
+        if (game == null) return;
+
+        if (game.IsRunning)
+        {
+            try
+            {
+                var process = Process.GetProcesses().FirstOrDefault(p => !p.HasExited && string.Equals(p.MainModule?.FileName, game.ExecutablePath, StringComparison.OrdinalIgnoreCase));
+                process?.Kill();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error stopping game: {ex.Message}");
+            }
+        }
+        else
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(game.ExecutablePath)
+                {
+                    WorkingDirectory = Path.GetDirectoryName(game.ExecutablePath),
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error starting game: {ex.Message}");
+            }
+        }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

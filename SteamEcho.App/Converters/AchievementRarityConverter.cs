@@ -19,12 +19,10 @@ public class AchievementRarityConverter : IValueConverter
         {
             if (percentage >= 40)
             {
-                Console.WriteLine("Common Achievement");
                 return Rarity.Common;
             }
             else if (percentage >= 10)
             {
-                Console.WriteLine("Uncommon Achievement");
                 return Rarity.Uncommon;
             }
             else if (percentage >= 5)
