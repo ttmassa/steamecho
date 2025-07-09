@@ -1,5 +1,4 @@
 # Build artifacts
-*.dll
 *.obj
 *.lib
 *.exp
