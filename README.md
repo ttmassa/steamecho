@@ -39,6 +39,36 @@ Voici un exemple de l'affichage des notifications de succès en temps réel :
 *   **`SteamEcho.Core`**: Une bibliothèque de classes .NET qui définit les modèles de données (Jeu, Succès) et les interfaces des services.
 *   **`SteamApiProxy`**: Un projet C++ qui produit la DLL proxy pour intercepter les appels de l'API Steam.
 
+## Compilation des DLL Proxy (`SteamApiProxy`)
+
+Pour compiler les deux DLL proxy (`steam_api.dll` pour 32 bits et `steam_api64.dll` pour 64 bits) :
+
+1. **Ouvrez un terminal développeur Visual Studio** (x86 pour 32 bits, x64 pour 64 bits) dans le dossier `SteamApiProxy`.
+2. **Générez les fichiers .def** (déjà fait avec `dumpbin`, voir les fichiers `exports32.def` et `exports64.def`).
+3. **Créez les fichiers .lib à partir des .def** :
+
+   - Pour 32 bits :
+     ```cmd
+     lib /def:exports32.def /out:steam_api_proxy32.lib /machine:x86
+     ```
+   - Pour 64 bits :
+     ```cmd
+     lib /def:exports64.def /out:steam_api_proxy64.lib /machine:x64
+     ```
+
+4. **Compilez la DLL proxy** :
+
+   - Pour 32 bits :
+     ```cmd
+     cl /LD dllmain.cpp steam_api_proxy32.lib /Fe:steam_api.dll
+     ```
+   - Pour 64 bits :
+     ```cmd
+     cl /LD dllmain.cpp steam_api_proxy64.lib /Fe:steam_api64.dll
+     ```
+
+Les DLL générées (`steam_api.dll` et `steam_api64.dll`) sont prêtes à être utilisées comme proxy dans le dossier du jeu.
+
 ## Stack Technique
 
 *   **Proxy DLL**: C++ pour l'interception des appels bas niveau de l'API Steam.
