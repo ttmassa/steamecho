@@ -1,5 +1,8 @@
+using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using SteamEcho.Core.DTOs;
 using SteamEcho.Core.Models;
@@ -45,9 +48,9 @@ public class SteamService : ISteamService
 
             // Get steam ID from the first game
             var firstGame = items[0];
-            string steamId = firstGame.GetProperty("id").GetInt32().ToString() ?? throw new InvalidDataException("Steam ID not found in search result.");
+            string claimedId = firstGame.GetProperty("id").GetInt32().ToString() ?? throw new InvalidDataException("Steam ID not found in search result.");
             string name = firstGame.GetProperty("name").GetString() ?? "Unknown Name";
-            string? iconUrl = $"https://cdn.cloudflare.steamstatic.com/steam/apps/{steamId}/library_600x900.jpg";
+            string? iconUrl = $"https://cdn.cloudflare.steamstatic.com/steam/apps/{claimedId}/library_600x900.jpg";
 
             // Check if the icon URL is valid
             using var request = new HttpRequestMessage(HttpMethod.Head, iconUrl);
@@ -58,7 +61,7 @@ public class SteamService : ISteamService
             }
 
             // Create and return GameInfo object
-            return new GameInfo(steamId, name, iconUrl);
+            return new GameInfo(claimedId, name, iconUrl);
         }
         catch (HttpRequestException e)
         {
@@ -67,12 +70,12 @@ public class SteamService : ISteamService
         }
     }
 
-    public async Task<List<Achievement>> GetAchievementsAsync(string steamId)
+    public async Task<List<Achievement>> GetAchievementsAsync(string claimedId)
     {
         // Fetch achievements for a game
         HttpClient client = new();
         var achievements = new List<Achievement>();
-        string url = $"https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key={_steamApiKey}&appid={steamId}";
+        string url = $"https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key={_steamApiKey}&appid={claimedId}";
 
         try
         {
@@ -91,7 +94,7 @@ public class SteamService : ISteamService
                 statsElement.TryGetProperty("achievements", out var achievementsElement))
             {
                 // First get global achievement percentages
-                var globalPercentagesDict = await GetGlobalAchievementPercentagesDictAsync(steamId);
+                var globalPercentagesDict = await GetGlobalAchievementPercentagesDictAsync(claimedId);
 
                 // Create Achievement instances from the JSON data
                 foreach (var achievement in achievementsElement.EnumerateArray())
@@ -126,11 +129,128 @@ public class SteamService : ISteamService
         return achievements;
     }
 
+    public async Task<SteamUserInfo?> LogToSteamAsync()
+    {
+        // OpenId authentication to Steam with system browser + local listener
+        string redirectUrl = "http://localhost:54321/steam-auth/";
+        string openIdUrl = "https://steamcommunity.com/openid/login" +
+        "?openid.ns=http://specs.openid.net/auth/2.0" +
+        "&openid.mode=checkid_setup" +
+        "&openid.return_to=" + WebUtility.UrlEncode(redirectUrl) +
+        "&openid.realm=" + Uri.EscapeDataString("http://localhost:54321/") +
+        "&openid.identity=http://specs.openid.net/auth/2.0/identifier_select" +
+        "&openid.claimed_id=http://specs.openid.net/auth/2.0/identifier_select";
+
+        // Start HTTP listener
+        using var listener = new HttpListener();
+        listener.Prefixes.Add(redirectUrl);
+        listener.Start();
+
+        // Open browser
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = openIdUrl,
+            UseShellExecute = true
+        });
+
+        // Wait for redirection
+        var context = await listener.GetContextAsync();
+        var request = context.Request;
+
+        // Send a response to the browser
+        var response = context.Response;
+        string responseString = @"
+            <html>
+                <head>
+                    <title>Steam Echo</title>
+                    <meta http-equiv='refresh' content='0;url=steamecho://auth'>
+                    <style>
+                        body {
+                            margin: 0;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            height: 100vh;
+                            background-color: #323234;
+                            color: #F0F0F0;
+                        }
+                        .container {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                        }
+                        h1 {
+                            font-size: 2em;
+                            margin-bottom: 20px;
+                        }
+                        p {
+                            font-size: 1.2em;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <h1>Authentication successful!</h1>
+                        <p>You can close this window and return to the application.</p>
+                    </div>
+                </body>
+            </html>";
+        var buffer = Encoding.UTF8.GetBytes(responseString);
+        response.ContentLength64 = buffer.Length;
+        var responseOutput = response.OutputStream;
+        await responseOutput.WriteAsync(buffer);
+        responseOutput.Close();
+        listener.Stop();
+
+        // Extract Steam ID from OpenID response
+        var query = request.QueryString;
+        string? claimedId = query["openid.claimed_id"];
+
+        // Validate Steam ID
+        using var client = new HttpClient();
+        var values = new List<KeyValuePair<string, string>>();
+        foreach (string? key in query.AllKeys)
+        {
+            if (key != null)
+            {
+                if (key == "openid.mode")
+                {
+                    values.Add(new KeyValuePair<string, string>(key, "check_authentication"));
+                }
+                else
+                {
+                    values.Add(new KeyValuePair<string, string>(key, query[key]!));
+                }
+            }
+        }
+        var content = new FormUrlEncodedContent(values);
+
+        var verifyResponse = await client.PostAsync("https://steamcommunity.com/openid/login", content);
+        string verifyString = await verifyResponse.Content.ReadAsStringAsync();
+        if (!verifyString.Contains("is_valid:true"))
+        {
+            Console.WriteLine("Error: Invalid OpenID response from Steam.");
+            return null;
+        }
+
+        // Extract Steam ID from the OpenID URL
+        if (!string.IsNullOrEmpty(claimedId))
+        {
+            var parts = claimedId.Split('/');
+            string steamId = parts.Last();
+            return new SteamUserInfo(steamId);
+        }
+
+        Console.WriteLine("Error: No Steam ID found in OpenID response.");
+        return null;
+    }
+
     // Helper method to get global achievement percentages as a dictionary
-    private static async Task<Dictionary<string, double>> GetGlobalAchievementPercentagesDictAsync(string steamId)
+    private static async Task<Dictionary<string, double>> GetGlobalAchievementPercentagesDictAsync(string claimedId)
     {
         HttpClient client = new();
-        string url = $"https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v2/?gameid={steamId}";
+        string url = $"https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v2/?gameid={claimedId}";
         var dict = new Dictionary<string, double>();
 
         try

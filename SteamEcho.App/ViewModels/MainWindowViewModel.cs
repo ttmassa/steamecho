@@ -7,10 +7,10 @@ using SteamEcho.App.Services;
 using SteamEcho.Core.DTOs;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using SteamEcho.Core.Services;
 using System.Windows;
 using System.Media;
 using System.Diagnostics;
+using SteamEcho.App.Views;
 
 namespace SteamEcho.App.ViewModels;
 
@@ -23,13 +23,16 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand LockAchievementCommand { get; }
     public ICommand UnlockAchievementCommand { get; }
     public ICommand TogglePlayStateCommand { get; }
-    private readonly ISteamService _steamService;
+    public ICommand LogToSteamCommand { get; }
+    public ICommand LogOutFromSteamCommand { get; }
+    private readonly SteamService _steamService;
     private readonly StorageService _storageService;
     private readonly AchievementListenerService _achievementListenerService;
     private readonly SoundPlayer _soundPlayer;
     private readonly NotificationService _notificationService;
     private readonly GameProcessService _gameProcessService;
     private Game? _selectedGame;
+    private SteamUserInfo? _currentUser;
     public Game? SelectedGame
     {
         get => _selectedGame;
@@ -42,6 +45,20 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
         }
     }
+    public SteamUserInfo? CurrentUser
+    {
+        get => _currentUser;
+        set
+        {
+            if (_currentUser != value)
+            {
+                _currentUser = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsUserLoggedIn));
+            }
+        }
+    }
+    public bool IsUserLoggedIn => CurrentUser != null && !string.IsNullOrEmpty(CurrentUser.SteamId);
 
     public MainWindowViewModel()
     {
@@ -55,6 +72,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         _soundPlayer = new SoundPlayer("Assets/Sound/notification.wav");
         _notificationService = new NotificationService();
 
+        CurrentUser = _storageService.LoadUser();
         Games = new ObservableCollection<Game>(_storageService.LoadGames());
         SelectedGame = Games.FirstOrDefault();
 
@@ -68,6 +86,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
         LockAchievementCommand = new RelayCommand<Achievement>(LockAchievement);
         UnlockAchievementCommand = new RelayCommand<Achievement>(UnlockAchievement);
         TogglePlayStateCommand = new RelayCommand<Game>(TogglePlayState);
+        LogToSteamCommand = new RelayCommand(LogToSteam);
+        LogOutFromSteamCommand = new RelayCommand(LogOutFromSteam);
     }
 
     private async void AddGame()
@@ -234,6 +254,34 @@ public class MainWindowViewModel : INotifyPropertyChanged
             catch (Exception ex)
             {
                 Console.WriteLine($"Error starting game: {ex.Message}");
+            }
+        }
+    }
+
+    private async void LogToSteam()
+    {
+        var userInfo = await _steamService.LogToSteamAsync();
+        if (userInfo != null && !string.IsNullOrEmpty(userInfo.SteamId))
+        {
+            _storageService.SaveUser(userInfo);
+            CurrentUser = userInfo;
+        }
+    }
+
+    private void LogOutFromSteam()
+    {
+        if (IsUserLoggedIn)
+        {
+            var messageBoxText = "Are you sure you want to logout from Steam? You'll lose all data related to your Steam account.";
+            var caption = "Confirm Logout";
+
+            var dialog = new ConfirmDialog(messageBoxText, caption);
+            var result = dialog.ShowDialog();
+
+            if (result == true)
+            {
+                _storageService.DeleteUser();
+                CurrentUser = null;
             }
         }
     }

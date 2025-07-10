@@ -1,5 +1,6 @@
 using System.Data.SQLite;
 using System.IO;
+using SteamEcho.Core.DTOs;
 using SteamEcho.Core.Models;
 
 namespace SteamEcho.App.Services;
@@ -45,6 +46,9 @@ public class StorageService
                 IsUnlocked BOOLEAN NOT NULL DEFAULT 0,
                 UnlockDate DATETIME,
                 FOREIGN KEY (GameId) REFERENCES Games(Id)
+            );
+            CREATE TABLE IF NOT EXISTS User (
+                SteamId TEXT PRIMARY KEY
             );
         ";
         command.ExecuteNonQuery();
@@ -104,6 +108,30 @@ public class StorageService
         command.ExecuteNonQuery();
     }
 
+    public void SaveUser(SteamUserInfo userInfo)
+    {
+        using var connection = new SQLiteConnection(_connectionString);
+        connection.Open();
+
+        using var command = connection.CreateCommand();
+        command.CommandText = @"
+            INSERT OR REPLACE INTO User (SteamId)
+            VALUES (@SteamId);
+        ";
+        command.Parameters.AddWithValue("@SteamId", userInfo.SteamId);
+        command.ExecuteNonQuery();
+    }
+
+    public void DeleteUser()
+    {
+        using var connection = new SQLiteConnection(_connectionString);
+        connection.Open();
+
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM User";
+        command.ExecuteNonQuery();
+    }
+
     public List<Game> LoadGames()
     {
         var games = new List<Game>();
@@ -114,7 +142,7 @@ public class StorageService
         // Load games
         using var command = connection.CreateCommand();
         command.CommandText = "SELECT Id, Name, ExecutablePath, IconUrl FROM Games";
-        
+
         using var reader = command.ExecuteReader();
         while (reader.Read())
         {
@@ -129,7 +157,7 @@ public class StorageService
 
         if (games.Count == 0)
         {
-            return games;  
+            return games;
         }
 
         // Load achievements
@@ -161,6 +189,23 @@ public class StorageService
         }
         return games;
     }
+
+    public SteamUserInfo? LoadUser()
+    {
+        using var connection = new SQLiteConnection(_connectionString);
+        connection.Open();
+
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT SteamId FROM User";
+
+        using var reader = command.ExecuteReader();
+        if (reader.Read())
+        {
+            return new SteamUserInfo(reader.GetString(0));
+        }
+        return null;
+    }
+
     private void SaveAchievement(long gameId, string id, string name, string description, string? icon = null, string? grayIcon = null, double? globalPercentage = null, bool isUnlocked = false)
     {
         using var connection = new SQLiteConnection(_connectionString);
