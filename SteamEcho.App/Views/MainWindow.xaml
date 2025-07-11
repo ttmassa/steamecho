@@ -36,8 +36,12 @@
         </Grid.ColumnDefinitions>
 
         <!-- Menu Column -->
-        <StackPanel Grid.Column="0" Background="#2B2B2C">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+        <Grid Grid.Column="0" Background="#2B2B2C">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="Games" Foreground="#F0F0F0" FontSize="16" FontWeight="Bold" VerticalAlignment="Center" Margin="10"/>
                 <Button Padding="0" Margin="0,10,10,10">
                     <Button.Style>
@@ -59,7 +63,7 @@
                 </Button>
             </StackPanel>
             <!-- Menu List -->
-            <ListBox ItemsSource="{Binding Games}" SelectedItem="{Binding SelectedGame, Mode=TwoWay}" Background="#2B2B2C" BorderThickness="0" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox Grid.Row="1" ItemsSource="{Binding Games}" SelectedItem="{Binding SelectedGame, Mode=TwoWay}" Background="#2B2B2C" BorderThickness="0" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Hidden">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Grid Margin="5" Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}" ToolTip="{Binding Name}">
@@ -82,7 +86,7 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-        </StackPanel>
+        </Grid>
 
         <!-- Main Content Area -->
         <Grid Grid.Column="1">

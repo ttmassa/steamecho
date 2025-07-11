@@ -4,9 +4,9 @@ using System.Runtime.CompilerServices;
 
 namespace SteamEcho.Core.Models;
 
-public class Game(string steamId, string name, string executablePath, string? iconUrl) : INotifyPropertyChanged
+public class Game(long steamId, string name, string executablePath, string? iconUrl) : INotifyPropertyChanged
 {
-    public string SteamId { get; set; } = steamId;
+    public long SteamId { get; set; } = steamId;
     public string Name { get; set; } = name;
     public string ExecutablePath { get; set; } = executablePath;
     public string IconUrl { get; set; } = iconUrl ?? "/SteamEcho.App;component/Assets/Images/library_placeholder.png";
@@ -29,7 +29,7 @@ public class Game(string steamId, string name, string executablePath, string? ic
     public string AchievementsSummary => $"{Achievements.Count(a => a.IsUnlocked)}/{Achievements.Count}";
 
     // Constructor for when creating a NEW game with achievements
-    public Game(string steamId, string name, string executablePath, List<Achievement> achievements, string? iconUrl = null)
+    public Game(long steamId, string name, string executablePath, List<Achievement> achievements, string? iconUrl = null)
         : this(steamId, name, executablePath, iconUrl)
     {
         foreach (var ach in achievements)

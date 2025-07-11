@@ -48,7 +48,7 @@ public class SteamService : ISteamService
 
             // Get steam ID from the first game
             var firstGame = items[0];
-            string claimedId = firstGame.GetProperty("id").GetInt32().ToString() ?? throw new InvalidDataException("Steam ID not found in search result.");
+            long claimedId = firstGame.GetProperty("id").GetInt64();
             string name = firstGame.GetProperty("name").GetString() ?? "Unknown Name";
             string? iconUrl = $"https://cdn.cloudflare.steamstatic.com/steam/apps/{claimedId}/library_600x900.jpg";
 
@@ -70,12 +70,12 @@ public class SteamService : ISteamService
         }
     }
 
-    public async Task<List<Achievement>> GetAchievementsAsync(string claimedId)
+    public async Task<List<Achievement>> GetAchievementsAsync(long steamId)
     {
         // Fetch achievements for a game
         HttpClient client = new();
         var achievements = new List<Achievement>();
-        string url = $"https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key={_steamApiKey}&appid={claimedId}";
+        string url = $"https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key={_steamApiKey}&appid={steamId}";
 
         try
         {
@@ -94,7 +94,7 @@ public class SteamService : ISteamService
                 statsElement.TryGetProperty("achievements", out var achievementsElement))
             {
                 // First get global achievement percentages
-                var globalPercentagesDict = await GetGlobalAchievementPercentagesDictAsync(claimedId);
+                var globalPercentagesDict = await GetGlobalAchievementPercentagesDictAsync(steamId);
 
                 // Create Achievement instances from the JSON data
                 foreach (var achievement in achievementsElement.EnumerateArray())
@@ -246,11 +246,75 @@ public class SteamService : ISteamService
         return null;
     }
 
-    // Helper method to get global achievement percentages as a dictionary
-    private static async Task<Dictionary<string, double>> GetGlobalAchievementPercentagesDictAsync(string claimedId)
+    public async Task<List<Game>> GetOwnedGamesAsync(string steamId)
     {
         HttpClient client = new();
-        string url = $"https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v2/?gameid={claimedId}";
+        string url = $"https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={_steamApiKey}&steamid={steamId}&include_appinfo=true&format=json";
+        var games = new List<Game>();
+
+        try
+        {
+            HttpResponseMessage response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            string content = await response.Content.ReadAsStringAsync();
+            if (string.IsNullOrEmpty(content))
+            {
+                Console.WriteLine("Error: No content returned from Steam API for owned games.");
+                return games;
+            }
+
+            using var doc = JsonDocument.Parse(content);
+
+            if (doc.RootElement.TryGetProperty("response", out var responseElement) &&
+                responseElement.TryGetProperty("games", out var gamesElement))
+            {
+                foreach (var game in gamesElement.EnumerateArray())
+                {
+                    long gameId = game.GetProperty("appid").GetInt64();
+                    string name = game.GetProperty("name").GetString() ?? "Unknown Game";
+                    string? iconUrl = $"https://cdn.cloudflare.steamstatic.com/steam/apps/{gameId}/library_600x900.jpg";
+
+                    // Check if the icon URL is valid
+                    using var request = new HttpRequestMessage(HttpMethod.Head, iconUrl);
+                    HttpResponseMessage iconResponse = await client.SendAsync(request);
+                    if (!iconResponse.IsSuccessStatusCode)
+                    {
+                        iconUrl = null;
+                    }
+
+                    GameInfo gameInfo = new(gameId, name, iconUrl);
+
+                    // Fetch achievements for the game
+                    var achievements = await GetAchievementsAsync(gameId);
+                    if (achievements.Count > 0)
+                    {
+                        var gameWithAchievements = new Game(gameId, name, string.Empty, achievements, iconUrl);
+                        games.Add(gameWithAchievements);
+                    }
+                    else
+                    {
+                        // If no achievements, add a basic game entry
+                        games.Add(new Game(gameId, name, string.Empty, iconUrl));
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("Warning: No games found in the response.");
+            }
+        }
+        catch (HttpRequestException e)
+        {
+            Console.WriteLine("Error: " + e.Message);
+        }
+        return games;
+    }
+
+    // Helper method to get global achievement percentages as a dictionary
+    private static async Task<Dictionary<string, double>> GetGlobalAchievementPercentagesDictAsync(long steamId)
+    {
+        HttpClient client = new();
+        string url = $"https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v2/?gameid={steamId}";
         var dict = new Dictionary<string, double>();
 
         try

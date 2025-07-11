@@ -6,5 +6,5 @@ namespace SteamEcho.Core.Services;
 public interface ISteamService
 {
     public Task<GameInfo?> ResolveSteamIdAsync(string gameName);
-    public Task<List<Achievement>> GetAchievementsAsync(string steamId);
+    public Task<List<Achievement>> GetAchievementsAsync(long steamId);
 }

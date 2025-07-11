@@ -54,8 +54,9 @@ public class StorageService
         command.ExecuteNonQuery();
     }
 
-    public void SaveGame(long steamId, string name, string executablePath, List<Achievement> achievements, string? iconUrl = null)
+    public void SaveGame(Game game)
     {
+        // Save the game details
         using var connection = new SQLiteConnection(_connectionString);
         connection.Open();
 
@@ -64,18 +65,66 @@ public class StorageService
             INSERT OR REPLACE INTO Games (Id, Name, ExecutablePath, IconUrl)
             VALUES (@Id, @Name, @ExecutablePath, @IconUrl);
         ";
-        command.Parameters.AddWithValue("@Id", steamId);
-        command.Parameters.AddWithValue("@Name", name);
-        command.Parameters.AddWithValue("@ExecutablePath", executablePath);
-        command.Parameters.AddWithValue("@IconUrl", iconUrl);
+        command.Parameters.AddWithValue("@Id", game.SteamId);
+        command.Parameters.AddWithValue("@Name", game.Name);
+        command.Parameters.AddWithValue("@ExecutablePath", game.ExecutablePath);
+        command.Parameters.AddWithValue("@IconUrl", game.IconUrl);
         command.ExecuteNonQuery();
 
-        foreach (var achievement in achievements)
+        foreach (var achievement in game.Achievements)
         {
-            SaveAchievement(steamId, achievement.Id, achievement.Name, achievement.Description, achievement.Icon, achievement.GrayIcon, achievement.GlobalPercentage, achievement.IsUnlocked);
+            SaveAchievement(game.SteamId, achievement);
         }
     }
 
+    public void SaveGames(List<Game> games)
+    {
+        using var connection = new SQLiteConnection(_connectionString);
+        connection.Open();
+
+        using var transaction = connection.BeginTransaction();
+
+        var gameCommand = connection.CreateCommand();
+        gameCommand.Transaction = transaction;
+        gameCommand.CommandText = @"
+            INSERT OR REPLACE INTO Games (Id, Name, ExecutablePath, IconUrl)
+            VALUES (@Id, @Name, @ExecutablePath, @IconUrl);
+        ";
+
+        var achievementCommand = connection.CreateCommand();
+        achievementCommand.Transaction = transaction;
+        achievementCommand.CommandText = @"
+            INSERT OR REPLACE INTO Achievements (GameId, Id, Name, Description, Icon, GrayIcon, GlobalPercentage, IsUnlocked)
+            VALUES (@GameId, @Id, @Name, @Description, @Icon, @GrayIcon, @GlobalPercentage, @IsUnlocked);
+        ";
+
+        foreach (var game in games)
+        {
+            gameCommand.Parameters.Clear();
+            gameCommand.Parameters.AddWithValue("@Id", game.SteamId);
+            gameCommand.Parameters.AddWithValue("@Name", game.Name);
+            gameCommand.Parameters.AddWithValue("@ExecutablePath", game.ExecutablePath);
+            gameCommand.Parameters.AddWithValue("@IconUrl", game.IconUrl ?? (object)DBNull.Value);
+            gameCommand.ExecuteNonQuery();
+
+            foreach (var achievement in game.Achievements)
+            {
+                achievementCommand.Parameters.Clear();
+                achievementCommand.Parameters.AddWithValue("@GameId", game.SteamId);
+                achievementCommand.Parameters.AddWithValue("@Id", achievement.Id);
+                achievementCommand.Parameters.AddWithValue("@Name", achievement.Name);
+                achievementCommand.Parameters.AddWithValue("@Description", achievement.Description);
+                achievementCommand.Parameters.AddWithValue("@Icon", achievement.Icon ?? (object)DBNull.Value);
+                achievementCommand.Parameters.AddWithValue("@GrayIcon", achievement.GrayIcon ?? (object)DBNull.Value);
+                achievementCommand.Parameters.AddWithValue("@GlobalPercentage", achievement.GlobalPercentage.HasValue ? achievement.GlobalPercentage.Value : DBNull.Value);
+                achievementCommand.Parameters.AddWithValue("@IsUnlocked", achievement.IsUnlocked ? 1 : 0);
+                achievementCommand.ExecuteNonQuery();
+            }
+        }
+
+        transaction.Commit();
+    }
+    
     public void DeleteGame(long steamId)
     {
         using var connection = new SQLiteConnection(_connectionString);
@@ -147,7 +196,7 @@ public class StorageService
         while (reader.Read())
         {
             var game = new Game(
-                reader.GetInt64(0).ToString(),
+                reader.GetInt64(0),
                 reader.GetString(1),
                 reader.GetString(2),
                 reader.IsDBNull(3) ? null : reader.GetString(3)
@@ -184,7 +233,7 @@ public class StorageService
             };
 
             // Find the game and add the achievement
-            var game = games.Find(g => g.SteamId == gameId.ToString());
+            var game = games.Find(g => g.SteamId == gameId);
             game?.AddAchievement(achievement);
         }
         return games;
@@ -206,7 +255,7 @@ public class StorageService
         return null;
     }
 
-    private void SaveAchievement(long gameId, string id, string name, string description, string? icon = null, string? grayIcon = null, double? globalPercentage = null, bool isUnlocked = false)
+    private void SaveAchievement(long gameId, Achievement achievement)
     {
         using var connection = new SQLiteConnection(_connectionString);
         connection.Open();
@@ -217,13 +266,13 @@ public class StorageService
             VALUES (@GameId, @Id, @Name, @Description, @Icon, @GrayIcon, @GlobalPercentage, @IsUnlocked);
         ";
         command.Parameters.AddWithValue("@GameId", gameId);
-        command.Parameters.AddWithValue("@Id", id);
-        command.Parameters.AddWithValue("@Name", name);
-        command.Parameters.AddWithValue("@Description", description);
-        command.Parameters.AddWithValue("@Icon", icon);
-        command.Parameters.AddWithValue("@GrayIcon", grayIcon);
-        command.Parameters.AddWithValue("@GlobalPercentage", globalPercentage);
-        command.Parameters.AddWithValue("@IsUnlocked", isUnlocked ? 1 : 0);
+        command.Parameters.AddWithValue("@Id", achievement.Id);
+        command.Parameters.AddWithValue("@Name", achievement.Name);
+        command.Parameters.AddWithValue("@Description", achievement.Description);
+        command.Parameters.AddWithValue("@Icon", achievement.Icon ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("@GrayIcon", achievement.GrayIcon ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("@GlobalPercentage", achievement.GlobalPercentage.HasValue ? achievement.GlobalPercentage.Value : DBNull.Value);
+        command.Parameters.AddWithValue("@IsUnlocked", achievement.IsUnlocked ? 1 : 0);
         command.ExecuteNonQuery();
     }
 

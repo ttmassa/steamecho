@@ -109,7 +109,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 Console.WriteLine("Error resolving Steam ID. Please check the game name or try again later.");
                 return;
             }
-            string steamId = gameInfo.SteamId;
+            long steamId = gameInfo.SteamId;
             string gameName = gameInfo.Name;
             string? iconUrl = gameInfo.IconUrl;
 
@@ -128,7 +128,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
             // Add the game to the collection and save to database
             Games.Add(game);
-            _storageService.SaveGame(long.Parse(steamId), gameName, dialog.FileName, achievements, iconUrl);
+            _storageService.SaveGame(game);
 
             SelectedGame = game;
         }
@@ -137,7 +137,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     private void DeleteGame(Game game)
     {
         Games.Remove(game);
-        _storageService.DeleteGame(long.Parse(game.SteamId));
+        _storageService.DeleteGame(game.SteamId);
         if (SelectedGame == game)
         {
             SelectedGame = Games.FirstOrDefault();
@@ -181,7 +181,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             achievement.IsUnlocked = false;
             achievement.UnlockDate = null;
-            _storageService.UpdateAchievement(long.Parse(SelectedGame.SteamId), achievement.Id, false, null);
+            _storageService.UpdateAchievement(SelectedGame.SteamId, achievement.Id, false, null);
         }
     }
 
@@ -190,7 +190,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         if (achievement != null && !achievement.IsUnlocked && SelectedGame != null)
         {
             achievement.Unlock();
-            _storageService.UpdateAchievement(long.Parse(SelectedGame.SteamId), achievement.Id, true, achievement.UnlockDate);
+            _storageService.UpdateAchievement(SelectedGame.SteamId, achievement.Id, true, achievement.UnlockDate);
         }
     }
 
@@ -214,7 +214,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
                     _notificationService.ShowNotification(achievement);
 
                     // Update the game in the database
-                    _storageService.UpdateAchievement(long.Parse(game.SteamId), achievement.Id, true, achievement.UnlockDate);
+                    _storageService.UpdateAchievement(game.SteamId, achievement.Id, true, achievement.UnlockDate);
 
                     break;
                 }
@@ -265,7 +265,19 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             _storageService.SaveUser(userInfo);
             CurrentUser = userInfo;
+
+            // Get potentiel owned games and store them
+            List<Game> ownedGames = await _steamService.GetOwnedGamesAsync(userInfo.SteamId);
+            _storageService.SaveGames(ownedGames);
+            foreach (var game in ownedGames)
+            {
+                if (!Games.Any(g => g.SteamId == game.SteamId))
+                {
+                    Games.Add(game);
+                }
+            }
         }
+
     }
 
     private void LogOutFromSteam()
