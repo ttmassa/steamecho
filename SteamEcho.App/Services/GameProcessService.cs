@@ -29,7 +29,8 @@ public class GameProcessService
     private void CheckProcesses(object? state)
     {
         var runningProcesses = Process.GetProcesses();
-        foreach (var game in _games)
+        var gamesCopy = _games.ToList();
+        foreach (var game in gamesCopy)
         {
             var process = runningProcesses.FirstOrDefault(p =>
             {

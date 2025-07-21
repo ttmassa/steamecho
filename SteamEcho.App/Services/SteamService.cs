@@ -291,11 +291,6 @@ public class SteamService : ISteamService
                         var gameWithAchievements = new Game(gameId, name, string.Empty, achievements, iconUrl);
                         games.Add(gameWithAchievements);
                     }
-                    else
-                    {
-                        // If no achievements, add a basic game entry
-                        games.Add(new Game(gameId, name, string.Empty, iconUrl));
-                    }
                 }
             }
             else
