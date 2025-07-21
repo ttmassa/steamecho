@@ -33,6 +33,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
     private readonly GameProcessService _gameProcessService;
     private Game? _selectedGame;
     private SteamUserInfo? _currentUser;
+    private bool _isLoadingGames;
+
     public Game? SelectedGame
     {
         get => _selectedGame;
@@ -59,6 +61,19 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
     public bool IsUserLoggedIn => CurrentUser != null && !string.IsNullOrEmpty(CurrentUser.SteamId);
+
+    public bool IsLoadingGames
+    {
+        get => _isLoadingGames;
+        set
+        {
+            if (_isLoadingGames != value)
+            {
+                _isLoadingGames = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     public MainWindowViewModel()
     {
@@ -266,15 +281,23 @@ public class MainWindowViewModel : INotifyPropertyChanged
             _storageService.SaveUser(userInfo);
             CurrentUser = userInfo;
 
-            // Get potentiel owned games and store them
-            List<Game> ownedGames = await _steamService.GetOwnedGamesAsync(userInfo.SteamId);
-            _storageService.SaveGames(ownedGames);
-            foreach (var game in ownedGames)
+            IsLoadingGames = true;
+            try
             {
-                if (!Games.Any(g => g.SteamId == game.SteamId))
+                // Get potentiel owned games and store them
+                List<Game> ownedGames = await _steamService.GetOwnedGamesAsync(userInfo.SteamId);
+                _storageService.SaveGames(ownedGames);
+                foreach (var game in ownedGames)
                 {
-                    Games.Add(game);
+                    if (!Games.Any(g => g.SteamId == game.SteamId))
+                    {
+                        Games.Add(game);
+                    }
                 }
+            }
+            finally
+            {
+                IsLoadingGames = false;
             }
         }
 
