@@ -48,7 +48,8 @@ public class StorageService
                 FOREIGN KEY (GameId) REFERENCES Games(Id)
             );
             CREATE TABLE IF NOT EXISTS User (
-                SteamId TEXT PRIMARY KEY
+                SteamId TEXT PRIMARY KEY,
+                ApiKey TEXT
             );
         ";
         command.ExecuteNonQuery();
@@ -164,10 +165,11 @@ public class StorageService
 
         using var command = connection.CreateCommand();
         command.CommandText = @"
-            INSERT OR REPLACE INTO User (SteamId)
-            VALUES (@SteamId);
+            INSERT OR REPLACE INTO User (SteamId, ApiKey)
+            VALUES (@SteamId, @ApiKey);
         ";
         command.Parameters.AddWithValue("@SteamId", userInfo.SteamId);
+        command.Parameters.AddWithValue("@ApiKey", userInfo.ApiKey ?? (object)DBNull.Value);
         command.ExecuteNonQuery();
     }
 
@@ -245,12 +247,16 @@ public class StorageService
         connection.Open();
 
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT SteamId FROM User";
+        command.CommandText = "SELECT SteamId, ApiKey FROM User";
 
         using var reader = command.ExecuteReader();
         if (reader.Read())
         {
-            return new SteamUserInfo(reader.GetString(0));
+            var user = new SteamUserInfo(reader.GetString(0))
+            {
+                ApiKey = reader.IsDBNull(1) ? null : reader.GetString(1)
+            };
+            return user;
         }
         return null;
     }

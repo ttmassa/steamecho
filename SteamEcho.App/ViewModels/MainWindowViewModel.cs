@@ -25,6 +25,10 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand TogglePlayStateCommand { get; }
     public ICommand LogToSteamCommand { get; }
     public ICommand LogOutFromSteamCommand { get; }
+    public ICommand ShowSettingsCommand { get; }
+    public ICommand HideSettingsCommand { get; }
+    public ICommand SaveApiKeyCommand { get; }
+    public ICommand RefreshDataCommand { get; }
     private readonly SteamService _steamService;
     private readonly StorageService _storageService;
     private readonly AchievementListenerService _achievementListenerService;
@@ -34,6 +38,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
     private Game? _selectedGame;
     private SteamUserInfo? _currentUser;
     private bool _isLoadingGames;
+    private bool _isSettingsVisible;
+    private string? _steamApiKey;
 
     public Game? SelectedGame
     {
@@ -75,6 +81,32 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    public bool IsSettingsVisible
+    {
+        get => _isSettingsVisible;
+        set
+        {
+            if (_isSettingsVisible != value)
+            {
+                _isSettingsVisible = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public string? SteamApiKey
+    {
+        get => _steamApiKey;
+        set
+        {
+            if (_steamApiKey != value)
+            {
+                _steamApiKey = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
     public MainWindowViewModel()
     {
         _steamService = new SteamService();
@@ -103,6 +135,15 @@ public class MainWindowViewModel : INotifyPropertyChanged
         TogglePlayStateCommand = new RelayCommand<Game>(TogglePlayState);
         LogToSteamCommand = new RelayCommand(LogToSteam);
         LogOutFromSteamCommand = new RelayCommand(LogOutFromSteam);
+        ShowSettingsCommand = new RelayCommand(() => IsSettingsVisible = true);
+        HideSettingsCommand = new RelayCommand(() => IsSettingsVisible = false);
+        SaveApiKeyCommand = new RelayCommand(SaveApiKey);
+        RefreshDataCommand = new RelayCommand(RefreshData);
+
+        if (CurrentUser != null)
+        {
+            SteamApiKey = CurrentUser.ApiKey;
+        }
     }
 
     private async void AddGame()
@@ -280,6 +321,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             _storageService.SaveUser(userInfo);
             CurrentUser = userInfo;
+            SteamApiKey = userInfo.ApiKey;
 
             IsLoadingGames = true;
             try
@@ -317,7 +359,42 @@ public class MainWindowViewModel : INotifyPropertyChanged
             {
                 _storageService.DeleteUser();
                 CurrentUser = null;
+                SteamApiKey = null;
             }
+        }
+    }
+
+    private void SaveApiKey()
+    {
+        if (CurrentUser != null)
+        {
+            CurrentUser.ApiKey = SteamApiKey;
+            _storageService.SaveUser(CurrentUser);
+            // You might want to show a confirmation to the user
+        }
+    }
+
+    private async void RefreshData()
+    {
+        if (CurrentUser == null) return;
+
+        IsLoadingGames = true;
+        try
+        {
+            // Get potentiel owned games and store them
+            List<Game> ownedGames = await _steamService.GetOwnedGamesAsync(CurrentUser.SteamId);
+            _storageService.SaveGames(ownedGames);
+            foreach (var game in ownedGames)
+            {
+                if (!Games.Any(g => g.SteamId == game.SteamId))
+                {
+                    Games.Add(game);
+                }
+            }
+        }
+        finally
+        {
+            IsLoadingGames = false;
         }
     }
 

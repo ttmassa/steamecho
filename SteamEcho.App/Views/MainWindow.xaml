@@ -43,23 +43,13 @@
             </Grid.RowDefinitions>
             <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="Games" Foreground="#F0F0F0" FontSize="16" FontWeight="Bold" VerticalAlignment="Center" Margin="10"/>
-                <Button Padding="0" Margin="0,10,10,10">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource NoHoverButton}">
-                            <Setter Property="Command" Value="{Binding LogToSteamCommand}"/>
-                            <Setter Property="ToolTip" Value="Log in to Steam"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsUserLoggedIn}" Value="True">
-                                    <Setter Property="Command" Value="{Binding LogOutFromSteamCommand}"/>
-                                    <Setter Property="ToolTip" Value="Log out from Steam"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                    <Image Source="/SteamEcho.App;component/Assets/Images/steam_icon.png" Width="25"/>
-                </Button>
+                <!-- Add Game Button -->
                 <Button Command="{Binding AddGameCommand}" Style="{StaticResource NoHoverButton}" Padding="0" ToolTip="Add Game" Margin="0,10,10,10">
                     <Image Source="/SteamEcho.App;component/Assets/Images/add_icon.png" Width="16"/>
+                </Button>
+                <!-- Settings Button -->
+                <Button Padding="0" Margin="0,10,10,10" Command="{Binding ShowSettingsCommand}" Style="{StaticResource NoHoverButton}" ToolTip="Settings">
+                    <Image Source="/SteamEcho.App;component/Assets/Images/settings_icon.png" Width="18"/>
                 </Button>
             </StackPanel>
             <!-- Menu List -->
@@ -92,288 +82,397 @@
 
         <!-- Main Content Area -->
         <Grid Grid.Column="1">
-            <Grid.RowDefinitions>
+            <!-- Game Content (Visible when not in settings) -->
+            <Grid x:Name="GameContentGrid">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsSettingsVisible}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <Grid.RowDefinitions>
+                    <!-- Content Header -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- Content Area -->
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
                 <!-- Content Header -->
-                <RowDefinition Height="Auto"/>
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Game title -->
+                    <TextBlock Grid.Column="0" Text="{Binding SelectedGame.Name}" Foreground="#F0F0F0" FontSize="20" FontWeight="Bold" Margin="10"/>
+
+                    <!-- Play/Stop button -->
+                    <Button Grid.Column="1" Command="{Binding TogglePlayStateCommand}" CommandParameter="{Binding SelectedGame}" Foreground="#F0F0F0" Margin="0,10,20,10">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource NoHoverButton}">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="ButtonBorder" CornerRadius="4" Background="{TemplateBinding Background}" Padding="10,5">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <!-- Default state: Start -->
+                                <Setter Property="Background" Value="#E63946"/>
+                                <Setter Property="Content">
+                                    <Setter.Value>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <TextBlock Text="Play" FontSize="14" FontWeight="Medium" Margin="0,0,5,0"/>
+                                            <Image Source="/SteamEcho.App;component/Assets/Images/play_icon.png" Width="10"/>
+                                        </StackPanel>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <!-- When game is running: Stop -->
+                                    <DataTrigger Binding="{Binding SelectedGame.IsRunning}" Value="True">
+                                        <Setter Property="Background" Value="#E63946"/>
+                                        <Setter Property="Content">
+                                            <Setter.Value>
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                    <TextBlock Text="Running..." FontSize="14" FontWeight="Medium" Margin="0,0,5,0"/>
+                                                    <Image Source="/SteamEcho.App;component/Assets/Images/stop_icon.png" Width="12"/>
+                                                </StackPanel>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                    <!-- When no game is selected -->
+                                    <DataTrigger Binding="{Binding SelectedGame}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+
                 <!-- Content Area -->
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <!-- Achievement Section -->
+                        <ColumnDefinition Width="3*"/>
+                        <!-- Other Sections -->
+                        <ColumnDefinition Width="2*"/>
+                    </Grid.ColumnDefinitions>
 
-            <!-- Content Header -->
-            <Grid Grid.Row="0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+                    <!-- Achievement Section -->
+                    <Border Grid.Column="0" Background="#E63946" Margin="10" CornerRadius="12">
+                        <Border.Resources>
+                            <CollectionViewSource x:Key="SortedAchievements" Source="{Binding SelectedGame.Achievements}" IsLiveSortingRequested="True">
+                                <CollectionViewSource.SortDescriptions>
+                                    <componentModel:SortDescription PropertyName="IsUnlocked" Direction="Descending"/>
+                                    <componentModel:SortDescription PropertyName="UnlockDate" Direction="Descending"/>
+                                </CollectionViewSource.SortDescriptions>
+                                <CollectionViewSource.LiveSortingProperties>
+                                    <sys:String>IsUnlocked</sys:String>
+                                    <sys:String>UnlockDate</sys:String>
+                                </CollectionViewSource.LiveSortingProperties>
+                            </CollectionViewSource>
+                        </Border.Resources>
+                        <Grid Margin="10">
+                            <Grid.RowDefinitions>
+                                <!-- Achievement Section Header -->
+                                <RowDefinition Height="Auto"/>
+                                <!-- Achievement List -->
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
 
-                <!-- Game title -->
-                <TextBlock Grid.Column="0" Text="{Binding SelectedGame.Name}" Foreground="#F0F0F0" FontSize="20" FontWeight="Bold" Margin="10"/>
-                
-                <!-- Play/Stop button -->
-                <Button Grid.Column="1" Command="{Binding TogglePlayStateCommand}" CommandParameter="{Binding SelectedGame}" Foreground="#F0F0F0" Margin="0,10,20,10">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource NoHoverButton}">
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="ButtonBorder" CornerRadius="4" Background="{TemplateBinding Background}" Padding="10,5">
-                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                        </Border>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                            <!-- Default state: Start -->
-                            <Setter Property="Background" Value="#E63946"/>
-                            <Setter Property="Content">
-                                <Setter.Value>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <TextBlock Text="Play" FontSize="14" FontWeight="Medium" Margin="0,0,5,0"/>
-                                        <Image Source="/SteamEcho.App;component/Assets/Images/play_icon.png" Width="10"/>
-                                    </StackPanel>
-                                </Setter.Value>
-                            </Setter>
-                            <Style.Triggers>
-                                <!-- When game is running: Stop -->
-                                <DataTrigger Binding="{Binding SelectedGame.IsRunning}" Value="True">
-                                    <Setter Property="Background" Value="#E63946"/>
-                                    <Setter Property="Content">
-                                        <Setter.Value>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <TextBlock Text="Running..." FontSize="14" FontWeight="Medium" Margin="0,0,5,0"/>
-                                                <Image Source="/SteamEcho.App;component/Assets/Images/stop_icon.png" Width="12"/>
+                            <!-- Achievement Section Header -->
+                            <StackPanel Orientation="Horizontal" Grid.Row="0">
+                                <!-- Achievement Trophy Icon -->
+                                <Image Source="/SteamEcho.App;component/Assets/Images/achievement_icon.png" Width="25" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <TextBlock Text="Achievements" Foreground="#F0F0F0" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Achievement List -->
+                            <ListBox Grid.Row="1" ItemsSource="{Binding Source={StaticResource SortedAchievements}}" Background="#E63946" BorderThickness="0" Margin="0,10,0,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="ClipToBounds" Value="False"/>
+                                        <Setter Property="Padding" Value="5,5,0,5"/>
+                                        <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                        <Setter Property="ContextMenu">
+                                            <Setter.Value>
+                                                <ContextMenu>
+                                                    <MenuItem Header="Unlock" Command="{Binding PlacementTarget.Tag.UnlockAchievementCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
+                                                        <MenuItem.Style>
+                                                            <Style TargetType="MenuItem">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsUnlocked}" Value="False">
+                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </MenuItem.Style>
+                                                    </MenuItem>
+                                                    <MenuItem Header="Lock" Command="{Binding PlacementTarget.Tag.LockAchievementCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
+                                                        <MenuItem.Style>
+                                                            <Style TargetType="MenuItem">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsUnlocked}" Value="True">
+                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </MenuItem.Style>
+                                                    </MenuItem>
+                                                </ContextMenu>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.Resources>
+                                    <!-- Style for the scroll bar -->
+                                    <Style TargetType="ScrollBar">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="Width" Value="4"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ScrollBar">
+                                                    <Grid Background="Transparent">
+                                                        <Track x:Name="PART_Track" IsDirectionReversed="true" Focusable="false">
+                                                            <Track.DecreaseRepeatButton>
+                                                                <RepeatButton Visibility="Collapsed" IsTabStop="False"/>
+                                                            </Track.DecreaseRepeatButton>
+                                                            <Track.Thumb>
+                                                                <Thumb Height="25" Cursor="Hand" VerticalAlignment="Top">
+                                                                    <Thumb.Template>
+                                                                        <ControlTemplate TargetType="Thumb">
+                                                                            <Border Background="#F0F0F0" CornerRadius="5" Width="8"/>
+                                                                        </ControlTemplate>
+                                                                    </Thumb.Template>
+                                                                </Thumb>
+                                                            </Track.Thumb>
+                                                            <Track.IncreaseRepeatButton>
+                                                                <RepeatButton Visibility="Collapsed" IsTabStop="False"/>
+                                                            </Track.IncreaseRepeatButton>
+                                                        </Track>
+                                                    </Grid>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ListBox.Resources>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0" VerticalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <!-- Achievement Icon -->
+                                                <ColumnDefinition Width="Auto"/>
+                                                <!-- Achievement Details -->
+                                                <ColumnDefinition Width="*"/>
+                                                <!-- Achievement Global Percentage -->
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Container for Icon and Glow Effect -->
+                                            <Grid Width="34" Height="34" Margin="0,0,10,0" ClipToBounds="False">
+                                                <!-- Glow Effect Border -->
+                                                <Border x:Name="GlowBorder" CornerRadius="5" />
+                                                
+                                                <!-- Achievement Icon -->
+                                                <Image x:Name="AchievementIcon"
+                                                    Source="{Binding Icon}"
+                                                    VerticalAlignment="Center"
+                                                    Width="34"/>
+                                            </Grid>
+                                            
+                                            <!-- Achievement Details -->
+                                            <StackPanel Orientation="Vertical"
+                                                        Margin="0,0,10,0"
+                                                        Grid.Column="1">
+                                                <TextBlock x:Name="AchievementName" Text="{Binding Name}" Foreground="#F0F0F0" FontSize="12" FontWeight="Regular" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Stretch"/>
+                                                <TextBlock x:Name="AchievementDesc" Text="{Binding Description}" Foreground="#F0F0F0" FontSize="10" FontWeight="Light" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" HorizontalAlignment="Stretch"/>
                                             </StackPanel>
-                                        </Setter.Value>
-                                    </Setter>
-                                </DataTrigger>
-                                <!-- When no game is selected -->
-                                <DataTrigger Binding="{Binding SelectedGame}" Value="{x:Null}">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
+                                            <!-- Achievement Global Percentage -->
+                                            <TextBlock x:Name="AchievementGlobalPercentage" Text="{Binding GlobalPercentage, StringFormat='{}{0:F1}%'}" Foreground="#F0F0F0" FontSize="12" FontWeight="Regular" VerticalAlignment="Center" Grid.Column="2" HorizontalAlignment="Right" Margin="10,0,0,0"/>
+                                        </Grid>
+                                        <!-- Change color and icon based on achievement's completude -->
+                                        <DataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding IsUnlocked}" Value="False">
+                                                <Setter TargetName="AchievementIcon" Property="Source" Value="{Binding GrayIcon}"/>
+                                                <Setter TargetName="AchievementName" Property="Foreground" Value="#4A4A4D"/>
+                                                <Setter TargetName="AchievementDesc" Property="Foreground" Value="#4A4A4D"/>
+                                                <Setter TargetName="AchievementGlobalPercentage" Property="Foreground" Value="#4A4A4D"/>
+                                            </DataTrigger>
+
+                                            <!-- Uncommon Achievement Glow -->
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding IsUnlocked}" Value="True" />
+                                                    <Condition Binding="{Binding GlobalPercentage, Converter={StaticResource RarityConverter}}" Value="Uncommon" />
+                                                </MultiDataTrigger.Conditions>
+                                                <MultiDataTrigger.EnterActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="AchievementIcon" Storyboard.TargetProperty="Effect">
+                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                        <DropShadowEffect ShadowDepth="0" Color="#00FFFF" Opacity="1" BlurRadius="15" />
+                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                </DiscreteObjectKeyFrame>
+                                                            </ObjectAnimationUsingKeyFrames>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </MultiDataTrigger.EnterActions>
+                                            </MultiDataTrigger>
+
+                                            <!-- Rare Achievement Glow -->
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding IsUnlocked}" Value="True" />
+                                                    <Condition Binding="{Binding GlobalPercentage, Converter={StaticResource RarityConverter}}" Value="Rare" />
+                                                </MultiDataTrigger.Conditions>
+                                                <MultiDataTrigger.EnterActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="AchievementIcon" Storyboard.TargetProperty="Effect">
+                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                        <DropShadowEffect ShadowDepth="0" Color="#BF00FF" Opacity="1" BlurRadius="20" />
+                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                </DiscreteObjectKeyFrame>
+                                                            </ObjectAnimationUsingKeyFrames>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </MultiDataTrigger.EnterActions>
+                                            </MultiDataTrigger>
+
+                                            <!-- Ultra Rare Glow -->
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding IsUnlocked}" Value="True" />
+                                                    <Condition Binding="{Binding GlobalPercentage, Converter={StaticResource RarityConverter}}" Value="UltraRare" />
+                                                </MultiDataTrigger.Conditions>
+                                                <MultiDataTrigger.EnterActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="AchievementIcon" Storyboard.TargetProperty="Effect">
+                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                        <DropShadowEffect ShadowDepth="0" Color="#FFFF00" Opacity="1" BlurRadius="30" />
+                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                </DiscreteObjectKeyFrame>
+                                                            </ObjectAnimationUsingKeyFrames>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </MultiDataTrigger.EnterActions>
+                                            </MultiDataTrigger>
+                                        </DataTemplate.Triggers>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+                </Grid>
             </Grid>
 
-            <!-- Content Area -->
-            <Grid Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                    <!-- Achievement Section -->
-                    <ColumnDefinition Width="3*"/>
-                    <!-- Other Sections -->
-                    <ColumnDefinition Width="2*"/>
-                </Grid.ColumnDefinitions>
+            <!-- Settings Content (Visible when in settings) -->
+            <Grid x:Name="SettingsContentGrid">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsSettingsVisible}" Value="True">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <!-- Settings Header -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Settings" Foreground="#F0F0F0" FontSize="20" FontWeight="Bold" Margin="10"/>
+                    <Button Grid.Column="1" Command="{Binding HideSettingsCommand}" Style="{StaticResource NoHoverButton}" Margin="0,0,20,0">
+                        <Image Source="/SteamEcho.App;component/Assets/Images/cross_icon.png" Width="14"/>
+                    </Button>
+                </Grid>
 
-                <!-- Achievement Section -->
-                <Border Grid.Column="0" Background="#E63946" Margin="10" CornerRadius="12">
-                    <Border.Resources>
-                        <CollectionViewSource x:Key="SortedAchievements" Source="{Binding SelectedGame.Achievements}" IsLiveSortingRequested="True">
-                            <CollectionViewSource.SortDescriptions>
-                                <componentModel:SortDescription PropertyName="IsUnlocked" Direction="Descending"/>
-                                <componentModel:SortDescription PropertyName="UnlockDate" Direction="Descending"/>
-                            </CollectionViewSource.SortDescriptions>
-                            <CollectionViewSource.LiveSortingProperties>
-                                <sys:String>IsUnlocked</sys:String>
-                                <sys:String>UnlockDate</sys:String>
-                            </CollectionViewSource.LiveSortingProperties>
-                        </CollectionViewSource>
-                    </Border.Resources>
-                    <Grid Margin="10">
-                        <Grid.RowDefinitions>
-                            <!-- Achievement Section Header -->
-                            <RowDefinition Height="Auto"/>
-                            <!-- Achievement List -->
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-
-                        <!-- Achievement Section Header -->
-                        <StackPanel Orientation="Horizontal" Grid.Row="0">
-                            <!-- Achievement Trophy Icon -->
-                            <Image Source="/SteamEcho.App;component/Assets/Images/achievement_icon.png" Width="25" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                            <TextBlock Text="Achievements" Foreground="#F0F0F0" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <!-- Settings Area -->
+                <Border Grid.Row="1" Background="#2B2B2C" Margin="10" CornerRadius="12">
+                    <StackPanel Margin="15">
+                        <!-- Steam Section -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Steam" Foreground="#F0F0F0" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <Button Command="{Binding RefreshDataCommand}" Style="{StaticResource NoHoverButton}" Margin="10,0,0,0" ToolTip="Refresh owned games">
+                                <Image Source="/SteamEcho.App;component/Assets/Images/refresh_icon.png" Width="16"/>
+                            </Button>
                         </StackPanel>
 
-                        <!-- Achievement List -->
-                        <ListBox Grid.Row="1" ItemsSource="{Binding Source={StaticResource SortedAchievements}}" Background="#E63946" BorderThickness="0" Margin="0,10,0,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch">
-                            <ListBox.ItemContainerStyle>
-                                <Style TargetType="ListBoxItem">
-                                    <Setter Property="ClipToBounds" Value="False"/>
-                                    <Setter Property="Padding" Value="5,5,0,5"/>
-                                    <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                    <Setter Property="ContextMenu">
-                                        <Setter.Value>
-                                            <ContextMenu>
-                                                <MenuItem Header="Unlock" Command="{Binding PlacementTarget.Tag.UnlockAchievementCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
-                                                    <MenuItem.Style>
-                                                        <Style TargetType="MenuItem">
-                                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsUnlocked}" Value="False">
-                                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </MenuItem.Style>
-                                                </MenuItem>
-                                                <MenuItem Header="Lock" Command="{Binding PlacementTarget.Tag.LockAchievementCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
-                                                    <MenuItem.Style>
-                                                        <Style TargetType="MenuItem">
-                                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsUnlocked}" Value="True">
-                                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </MenuItem.Style>
-                                                </MenuItem>
-                                            </ContextMenu>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </ListBox.ItemContainerStyle>
-                            <ListBox.Resources>
-                                <!-- Style for the scroll bar -->
-                                <Style TargetType="ScrollBar">
-                                    <Setter Property="Background" Value="Transparent"/>
-                                    <Setter Property="Width" Value="4"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="ScrollBar">
-                                                <Grid Background="Transparent">
-                                                    <Track x:Name="PART_Track" IsDirectionReversed="true" Focusable="false">
-                                                        <Track.DecreaseRepeatButton>
-                                                            <RepeatButton Visibility="Collapsed" IsTabStop="False"/>
-                                                        </Track.DecreaseRepeatButton>
-                                                        <Track.Thumb>
-                                                            <Thumb Height="25" Cursor="Hand">
-                                                                <Thumb.Template>
-                                                                    <ControlTemplate TargetType="Thumb">
-                                                                        <Border Background="#F0F0F0" CornerRadius="5" Width="8"/>
-                                                                    </ControlTemplate>
-                                                                </Thumb.Template>
-                                                            </Thumb>
-                                                        </Track.Thumb>
-                                                        <Track.IncreaseRepeatButton>
-                                                            <RepeatButton Visibility="Collapsed" IsTabStop="False"/>
-                                                        </Track.IncreaseRepeatButton>
-                                                    </Track>
-                                                </Grid>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </ListBox.Resources>
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0" VerticalAlignment="Center">
-                                        <Grid.ColumnDefinitions>
-                                            <!-- Achievement Icon -->
-                                            <ColumnDefinition Width="Auto"/>
-                                            <!-- Achievement Details -->
-                                            <ColumnDefinition Width="*"/>
-                                            <!-- Achievement Global Percentage -->
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
+                        <!-- Status -->
+                        <StackPanel Orientation="Horizontal" Margin="0,15,0,0">
+                            <TextBlock Text="Status: " Foreground="#F0F0F0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Disconnected" Foreground="#E63946" FontWeight="SemiBold" VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsUserLoggedIn}" Value="True">
+                                                <Setter Property="Text" Value="Connected"/>
+                                                <Setter Property="Foreground" Value="#A1E8AF"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
 
-                                        <!-- Container for Icon and Glow Effect -->
-                                        <Grid Width="34" Height="34" Margin="0,0,10,0" ClipToBounds="False">
-                                            <!-- Glow Effect Border -->
-                                            <Border x:Name="GlowBorder" CornerRadius="5" />
-                                            
-                                            <!-- Achievement Icon -->
-                                            <Image x:Name="AchievementIcon"
-                                                   Source="{Binding Icon}"
-                                                   VerticalAlignment="Center"
-                                                   Width="34"/>
-                                        </Grid>
-                                        
-                                        <!-- Achievement Details -->
-                                        <StackPanel Orientation="Vertical"
-                                                    Margin="0,0,10,0"
-                                                    Grid.Column="1">
-                                            <TextBlock x:Name="AchievementName" Text="{Binding Name}" Foreground="#F0F0F0" FontSize="12" FontWeight="Regular" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Stretch"/>
-                                            <TextBlock x:Name="AchievementDesc" Text="{Binding Description}" Foreground="#F0F0F0" FontSize="10" FontWeight="Light" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" HorizontalAlignment="Stretch"/>
-                                        </StackPanel>
-                                        <!-- Achievement Global Percentage -->
-                                        <TextBlock x:Name="AchievementGlobalPercentage" Text="{Binding GlobalPercentage, StringFormat='{}{0:F1}%'}" Foreground="#F0F0F0" FontSize="12" FontWeight="Regular" VerticalAlignment="Center" Grid.Column="2" HorizontalAlignment="Right" Margin="10,0,0,0"/>
-                                    </Grid>
-                                    <!-- Change color and icon based on achievement's completude -->
-                                    <DataTemplate.Triggers>
-                                        <DataTrigger Binding="{Binding IsUnlocked}" Value="False">
-                                            <Setter TargetName="AchievementIcon" Property="Source" Value="{Binding GrayIcon}"/>
-                                            <Setter TargetName="AchievementName" Property="Foreground" Value="#4A4A4D"/>
-                                            <Setter TargetName="AchievementDesc" Property="Foreground" Value="#4A4A4D"/>
-                                            <Setter TargetName="AchievementGlobalPercentage" Property="Foreground" Value="#4A4A4D"/>
-                                        </DataTrigger>
+                        <!-- Login/Logout -->
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="Login to your Steam account: " Foreground="#F0F0F0" VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsUserLoggedIn}" Value="True">
+                                                <Setter Property="Text" Value="Logout from your Steam account: "/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <Button>
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource NoHoverButton}">
+                                        <Setter Property="Command" Value="{Binding LogToSteamCommand}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsUserLoggedIn}" Value="True">
+                                                <Setter Property="Command" Value="{Binding LogOutFromSteamCommand}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <Image Source="/SteamEcho.App;component/Assets/Images/steam_icon.png" Width="20"/>
+                            </Button>
+                        </StackPanel>
 
-                                        <!-- Uncommon Achievement Glow -->
-                                        <MultiDataTrigger>
-                                            <MultiDataTrigger.Conditions>
-                                                <Condition Binding="{Binding IsUnlocked}" Value="True" />
-                                                <Condition Binding="{Binding GlobalPercentage, Converter={StaticResource RarityConverter}}" Value="Uncommon" />
-                                            </MultiDataTrigger.Conditions>
-                                            <MultiDataTrigger.EnterActions>
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="AchievementIcon" Storyboard.TargetProperty="Effect">
-                                                            <DiscreteObjectKeyFrame KeyTime="0">
-                                                                <DiscreteObjectKeyFrame.Value>
-                                                                    <DropShadowEffect ShadowDepth="0" Color="#00FFFF" Opacity="1" BlurRadius="15" />
-                                                                </DiscreteObjectKeyFrame.Value>
-                                                            </DiscreteObjectKeyFrame>
-                                                        </ObjectAnimationUsingKeyFrames>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </MultiDataTrigger.EnterActions>
-                                        </MultiDataTrigger>
-
-                                        <!-- Rare Achievement Glow -->
-                                        <MultiDataTrigger>
-                                            <MultiDataTrigger.Conditions>
-                                                <Condition Binding="{Binding IsUnlocked}" Value="True" />
-                                                <Condition Binding="{Binding GlobalPercentage, Converter={StaticResource RarityConverter}}" Value="Rare" />
-                                            </MultiDataTrigger.Conditions>
-                                            <MultiDataTrigger.EnterActions>
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="AchievementIcon" Storyboard.TargetProperty="Effect">
-                                                            <DiscreteObjectKeyFrame KeyTime="0">
-                                                                <DiscreteObjectKeyFrame.Value>
-                                                                    <DropShadowEffect ShadowDepth="0" Color="#BF00FF" Opacity="1" BlurRadius="20" />
-                                                                </DiscreteObjectKeyFrame.Value>
-                                                            </DiscreteObjectKeyFrame>
-                                                        </ObjectAnimationUsingKeyFrames>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </MultiDataTrigger.EnterActions>
-                                        </MultiDataTrigger>
-
-                                        <!-- Ultra Rare Glow -->
-                                        <MultiDataTrigger>
-                                            <MultiDataTrigger.Conditions>
-                                                <Condition Binding="{Binding IsUnlocked}" Value="True" />
-                                                <Condition Binding="{Binding GlobalPercentage, Converter={StaticResource RarityConverter}}" Value="UltraRare" />
-                                            </MultiDataTrigger.Conditions>
-                                            <MultiDataTrigger.EnterActions>
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="AchievementIcon" Storyboard.TargetProperty="Effect">
-                                                            <DiscreteObjectKeyFrame KeyTime="0">
-                                                                <DiscreteObjectKeyFrame.Value>
-                                                                    <DropShadowEffect ShadowDepth="0" Color="#FFFF00" Opacity="1" BlurRadius="30" />
-                                                                </DiscreteObjectKeyFrame.Value>
-                                                            </DiscreteObjectKeyFrame>
-                                                        </ObjectAnimationUsingKeyFrames>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </MultiDataTrigger.EnterActions>
-                                        </MultiDataTrigger>
-                                    </DataTemplate.Triggers>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </Grid>
+                        <!-- API Key -->
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="Steam API key: " Foreground="#F0F0F0" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding SteamApiKey, UpdateSourceTrigger=PropertyChanged}" Width="250" Background="#323234" Foreground="#F0F0F0" VerticalContentAlignment="Center" Margin="0,0,10,0"/>
+                            <Border CornerRadius="5">
+                                <Button Content="Save" Command="{Binding SaveApiKeyCommand}" Background="#E63946" Foreground="#F0F0F0" Padding="8,3"/>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
                 </Border>
             </Grid>
         </Grid>
