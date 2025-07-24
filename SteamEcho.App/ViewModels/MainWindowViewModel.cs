@@ -366,11 +366,11 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
     private void SaveApiKey()
     {
+        // Save API key in db
         if (CurrentUser != null)
         {
             CurrentUser.ApiKey = SteamApiKey;
             _storageService.SaveUser(CurrentUser);
-            // You might want to show a confirmation to the user
         }
     }
 
@@ -381,7 +381,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         IsLoadingGames = true;
         try
         {
-            // Get potentiel owned games and store them
+            // Get potentiel new owned games and store them
             List<Game> ownedGames = await _steamService.GetOwnedGamesAsync(CurrentUser.SteamId);
             _storageService.SaveGames(ownedGames);
             foreach (var game in ownedGames)

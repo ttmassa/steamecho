@@ -8,6 +8,7 @@ namespace SteamEcho.App.Services;
 public class StorageService
 {
     private readonly string _connectionString;
+    private readonly EncryptionService _encryptionService;
 
     public StorageService(string databasePath)
     {
@@ -20,6 +21,9 @@ public class StorageService
 
         _connectionString = $"Data Source={databasePath};Version=3;";
         InitializeDatabase();
+
+        // Initialize the encryption service
+        _encryptionService = new EncryptionService();
     }
 
     public void InitializeDatabase()
@@ -169,7 +173,10 @@ public class StorageService
             VALUES (@SteamId, @ApiKey);
         ";
         command.Parameters.AddWithValue("@SteamId", userInfo.SteamId);
-        command.Parameters.AddWithValue("@ApiKey", userInfo.ApiKey ?? (object)DBNull.Value);
+
+        // Encrypt the API key before saving
+        string? encryptedApiKey = _encryptionService.Encrypt(userInfo.ApiKey);
+        command.Parameters.AddWithValue("@ApiKey", encryptedApiKey ?? (object)DBNull.Value);
         command.ExecuteNonQuery();
     }
 
@@ -252,9 +259,12 @@ public class StorageService
         using var reader = command.ExecuteReader();
         if (reader.Read())
         {
+            var encryptedApiKey = reader.IsDBNull(1) ? null : reader.GetString(1);
+            var decryptedApiKey = _encryptionService.Decrypt(encryptedApiKey);
+
             var user = new SteamUserInfo(reader.GetString(0))
             {
-                ApiKey = reader.IsDBNull(1) ? null : reader.GetString(1)
+                ApiKey = decryptedApiKey
             };
             return user;
         }
