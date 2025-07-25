@@ -449,7 +449,7 @@
                                     </Style>
                                 </TextBlock.Style>
                             </TextBlock>
-                            <Button>
+                            <Button ToolTip="Login to Steam">
                                 <Button.Style>
                                     <Style TargetType="Button" BasedOn="{StaticResource NoHoverButton}">
                                         <Setter Property="Command" Value="{Binding LogToSteamCommand}"/>
@@ -465,13 +465,28 @@
                         </StackPanel>
 
                         <!-- API Key -->
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0" VerticalAlignment="Center">
-                            <TextBlock Text="Steam API key: " Foreground="#F0F0F0" VerticalAlignment="Center"/>
-                            <TextBox Text="{Binding SteamApiKey, UpdateSourceTrigger=PropertyChanged}" Width="250" Background="#323234" Foreground="#F0F0F0" VerticalContentAlignment="Center" Margin="0,0,10,0"/>
-                            <Border CornerRadius="5">
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Steam API key: " Foreground="#F0F0F0" VerticalAlignment="Center"/>
+
+                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding SteamApiKey, UpdateSourceTrigger=PropertyChanged}" Width="250" Background="#323234" Foreground="#F0F0F0" VerticalContentAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Foreground="#C4C4C6" FontSize="10" FontWeight="Light">
+                                <Span xml:space="preserve">Learn more about Steam API key <Hyperlink NavigateUri="https://steamcommunity.com/dev" RequestNavigate="Hyperlink_RequestNavigate">here</Hyperlink>.</Span>
+                            </TextBlock>
+
+                            <Border Grid.Row="0" Grid.Column="2" CornerRadius="5">
                                 <Button Content="Save" Command="{Binding SaveApiKeyCommand}" Background="#E63946" Foreground="#F0F0F0" Padding="8,3"/>
                             </Border>
-                        </StackPanel>
+                        </Grid>
                     </StackPanel>
                 </Border>
             </Grid>
