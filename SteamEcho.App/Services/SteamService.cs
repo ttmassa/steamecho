@@ -18,7 +18,19 @@ public class SteamService : ISteamService
     public SteamService()
     {
         // Load API key from config
-        _steamApiKey = AppConfig.Load().SteamAPI.Key;
+        try
+        {
+            _steamApiKey = AppConfig.Load().SteamAPI.Key;
+
+            if (string.IsNullOrEmpty(_steamApiKey))
+            {
+                throw new MissingApiKeyException();
+            }
+        }
+        catch (Exception e)
+        {
+            throw new MissingApiKeyException("Failed to load Steam API key from configuration.", e);
+        }
     }
 
     public async Task<GameInfo?> ResolveSteamIdAsync(string gameName)
@@ -97,12 +109,19 @@ public class SteamService : ISteamService
                 // First get global achievement percentages
                 var globalPercentagesDict = await GetGlobalAchievementPercentagesDictAsync(gameId);
 
+                // If user is logged in, fetch player achievements
+                Dictionary<string, PlayerAchievementStatus> playerAchievements = new();
+                if (user != null)
+                {
+                    playerAchievements = await GetPlayerAchievementsAsync(gameId, user);
+                }
+
                 // Create Achievement instances from the JSON data
                 foreach (var achievement in achievementsElement.EnumerateArray())
                 {
                     var id = achievement.GetProperty("name").GetString() ?? throw new InvalidDataException("Achievement ID not found.");
                     var name = achievement.GetProperty("displayName").GetString() ?? throw new InvalidDataException("Achievement name not found.");
-                    // Try to get description cause hidden achievements don't have it
+                    // Try to get description because hidden achievements don't have it
                     var description = achievement.TryGetProperty("description", out var descElement) ? descElement.GetString() : "Hidden Achievement";
                     if (string.IsNullOrEmpty(description))
                     {
@@ -118,7 +137,15 @@ public class SteamService : ISteamService
                         globalPercentage = percent;
                     }
 
-                    achievements.Add(new Achievement(id, name, description, icon, grayIcon, globalPercentage));
+                    var newAchievement = new Achievement(id, name, description, icon, grayIcon, globalPercentage);
+
+                    if (playerAchievements.TryGetValue(id, out var status))
+                    {
+                        newAchievement.IsUnlocked = status.IsUnlocked;
+                        newAchievement.UnlockDate = status.UnlockDate;
+                    }
+
+                    achievements.Add(newAchievement);
                 }
             }
         }
@@ -346,5 +373,63 @@ public class SteamService : ISteamService
         }
 
         return dict;
+    }
+
+    private async Task<Dictionary<string, PlayerAchievementStatus>> GetPlayerAchievementsAsync(long gameId, SteamUserInfo user)
+    {
+        HttpClient client = new();
+        string url = $"https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key={_steamApiKey}&steamid={user.SteamId}&appid={gameId}";
+        var playerAchievements = new Dictionary<string, PlayerAchievementStatus>();
+
+        try
+        {
+            HttpResponseMessage response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            string content = await response.Content.ReadAsStringAsync();
+
+            if (string.IsNullOrEmpty(content))
+            {
+                Console.WriteLine("Error: No content returned from Steam API for player achievements.");
+                return playerAchievements;
+            }
+
+            using var doc = JsonDocument.Parse(content);
+            if (doc.RootElement.TryGetProperty("playerstats", out var playerStatsElement))
+            {
+                // Handle private profile exception
+                if (playerStatsElement.TryGetProperty("success", out var successElement) && !successElement.GetBoolean())
+                {
+                    if (playerStatsElement.TryGetProperty("error", out var errorElement) && errorElement.GetString()?.Contains("Profile is not public") == true)
+                    {
+                        throw new PrivateProfileException();
+                    }
+                }
+
+                if (playerStatsElement.TryGetProperty("achievements", out var achievementsElement))
+                {
+                    foreach (var achievement in achievementsElement.EnumerateArray())
+                    {
+                        var apiName = achievement.GetProperty("apiname").GetString();
+                        var isUnlocked = achievement.GetProperty("achieved").GetInt32() == 1;
+                        var unlockDate = achievement.TryGetProperty("unlocktime", out var unlockTimeElement) ? DateTimeOffset.FromUnixTimeSeconds(unlockTimeElement.GetInt64()).UtcDateTime : (DateTime?)null;
+
+                        if (!string.IsNullOrEmpty(apiName))
+                        {
+                            playerAchievements[apiName] = new PlayerAchievementStatus(isUnlocked, unlockDate);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Warning: Achievement API name is null or empty.");
+                        }
+                    }
+                }
+            }
+        }
+        catch (HttpRequestException e)
+        {
+            Console.WriteLine("Error fetching player achievements: " + e.Message);
+        }
+
+        return playerAchievements;
     }
 }
