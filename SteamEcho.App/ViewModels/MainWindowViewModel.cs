@@ -27,7 +27,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand LogOutFromSteamCommand { get; }
     public ICommand ShowSettingsCommand { get; }
     public ICommand HideSettingsCommand { get; }
-    public ICommand SaveApiKeyCommand { get; }
     public ICommand RefreshDataCommand { get; }
     private readonly SteamService _steamService;
     private readonly StorageService _storageService;
@@ -137,13 +136,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         LogOutFromSteamCommand = new RelayCommand(LogOutFromSteam);
         ShowSettingsCommand = new RelayCommand(() => IsSettingsVisible = true);
         HideSettingsCommand = new RelayCommand(() => IsSettingsVisible = false);
-        SaveApiKeyCommand = new RelayCommand(SaveApiKey);
         RefreshDataCommand = new RelayCommand(RefreshData);
-
-        if (CurrentUser != null)
-        {
-            SteamApiKey = CurrentUser.ApiKey;
-        }
     }
 
     private async void AddGame()
@@ -321,13 +314,12 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             _storageService.SaveUser(userInfo);
             CurrentUser = userInfo;
-            SteamApiKey = userInfo.ApiKey;
 
             IsLoadingGames = true;
             try
             {
                 // Get potentiel owned games and store them
-                List<Game> ownedGames = await _steamService.GetOwnedGamesAsync(userInfo.SteamId);
+                List<Game> ownedGames = await _steamService.GetOwnedGamesAsync(userInfo);
                 _storageService.SaveGames(ownedGames);
                 foreach (var game in ownedGames)
                 {
@@ -364,16 +356,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
-    private void SaveApiKey()
-    {
-        // Save API key in db
-        if (CurrentUser != null)
-        {
-            CurrentUser.ApiKey = SteamApiKey;
-            _storageService.SaveUser(CurrentUser);
-        }
-    }
-
     private async void RefreshData()
     {
         if (CurrentUser == null) return;
@@ -382,7 +364,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         try
         {
             // Get potentiel new owned games and store them
-            List<Game> ownedGames = await _steamService.GetOwnedGamesAsync(CurrentUser.SteamId);
+            List<Game> ownedGames = await _steamService.GetOwnedGamesAsync(CurrentUser);
             _storageService.SaveGames(ownedGames);
             foreach (var game in ownedGames)
             {

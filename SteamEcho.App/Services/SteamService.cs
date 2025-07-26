@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using SteamEcho.Core.DTOs;
+using SteamEcho.Core.Exceptions;
 using SteamEcho.Core.Models;
 using SteamEcho.Core.Services;
 
@@ -70,12 +71,12 @@ public class SteamService : ISteamService
         }
     }
 
-    public async Task<List<Achievement>> GetAchievementsAsync(long steamId)
+    public async Task<List<Achievement>> GetAchievementsAsync(long gameId, SteamUserInfo? user = null)
     {
         // Fetch achievements for a game
         HttpClient client = new();
         var achievements = new List<Achievement>();
-        string url = $"https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key={_steamApiKey}&appid={steamId}";
+        string url = $"https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key={_steamApiKey}&appid={gameId}";
 
         try
         {
@@ -94,7 +95,7 @@ public class SteamService : ISteamService
                 statsElement.TryGetProperty("achievements", out var achievementsElement))
             {
                 // First get global achievement percentages
-                var globalPercentagesDict = await GetGlobalAchievementPercentagesDictAsync(steamId);
+                var globalPercentagesDict = await GetGlobalAchievementPercentagesDictAsync(gameId);
 
                 // Create Achievement instances from the JSON data
                 foreach (var achievement in achievementsElement.EnumerateArray())
@@ -246,10 +247,10 @@ public class SteamService : ISteamService
         return null;
     }
 
-    public async Task<List<Game>> GetOwnedGamesAsync(string steamId)
+    public async Task<List<Game>> GetOwnedGamesAsync(SteamUserInfo user)
     {
         HttpClient client = new();
-        string url = $"https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={_steamApiKey}&steamid={steamId}&include_appinfo=true&format=json";
+        string url = $"https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={_steamApiKey}&steamid={user.SteamId}&include_appinfo=true&format=json";
         var games = new List<Game>();
 
         try
@@ -285,7 +286,7 @@ public class SteamService : ISteamService
                     GameInfo gameInfo = new(gameId, name, iconUrl);
 
                     // Fetch achievements for the game
-                    var achievements = await GetAchievementsAsync(gameId);
+                    var achievements = await GetAchievementsAsync(gameId, user);
                     if (achievements.Count > 0)
                     {
                         var gameWithAchievements = new Game(gameId, name, string.Empty, achievements, iconUrl);
@@ -306,10 +307,10 @@ public class SteamService : ISteamService
     }
 
     // Helper method to get global achievement percentages as a dictionary
-    private static async Task<Dictionary<string, double>> GetGlobalAchievementPercentagesDictAsync(long steamId)
+    private static async Task<Dictionary<string, double>> GetGlobalAchievementPercentagesDictAsync(long gameId)
     {
         HttpClient client = new();
-        string url = $"https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v2/?gameid={steamId}";
+        string url = $"https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v2/?gameid={gameId}";
         var dict = new Dictionary<string, double>();
 
         try

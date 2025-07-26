@@ -8,7 +8,6 @@ namespace SteamEcho.App.Services;
 public class StorageService
 {
     private readonly string _connectionString;
-    private readonly EncryptionService _encryptionService;
 
     public StorageService(string databasePath)
     {
@@ -21,9 +20,6 @@ public class StorageService
 
         _connectionString = $"Data Source={databasePath};Version=3;";
         InitializeDatabase();
-
-        // Initialize the encryption service
-        _encryptionService = new EncryptionService();
     }
 
     public void InitializeDatabase()
@@ -52,8 +48,7 @@ public class StorageService
                 FOREIGN KEY (GameId) REFERENCES Games(Id)
             );
             CREATE TABLE IF NOT EXISTS User (
-                SteamId TEXT PRIMARY KEY,
-                ApiKey TEXT
+                SteamId TEXT PRIMARY KEY
             );
         ";
         command.ExecuteNonQuery();
@@ -169,14 +164,11 @@ public class StorageService
 
         using var command = connection.CreateCommand();
         command.CommandText = @"
-            INSERT OR REPLACE INTO User (SteamId, ApiKey)
-            VALUES (@SteamId, @ApiKey);
+            INSERT OR REPLACE INTO User (SteamId)
+            VALUES (@SteamId);
         ";
         command.Parameters.AddWithValue("@SteamId", userInfo.SteamId);
 
-        // Encrypt the API key before saving
-        string? encryptedApiKey = _encryptionService.Encrypt(userInfo.ApiKey);
-        command.Parameters.AddWithValue("@ApiKey", encryptedApiKey ?? (object)DBNull.Value);
         command.ExecuteNonQuery();
     }
 
@@ -254,18 +246,13 @@ public class StorageService
         connection.Open();
 
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT SteamId, ApiKey FROM User";
+        command.CommandText = "SELECT SteamId FROM User";
 
         using var reader = command.ExecuteReader();
         if (reader.Read())
         {
-            var encryptedApiKey = reader.IsDBNull(1) ? null : reader.GetString(1);
-            var decryptedApiKey = _encryptionService.Decrypt(encryptedApiKey);
 
-            var user = new SteamUserInfo(reader.GetString(0))
-            {
-                ApiKey = decryptedApiKey
-            };
+            var user = new SteamUserInfo(reader.GetString(0));
             return user;
         }
         return null;
