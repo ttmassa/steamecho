@@ -11,6 +11,7 @@ using System.Windows;
 using System.Media;
 using System.Diagnostics;
 using SteamEcho.App.Views;
+using System.Windows.Threading;
 
 namespace SteamEcho.App.ViewModels;
 
@@ -33,6 +34,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
     private readonly SoundPlayer _soundPlayer;
     private readonly NotificationService _notificationService;
     private readonly GameProcessService _gameProcessService;
+    private readonly AchievementListener _achievementListener;
+    private readonly DispatcherTimer _steamworksTimer;
     private Game? _selectedGame;
     private SteamUserInfo? _currentUser;
     private bool _isLoadingGames;
@@ -121,6 +124,18 @@ public class MainWindowViewModel : INotifyPropertyChanged
         // Initialize game process service
         _gameProcessService = new GameProcessService(Games);
         _gameProcessService.Start();
+ 
+        // Initialize achievement listener
+        _achievementListener = new AchievementListener();
+        _achievementListener.AchievementUnlocked += OnAchievementUnlocked;
+
+        // Set up achievement check timer
+        _steamworksTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(1)
+        };
+        _steamworksTimer.Tick += (s, e) => _achievementListener.Update();
+        _steamworksTimer.Start();
 
         AddGameCommand = new RelayCommand(AddGame);
         DeleteGameCommand = new RelayCommand<Game>(DeleteGame);
