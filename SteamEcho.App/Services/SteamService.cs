@@ -130,14 +130,16 @@ public class SteamService : ISteamService
                     // Optional properties
                     var icon = achievement.GetProperty("icon").GetString();
                     var grayIcon = achievement.GetProperty("icongray").GetString();
+                    var isHidden = achievement.TryGetProperty("hidden", out var hiddenElement) && hiddenElement.GetInt32() == 1;
                     // Try to get global percentage
                     double? globalPercentage = null;
                     if (globalPercentagesDict.TryGetValue(id, out var percent))
+
                     {
                         globalPercentage = percent;
                     }
 
-                    var newAchievement = new Achievement(id, name, description, icon, grayIcon, globalPercentage);
+                    var newAchievement = new Achievement(id, name, description, icon, grayIcon, isHidden, globalPercentage);
 
                     if (playerAchievements.TryGetValue(id, out var status))
                     {
@@ -155,6 +157,45 @@ public class SteamService : ISteamService
         }
 
         return achievements;
+    }
+
+    public async Task<string> GetAchievementDescription(long gameId, string achievementId)
+    {
+        // Fetch achievement description for hidden achievements
+        HttpClient client = new();
+        string url = $"https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key={_steamApiKey}&appid={gameId}";
+
+        try
+        {
+            HttpResponseMessage response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            string content = await response.Content.ReadAsStringAsync();
+            if (string.IsNullOrEmpty(content))
+            {
+                Console.WriteLine("Error: No content returned from Steam API for achievement description.");
+                return "No description available.";
+            }
+
+            using var doc = JsonDocument.Parse(content);
+            if (doc.RootElement.TryGetProperty("game", out var gameElement) &&
+                gameElement.TryGetProperty("availableGameStats", out var statsElement) &&
+                statsElement.TryGetProperty("achievements", out var achievementsElement))
+            {
+                foreach (var achievement in achievementsElement.EnumerateArray())
+                {
+                    if (achievement.GetProperty("name").GetString() == achievementId)
+                    {
+                        return achievement.GetProperty("description").GetString() ?? "No description available.";
+                    }
+                }
+            }
+        }
+        catch (HttpRequestException e)
+        {
+            Console.WriteLine($"Error fetching achievement description: {e.Message}");
+        }
+
+        return "No description available.";
     }
 
     public async Task<SteamUserInfo?> LogToSteamAsync()

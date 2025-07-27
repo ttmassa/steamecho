@@ -43,6 +43,7 @@ public class StorageService
                 Icon TEXT,
                 GrayIcon TEXT,
                 GlobalPercentage REAL,
+                IsHidden BOOLEAN NOT NULL DEFAULT 0,
                 IsUnlocked BOOLEAN NOT NULL DEFAULT 0,
                 UnlockDate DATETIME,
                 FOREIGN KEY (GameId) REFERENCES Games(Id)
@@ -94,8 +95,8 @@ public class StorageService
         var achievementCommand = connection.CreateCommand();
         achievementCommand.Transaction = transaction;
         achievementCommand.CommandText = @"
-            INSERT OR REPLACE INTO Achievements (GameId, Id, Name, Description, Icon, GrayIcon, GlobalPercentage, IsUnlocked)
-            VALUES (@GameId, @Id, @Name, @Description, @Icon, @GrayIcon, @GlobalPercentage, @IsUnlocked);
+            INSERT OR REPLACE INTO Achievements (GameId, Id, Name, Description, Icon, GrayIcon, GlobalPercentage, IsHidden, IsUnlocked)
+            VALUES (@GameId, @Id, @Name, @Description, @Icon, @GrayIcon, @GlobalPercentage, @IsHidden, @IsUnlocked);
         ";
 
         foreach (var game in games)
@@ -117,6 +118,7 @@ public class StorageService
                 achievementCommand.Parameters.AddWithValue("@Icon", achievement.Icon ?? (object)DBNull.Value);
                 achievementCommand.Parameters.AddWithValue("@GrayIcon", achievement.GrayIcon ?? (object)DBNull.Value);
                 achievementCommand.Parameters.AddWithValue("@GlobalPercentage", achievement.GlobalPercentage.HasValue ? achievement.GlobalPercentage.Value : DBNull.Value);
+                achievementCommand.Parameters.AddWithValue("@IsHidden", achievement.IsHidden ? 1 : 0);
                 achievementCommand.Parameters.AddWithValue("@IsUnlocked", achievement.IsUnlocked ? 1 : 0);
                 achievementCommand.ExecuteNonQuery();
             }
@@ -139,7 +141,7 @@ public class StorageService
         command.ExecuteNonQuery();
     }
 
-    public void UpdateAchievement(long gameId, string achievementId, bool isUnlocked, DateTime? unlockDate = null)
+    public void UpdateAchievement(long gameId, string achievementId, bool isUnlocked, DateTime? unlockDate = null, string? description = null)
     {
         using var connection = new SQLiteConnection(_connectionString);
         connection.Open();
@@ -147,12 +149,13 @@ public class StorageService
         using var command = connection.CreateCommand();
         command.CommandText = @"
             UPDATE Achievements
-            SET IsUnlocked = @IsUnlocked, UnlockDate = @UnlockDate
+            SET IsUnlocked = @IsUnlocked, Description = @Description, UnlockDate = @UnlockDate
             WHERE GameId = @GameId AND Id = @Id;
         ";
         command.Parameters.AddWithValue("@GameId", gameId);
         command.Parameters.AddWithValue("@Id", achievementId);
         command.Parameters.AddWithValue("@IsUnlocked", isUnlocked ? 1 : 0);
+        command.Parameters.AddWithValue("@Description", description ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("@UnlockDate", unlockDate.HasValue ? (object)unlockDate.Value : DBNull.Value);
         command.ExecuteNonQuery();
     }
@@ -212,7 +215,7 @@ public class StorageService
 
         // Load achievements
         using var achievementsCommand = connection.CreateCommand();
-        achievementsCommand.CommandText = "SELECT GameId, Id, Name, Description, Icon, GrayIcon, GlobalPercentage, IsUnlocked, UnlockDate FROM Achievements";
+        achievementsCommand.CommandText = "SELECT GameId, Id, Name, Description, Icon, GrayIcon, GlobalPercentage, IsHidden, IsUnlocked, UnlockDate FROM Achievements";
 
         using var achievementsReader = achievementsCommand.ExecuteReader();
         while (achievementsReader.Read())
@@ -224,10 +227,11 @@ public class StorageService
             string? icon = achievementsReader.IsDBNull(4) ? null : achievementsReader.GetString(4);
             string? grayIcon = achievementsReader.IsDBNull(5) ? null : achievementsReader.GetString(5);
             double? globalPercentage = achievementsReader.IsDBNull(6) ? null : achievementsReader.GetDouble(6);
-            bool isUnlocked = achievementsReader.GetBoolean(7);
-            DateTime? unlockDate = achievementsReader.IsDBNull(8) ? null : (DateTime?)achievementsReader.GetDateTime(8);
+            bool isHidden = achievementsReader.GetBoolean(7);
+            bool isUnlocked = achievementsReader.GetBoolean(8);
+            DateTime? unlockDate = achievementsReader.IsDBNull(9) ? null : (DateTime?)achievementsReader.GetDateTime(8);
 
-            var achievement = new Achievement(id, name, description, icon, grayIcon, globalPercentage)
+            var achievement = new Achievement(id, name, description, icon, grayIcon, isHidden, globalPercentage)
             {
                 IsUnlocked = isUnlocked,
                 UnlockDate = unlockDate
@@ -265,8 +269,8 @@ public class StorageService
 
         using var command = connection.CreateCommand();
         command.CommandText = @"
-            INSERT OR REPLACE INTO Achievements (GameId, Id, Name, Description, Icon, GrayIcon, GlobalPercentage, IsUnlocked)
-            VALUES (@GameId, @Id, @Name, @Description, @Icon, @GrayIcon, @GlobalPercentage, @IsUnlocked);
+            INSERT OR REPLACE INTO Achievements (GameId, Id, Name, Description, Icon, GrayIcon, GlobalPercentage, IsHidden, IsUnlocked)
+            VALUES (@GameId, @Id, @Name, @Description, @Icon, @GrayIcon, @GlobalPercentage, @IsHidden, @IsUnlocked);
         ";
         command.Parameters.AddWithValue("@GameId", gameId);
         command.Parameters.AddWithValue("@Id", achievement.Id);
@@ -275,6 +279,7 @@ public class StorageService
         command.Parameters.AddWithValue("@Icon", achievement.Icon ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("@GrayIcon", achievement.GrayIcon ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("@GlobalPercentage", achievement.GlobalPercentage.HasValue ? achievement.GlobalPercentage.Value : DBNull.Value);
+        command.Parameters.AddWithValue("@IsHidden", achievement.IsHidden ? 1 : 0);
         command.Parameters.AddWithValue("@IsUnlocked", achievement.IsUnlocked ? 1 : 0);
         command.ExecuteNonQuery();
     }
