@@ -30,7 +30,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand RefreshDataCommand { get; }
     private readonly SteamService _steamService;
     private readonly StorageService _storageService;
-    private readonly AchievementListenerService _achievementListenerService;
     private readonly SoundPlayer _soundPlayer;
     private readonly NotificationService _notificationService;
     private readonly GameProcessService _gameProcessService;
@@ -112,9 +111,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
         string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steamecho.db");
         _storageService = new StorageService(dbPath);
         _storageService.InitializeDatabase();
-        _achievementListenerService = new AchievementListenerService();
-        _achievementListenerService.AchievementUnlocked += OnAchievementUnlocked;
-        _achievementListenerService.StartListening();
         _soundPlayer = new SoundPlayer("Assets/Sound/notification.wav");
         _notificationService = new NotificationService();
 
