@@ -95,8 +95,8 @@ public class StorageService
         var achievementCommand = connection.CreateCommand();
         achievementCommand.Transaction = transaction;
         achievementCommand.CommandText = @"
-            INSERT OR REPLACE INTO Achievements (GameId, Id, Name, Description, Icon, GrayIcon, GlobalPercentage, IsHidden, IsUnlocked)
-            VALUES (@GameId, @Id, @Name, @Description, @Icon, @GrayIcon, @GlobalPercentage, @IsHidden, @IsUnlocked);
+            INSERT OR REPLACE INTO Achievements (GameId, Id, Name, Description, Icon, GrayIcon, GlobalPercentage, IsHidden, IsUnlocked, UnlockDate)
+            VALUES (@GameId, @Id, @Name, @Description, @Icon, @GrayIcon, @GlobalPercentage, @IsHidden, @IsUnlocked, @UnlockDate);
         ";
 
         foreach (var game in games)
@@ -120,6 +120,7 @@ public class StorageService
                 achievementCommand.Parameters.AddWithValue("@GlobalPercentage", achievement.GlobalPercentage.HasValue ? achievement.GlobalPercentage.Value : DBNull.Value);
                 achievementCommand.Parameters.AddWithValue("@IsHidden", achievement.IsHidden ? 1 : 0);
                 achievementCommand.Parameters.AddWithValue("@IsUnlocked", achievement.IsUnlocked ? 1 : 0);
+                achievementCommand.Parameters.AddWithValue("@UnlockDate", achievement.UnlockDate.HasValue ? (object)achievement.UnlockDate.Value : DBNull.Value);
                 achievementCommand.ExecuteNonQuery();
             }
         }
@@ -229,7 +230,7 @@ public class StorageService
             double? globalPercentage = achievementsReader.IsDBNull(6) ? null : achievementsReader.GetDouble(6);
             bool isHidden = achievementsReader.GetBoolean(7);
             bool isUnlocked = achievementsReader.GetBoolean(8);
-            DateTime? unlockDate = achievementsReader.IsDBNull(9) ? null : (DateTime?)achievementsReader.GetDateTime(8);
+            DateTime? unlockDate = achievementsReader.IsDBNull(9) ? null : achievementsReader.GetDateTime(9);
 
             var achievement = new Achievement(id, name, description, icon, grayIcon, isHidden, globalPercentage)
             {
@@ -269,8 +270,8 @@ public class StorageService
 
         using var command = connection.CreateCommand();
         command.CommandText = @"
-            INSERT OR REPLACE INTO Achievements (GameId, Id, Name, Description, Icon, GrayIcon, GlobalPercentage, IsHidden, IsUnlocked)
-            VALUES (@GameId, @Id, @Name, @Description, @Icon, @GrayIcon, @GlobalPercentage, @IsHidden, @IsUnlocked);
+            INSERT OR REPLACE INTO Achievements (GameId, Id, Name, Description, Icon, GrayIcon, GlobalPercentage, IsHidden, IsUnlocked, UnlockDate)
+            VALUES (@GameId, @Id, @Name, @Description, @Icon, @GrayIcon, @GlobalPercentage, @IsHidden, @IsUnlocked, @UnlockDate);
         ";
         command.Parameters.AddWithValue("@GameId", gameId);
         command.Parameters.AddWithValue("@Id", achievement.Id);
@@ -281,6 +282,7 @@ public class StorageService
         command.Parameters.AddWithValue("@GlobalPercentage", achievement.GlobalPercentage.HasValue ? achievement.GlobalPercentage.Value : DBNull.Value);
         command.Parameters.AddWithValue("@IsHidden", achievement.IsHidden ? 1 : 0);
         command.Parameters.AddWithValue("@IsUnlocked", achievement.IsUnlocked ? 1 : 0);
+        command.Parameters.AddWithValue("@UnlockDate", achievement.UnlockDate.HasValue ? (object)achievement.UnlockDate.Value : DBNull.Value);
         command.ExecuteNonQuery();
     }
 
