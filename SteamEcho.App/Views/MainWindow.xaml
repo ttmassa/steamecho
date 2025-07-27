@@ -71,8 +71,8 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <Image Grid.Column="0" Source="{Binding IconUrl}" VerticalAlignment="Center" Width="28" Margin="0,0,10,0"/>
-                                <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" Foreground="#F0F0F0" FontSize="14" FontWeight="SemiBold" Margin="0,0,10,0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
-                                <TextBlock Grid.Column="2" Text="{Binding AchievementsSummary}" VerticalAlignment="Center" Foreground="#F0F0F0" FontSize="12" FontWeight="Regular"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" Foreground="#F0F0F0" FontSize="14" FontWeight="Bold" Margin="0,0,10,0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                                <TextBlock Grid.Column="2" Text="{Binding AchievementsSummary}" VerticalAlignment="Center" Foreground="#F0F0F0" FontSize="12" FontWeight="SemiBold"/>
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
@@ -192,7 +192,7 @@
                             <StackPanel Orientation="Horizontal" Grid.Row="0">
                                 <!-- Achievement Trophy Icon -->
                                 <Image Source="/SteamEcho.App;component/Assets/Images/achievement_icon.png" Width="25" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                <TextBlock Text="Achievements" Foreground="#F0F0F0" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock Text="Achievements" Foreground="#F0F0F0" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
                             </StackPanel>
 
                             <!-- Achievement List -->
@@ -291,11 +291,9 @@
                                             </Grid>
                                             
                                             <!-- Achievement Details -->
-                                            <StackPanel Orientation="Vertical"
-                                                        Margin="0,0,10,0"
-                                                        Grid.Column="1">
-                                                <TextBlock x:Name="AchievementName" Text="{Binding Name}" Foreground="#F0F0F0" FontSize="12" FontWeight="Regular" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Stretch"/>
-                                                <TextBlock x:Name="AchievementDesc" Text="{Binding Description}" Foreground="#F0F0F0" FontSize="10" FontWeight="Light" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" HorizontalAlignment="Stretch"/>
+                                            <StackPanel Orientation="Vertical" Margin="0,0,10,0" Grid.Column="1">
+                                                <TextBlock x:Name="AchievementName" Text="{Binding Name}" Foreground="#F0F0F0" FontSize="12" FontWeight="Bold" ToolTip="{Binding Name}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Stretch"/>
+                                                <TextBlock x:Name="AchievementDesc" Text="{Binding Description}" Foreground="#F0F0F0" FontSize="10" FontWeight="Regular" TextWrapping="NoWrap" ToolTip="{Binding Description}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" HorizontalAlignment="Stretch"/>
                                             </StackPanel>
                                             <!-- Achievement Global Percentage -->
                                             <TextBlock x:Name="AchievementGlobalPercentage" Text="{Binding GlobalPercentage, StringFormat='{}{0:F1}%'}" Foreground="#F0F0F0" FontSize="12" FontWeight="Regular" VerticalAlignment="Center" Grid.Column="2" HorizontalAlignment="Right" Margin="10,0,0,0"/>

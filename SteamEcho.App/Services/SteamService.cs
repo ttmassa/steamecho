@@ -141,6 +141,7 @@ public class SteamService : ISteamService
 
                     var newAchievement = new Achievement(id, name, description, icon, grayIcon, isHidden, globalPercentage);
 
+                    // If user is logged in, check if the achievement is already unlocked
                     if (playerAchievements.TryGetValue(id, out var status))
                     {
                         newAchievement.IsUnlocked = status.IsUnlocked;
@@ -157,45 +158,6 @@ public class SteamService : ISteamService
         }
 
         return achievements;
-    }
-
-    public async Task<string> GetAchievementDescription(long gameId, string achievementId)
-    {
-        // Fetch achievement description for hidden achievements
-        HttpClient client = new();
-        string url = $"https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key={_steamApiKey}&appid={gameId}";
-
-        try
-        {
-            HttpResponseMessage response = await client.GetAsync(url);
-            response.EnsureSuccessStatusCode();
-            string content = await response.Content.ReadAsStringAsync();
-            if (string.IsNullOrEmpty(content))
-            {
-                Console.WriteLine("Error: No content returned from Steam API for achievement description.");
-                return "No description available.";
-            }
-
-            using var doc = JsonDocument.Parse(content);
-            if (doc.RootElement.TryGetProperty("game", out var gameElement) &&
-                gameElement.TryGetProperty("availableGameStats", out var statsElement) &&
-                statsElement.TryGetProperty("achievements", out var achievementsElement))
-            {
-                foreach (var achievement in achievementsElement.EnumerateArray())
-                {
-                    if (achievement.GetProperty("name").GetString() == achievementId)
-                    {
-                        return achievement.GetProperty("description").GetString() ?? "No description available.";
-                    }
-                }
-            }
-        }
-        catch (HttpRequestException e)
-        {
-            Console.WriteLine($"Error fetching achievement description: {e.Message}");
-        }
-
-        return "No description available.";
     }
 
     public async Task<SteamUserInfo?> LogToSteamAsync()
@@ -351,13 +313,28 @@ public class SteamService : ISteamService
                         iconUrl = null;
                     }
 
-                    GameInfo gameInfo = new(gameId, name, iconUrl);
+                    // Try to get executable path
+                    string? exePath = null;
+                    if (game.TryGetProperty("playtime_forever", out var playtimeElement) && playtimeElement.GetInt32() > 0)
+                    {
+                        // Attempt to get the executable path from the local Steam library
+                        string steamLibraryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Steam", "steamapps", "common");
+                        string gameFolder = Path.Combine(steamLibraryPath, name);
+                        if (Directory.Exists(gameFolder))
+                        {
+                            var exeFiles = Directory.GetFiles(gameFolder, "*.exe", SearchOption.TopDirectoryOnly);
+                            if (exeFiles.Length > 0)
+                            {
+                                exePath = exeFiles[0];
+                            }
+                        }
+                    }
 
                     // Fetch achievements for the game
                     var achievements = await GetAchievementsAsync(gameId, user);
                     if (achievements.Count > 0)
                     {
-                        var gameWithAchievements = new Game(gameId, name, string.Empty, achievements, iconUrl);
+                        var gameWithAchievements = new Game(gameId, name, achievements, exePath, iconUrl);
                         games.Add(gameWithAchievements);
                     }
                 }

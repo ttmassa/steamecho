@@ -173,7 +173,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             List<Achievement> achievements = await _steamService.GetAchievementsAsync(steamId);
 
             // Create game instance using the correct constructor
-            Game game = new(steamId, gameName, dialog.FileName, achievements, iconUrl);
+            Game game = new(steamId, gameName, achievements, dialog.FileName, iconUrl);
 
             // Add the game to the collection and save to database
             Games.Add(game);
