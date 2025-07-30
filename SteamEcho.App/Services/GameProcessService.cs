@@ -8,6 +8,9 @@ public class GameProcessService
 {
     private readonly ObservableCollection<Game> _games;
     private Timer? _timer;
+    private Game? _lastRunningGame;
+
+    public event Action<Game?>? RunningGameChanged;
 
     public GameProcessService(ObservableCollection<Game> games)
     {
@@ -16,7 +19,6 @@ public class GameProcessService
 
     public void Start()
     {
-        // Ensure only one timer is running
         _timer?.Change(Timeout.Infinite, 0);
         _timer = new Timer(CheckProcesses, null, 0, 2000);
     }
@@ -30,6 +32,8 @@ public class GameProcessService
     {
         var runningProcesses = Process.GetProcesses();
         var gamesCopy = _games.ToList();
+        Game? runningGame = null;
+
         foreach (var game in gamesCopy)
         {
             var process = runningProcesses.FirstOrDefault(p =>
@@ -45,6 +49,15 @@ public class GameProcessService
             });
 
             game.IsRunning = process != null;
+            if (game.IsRunning)
+                runningGame = game;
+        }
+
+        // Only fire event if the running game changed
+        if (!ReferenceEquals(runningGame, _lastRunningGame))
+        {
+            _lastRunningGame = runningGame;
+            RunningGameChanged?.Invoke(runningGame);
         }
     }
 }

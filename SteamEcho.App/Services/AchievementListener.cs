@@ -1,28 +1,104 @@
-using Steamworks;
+using System.IO;
+using System.Text.Json;
 
 namespace SteamEcho.App.Services;
 
 public class AchievementListener
 {
-    private Callback<UserAchievementStored_t>? _achievementStoredCallback;
+    private FileSystemWatcher? _watcher;
+    private CancellationTokenSource? _cts;
+    private string? _jsonFilePath;
+    private HashSet<long> _seenTimestamps = new();
+    private string? _currentWatchedDir;
+
     public event Action<string>? AchievementUnlocked;
 
-    public AchievementListener()
+    /// <summary>
+    /// Call this when a game starts running. Pass the game's executable path.
+    /// </summary>
+    public void Start(string? gameExePath)
     {
-        _achievementStoredCallback = Callback<UserAchievementStored_t>.Create(OnAchievementStored);
+        Stop();
+
+        if (string.IsNullOrEmpty(gameExePath) || !File.Exists(gameExePath))
+        {
+            // No executable path: prompt user to set it in the UI
+            Console.WriteLine("Executable path not set. Please set it via the UI.");
+            return;
+        }
+
+        var gameDir = Path.GetDirectoryName(gameExePath)!;
+        _jsonFilePath = Path.Combine(gameDir, "achievement_notifications.json");
+        _currentWatchedDir = gameDir;
+        _cts = new CancellationTokenSource();
+
+        _watcher = new FileSystemWatcher(gameDir, "achievement_notifications.json")
+        {
+            NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size
+        };
+        _watcher.Changed += OnFileChanged;
+        _watcher.EnableRaisingEvents = true;
+
+        // Initial read in case file already exists
+        _ = Task.Run(() => ProcessFileAsync(_cts.Token));
     }
 
-    private void OnAchievementStored(UserAchievementStored_t pCallback)
+    public void Stop()
     {
-        // Only trigger for standard achievements, not stats and progress updates
-        if (pCallback.m_nMaxProgress == 0)
+        _cts?.Cancel();
+        if (_watcher != null)
         {
-            AchievementUnlocked?.Invoke(pCallback.m_rgchAchievementName);
+            _watcher.EnableRaisingEvents = false;
+            _watcher.Dispose();
+            _watcher = null;
+        }
+        _seenTimestamps.Clear();
+        _currentWatchedDir = null;
+    }
+
+    private void OnFileChanged(object sender, FileSystemEventArgs e)
+    {
+        if (_cts?.IsCancellationRequested == false)
+            _ = Task.Run(() => ProcessFileAsync(_cts.Token));
+    }
+
+    private async Task ProcessFileAsync(CancellationToken token)
+    {
+        if (_jsonFilePath == null) return;
+
+        // Wait briefly to avoid file lock issues
+        await Task.Delay(200, token);
+
+        try
+        {
+            if (!File.Exists(_jsonFilePath)) return;
+
+            string json = await File.ReadAllTextAsync(_jsonFilePath, token);
+            var notifications = JsonSerializer.Deserialize<List<AchievementNotification>>(json);
+
+            if (notifications != null)
+            {
+                foreach (var notif in notifications)
+                {
+                    if (notif.event_type == "unlocked" && !_seenTimestamps.Contains(notif.timestamp))
+                    {
+                        _seenTimestamps.Add(notif.timestamp);
+                        AchievementUnlocked?.Invoke(notif.achievement_id);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error reading achievement notifications: {ex.Message}");
         }
     }
 
-    public void Update()
+    private class AchievementNotification
     {
-        SteamAPI.RunCallbacks();
+        public string achievement_id { get; set; } = "";
+        public string achievement_name { get; set; } = "";
+        public string event_type { get; set; } = "";
+        public long timestamp { get; set; }
     }
 }

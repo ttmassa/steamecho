@@ -11,7 +11,6 @@ using System.Windows;
 using System.Media;
 using System.Diagnostics;
 using SteamEcho.App.Views;
-using System.Windows.Threading;
 
 namespace SteamEcho.App.ViewModels;
 
@@ -29,13 +28,14 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand ShowSettingsCommand { get; }
     public ICommand HideSettingsCommand { get; }
     public ICommand RefreshDataCommand { get; }
+    public ICommand SetExecutableCommand { get; }
+    public ICommand ToggleProxyCommand { get; }
     private readonly SteamService _steamService;
     private readonly StorageService _storageService;
     private readonly SoundPlayer _soundPlayer;
     private readonly NotificationService _notificationService;
     private readonly GameProcessService _gameProcessService;
     private readonly AchievementListener _achievementListener;
-    private readonly DispatcherTimer _steamworksTimer;
     private Game? _selectedGame;
     private SteamUserInfo? _currentUser;
     private bool _isLoadingGames;
@@ -51,6 +51,10 @@ public class MainWindowViewModel : INotifyPropertyChanged
             {
                 _selectedGame = value;
                 OnPropertyChanged();
+                if (_selectedGame != null)
+                {
+                    CheckProxyStatus(_selectedGame);
+                }
             }
         }
     }
@@ -64,6 +68,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 _currentUser = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsUserLoggedIn));
+                OnPropertyChanged(nameof(StatusText));
             }
         }
     }
@@ -108,6 +113,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    public string StatusText => IsUserLoggedIn ? "Connected" : "Disconnected";
+
     public MainWindowViewModel()
     {
         _steamService = new SteamService();
@@ -123,19 +130,12 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         // Initialize game process service
         _gameProcessService = new GameProcessService(Games);
+        _gameProcessService.RunningGameChanged += OnRunningGameChanged;
         _gameProcessService.Start();
- 
+
         // Initialize achievement listener
         _achievementListener = new AchievementListener();
         _achievementListener.AchievementUnlocked += OnAchievementUnlocked;
-
-        // Set up achievement check timer
-        _steamworksTimer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromSeconds(1)
-        };
-        _steamworksTimer.Tick += (s, e) => _achievementListener.Update();
-        _steamworksTimer.Start();
 
         AddGameCommand = new RelayCommand(AddGame);
         DeleteGameCommand = new RelayCommand<Game>(DeleteGame);
@@ -148,6 +148,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
         ShowSettingsCommand = new RelayCommand(() => IsSettingsVisible = true);
         HideSettingsCommand = new RelayCommand(() => IsSettingsVisible = false);
         RefreshDataCommand = new RelayCommand(RefreshData);
+        SetExecutableCommand = new RelayCommand<Game>(SetExecutable);
+        ToggleProxyCommand = new RelayCommand<Game>(ToggleProxy);
     }
 
     private async void AddGame()
@@ -388,6 +390,238 @@ public class MainWindowViewModel : INotifyPropertyChanged
         finally
         {
             IsLoadingGames = false;
+        }
+    }
+
+    private void SetExecutable(Game game)
+    {
+        if (game == null) return;
+
+        var dialog = new OpenFileDialog
+        {
+            Filter = "Executable Files (*.exe)|*.exe",
+            Title = "Select Game Executable",
+            InitialDirectory = Path.GetDirectoryName(game.ExecutablePath)
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            game.ExecutablePath = dialog.FileName;
+            _storageService.UpdateGameExecutable(game.SteamId, game.ExecutablePath);
+            OnPropertyChanged(nameof(Games));
+        }
+    }
+
+    private void OnRunningGameChanged(Game? runningGame)
+    {
+        if (runningGame != null && !string.IsNullOrEmpty(runningGame.ExecutablePath) && File.Exists(runningGame.ExecutablePath))
+        {
+            // Start achievement listener for the running game
+            _achievementListener.Start(runningGame.ExecutablePath);
+        }
+        else
+        {
+            // Stop achievement listener if no game is running or executable path is invalid
+            _achievementListener.Stop();
+        }
+    }
+
+    private void ToggleProxy(Game game)
+    {
+        if (game == null) return;
+
+        if (string.IsNullOrEmpty(game.ExecutablePath) || !File.Exists(game.ExecutablePath))
+        {
+            var dialog = new MessageDialog(
+                "Executable path not set for this game. Please set it by right-clicking on the game in the library and selecting 'Set Executable'.",
+                "Error"
+            );
+            dialog.ShowDialog();
+            return;
+        }
+
+        var gameDirectory = Path.GetDirectoryName(game.ExecutablePath);
+        if (gameDirectory == null || !Directory.Exists(gameDirectory))
+        {
+            var dialog = new MessageDialog(
+                "Game directory does not exist. Please set a valid executable path.",
+                "Error"
+            );
+            dialog.ShowDialog();
+            return;
+        }
+
+        if (game.IsProxyReady)
+        {
+            // Ask for confirmation before disabling the proxy
+            var confirmDialog = new ConfirmDialog(
+                "Disabling the proxy will remove achievement tracking for this game until you set it up again. Are you sure you want to continue?",
+                "Disabling Proxy"
+            );
+            var result = confirmDialog.ShowDialog();
+            if (result != true) return;
+
+            // Disable the proxy
+            try
+            {
+                UnprocessSteamApiDll(gameDirectory, "x86");
+                UnprocessSteamApiDll(gameDirectory, "x64");
+
+                game.IsProxyReady = false;
+            }
+            catch (Exception ex)
+            {
+                var dialog = new MessageDialog(
+                    $"An error occurred while uninstalling the proxy: {ex.Message}",
+                    "Error"
+                );
+                dialog.ShowDialog();
+            }
+        }
+        else
+        {
+            // Setup the proxy
+            try
+            {
+                bool setupDone = false;
+                setupDone |= ProcessSteamApiDll(gameDirectory, "x86");
+                setupDone |= ProcessSteamApiDll(gameDirectory, "x64");
+
+                if (setupDone)
+                {
+                    game.IsProxyReady = true;
+                }
+                else
+                {
+                    var dialog = new MessageDialog(
+                        "Proxy setup failed. Please make sure the game directory contains a valid steam_api.dll or steam_api64.dll file.",
+                        "Setup Failed"
+                    );
+                    dialog.ShowDialog();
+                }
+            }
+            catch (Exception ex)
+            {
+                var dialog = new MessageDialog(
+                    $"An error occurred while setting up the proxy: {ex.Message}",
+                    "Error"
+                );
+                dialog.ShowDialog();
+            }
+        }
+    }
+
+    private static void CheckProxyStatus(Game game)
+    {
+        if (string.IsNullOrEmpty(game.ExecutablePath) || !File.Exists(game.ExecutablePath))
+        {
+            game.IsProxyReady = false;
+            return;
+        }
+
+        var gameDirectory = Path.GetDirectoryName(game.ExecutablePath);
+        if (string.IsNullOrEmpty(gameDirectory) || !Directory.Exists(gameDirectory))
+        {
+            game.IsProxyReady = false;
+            return;
+        }
+
+        // Check if either the 32-bit or 64-bit proxy is correctly set up.
+        bool isProxyReady32 = File.Exists(Path.Combine(gameDirectory, "steam_api_o.dll")) && File.Exists(Path.Combine(gameDirectory, "steam_api.dll"));
+        bool isProxyReady64 = File.Exists(Path.Combine(gameDirectory, "steam_api64_o.dll")) && File.Exists(Path.Combine(gameDirectory, "steam_api64.dll"));
+
+        game.IsProxyReady = isProxyReady32 || isProxyReady64;
+    }
+
+    private static bool ProcessSteamApiDll(string gameDirectory, string bitness) {
+        if (bitness != "x86" && bitness != "x64")
+        {
+            throw new ArgumentException("Bitness must be either 'x86' or 'x64'.");
+        }
+
+        string dllName = bitness == "x86" ? "steam_api.dll" : "steam_api64.dll";
+        string renamedDllName = bitness == "x86" ? "steam_api_o.dll" : "steam_api64_o.dll";
+        
+        // Look for both original and already-renamed DLLs
+        var originalDllPaths = Directory.GetFiles(gameDirectory, dllName, SearchOption.AllDirectories);
+        var renamedDllPaths = Directory.GetFiles(gameDirectory, renamedDllName, SearchOption.AllDirectories);
+
+        // Combine all unique directories where DLLs were found
+        var directoriesToProcess = originalDllPaths.Concat(renamedDllPaths)
+            .Select(Path.GetDirectoryName)
+            .Where(d => d != null)
+            .Distinct()
+            .ToList();
+
+        if (directoriesToProcess.Count == 0) return false;
+
+        foreach (var dllDirectory in directoriesToProcess)
+        {
+            var originalDllPath = Path.Combine(dllDirectory!, dllName);
+            var renamedDllPath = Path.Combine(dllDirectory!, renamedDllName);
+
+            // Rename original dll
+            if (File.Exists(originalDllPath) && !File.Exists(renamedDllPath))
+            {
+                File.Move(originalDllPath, renamedDllPath);
+            }
+
+            // Copy proxy dll
+            string proxyDllSourcePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ThirdParty", "SmokeAPI", bitness, dllName);
+            if (File.Exists(proxyDllSourcePath) && !File.Exists(originalDllPath))
+            {
+                File.Copy(proxyDllSourcePath, originalDllPath);
+            }
+
+            // Copy config file
+            string configSourcePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ThirdParty", "SmokeAPI", "SmokeAPI.config.json");
+            string configDestPath = Path.Combine(dllDirectory!, "SmokeAPI.config.json");
+            if (File.Exists(configSourcePath) && !File.Exists(configDestPath))
+            {
+                File.Copy(configSourcePath, configDestPath);
+            }
+        }
+        return true;
+    }
+
+    private static void UnprocessSteamApiDll(string gameDirectory, string bitness)
+    {
+        if (bitness != "x86" && bitness != "x64")
+        {
+            throw new ArgumentException("Bitness must be either 'x86' or 'x64'.");
+        }
+
+        string dllName = bitness == "x86" ? "steam_api.dll" : "steam_api64.dll";
+        string renamedDllName = bitness == "x86" ? "steam_api_o.dll" : "steam_api64_o.dll";
+
+        // Find all directories where the original DLL was renamed.
+        var renamedDllPaths = Directory.GetFiles(gameDirectory, renamedDllName, SearchOption.AllDirectories);
+
+        foreach (var renamedDllPath in renamedDllPaths)
+        {
+            var dllDirectory = Path.GetDirectoryName(renamedDllPath);
+            if (dllDirectory == null) continue;
+
+            var originalDllPath = Path.Combine(dllDirectory, dllName);
+            var configPath = Path.Combine(dllDirectory, "SmokeAPI.config.json");
+
+            // Delete the proxy DLL (which has the original name)
+            if (File.Exists(originalDllPath))
+            {
+                File.Delete(originalDllPath);
+            }
+
+            // Delete the config file
+            if (File.Exists(configPath))
+            {
+                File.Delete(configPath);
+            }
+
+            // Rename the original DLL back
+            if (File.Exists(renamedDllPath))
+            {
+                File.Move(renamedDllPath, originalDllPath);
+            }
         }
     }
 

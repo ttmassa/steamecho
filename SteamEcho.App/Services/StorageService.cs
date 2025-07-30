@@ -142,6 +142,22 @@ public class StorageService
         command.ExecuteNonQuery();
     }
 
+    public void UpdateGameExecutable(long steamId, string executablePath)
+    {
+        using var connection = new SQLiteConnection(_connectionString);
+        connection.Open();
+
+        using var command = connection.CreateCommand();
+        command.CommandText = @"
+            UPDATE Games
+            SET ExecutablePath = @ExecutablePath
+            WHERE Id = @Id;
+        ";
+        command.Parameters.AddWithValue("@Id", steamId);
+        command.Parameters.AddWithValue("@ExecutablePath", executablePath);
+        command.ExecuteNonQuery();
+    }
+
     public void UpdateAchievement(long gameId, string achievementId, bool isUnlocked, DateTime? unlockDate = null, string? description = null)
     {
         using var connection = new SQLiteConnection(_connectionString);

@@ -11,6 +11,8 @@ public class Game(long steamId, string name, string? executablePath = null, stri
     public string ExecutablePath { get; set; } = executablePath ?? string.Empty;
     public string IconUrl { get; set; } = iconUrl ?? "/SteamEcho.App;component/Assets/Images/library_placeholder.png";
     private bool _isRunning;
+    private bool _isProxyReady;
+
     public bool IsRunning
     {
         get => _isRunning;
@@ -19,6 +21,19 @@ public class Game(long steamId, string name, string? executablePath = null, stri
             if (_isRunning != value)
             {
                 _isRunning = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool IsProxyReady
+    {
+        get => _isProxyReady;
+        set
+        {
+            if (_isProxyReady != value)
+            {
+                _isProxyReady = value;
                 OnPropertyChanged();
             }
         }
