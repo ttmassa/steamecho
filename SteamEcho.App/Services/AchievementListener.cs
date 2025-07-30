@@ -1,5 +1,7 @@
 using System.IO;
 using System.Text.Json;
+using System.Windows;
+using SteamEcho.App.Views;
 
 namespace SteamEcho.App.Services;
 
@@ -23,7 +25,8 @@ public class AchievementListener
         if (string.IsNullOrEmpty(gameExePath) || !File.Exists(gameExePath))
         {
             // No executable path: prompt user to set it in the UI
-            Console.WriteLine("Executable path not set. Please set it via the UI.");
+            var dialog = new MessageDialog("Please set the game executable path by right-clicking on the game in library and selecting 'Set Executable'.", "No Executable Path");
+            dialog.ShowDialog();
             return;
         }
 
@@ -43,6 +46,9 @@ public class AchievementListener
         _ = Task.Run(() => ProcessFileAsync(_cts.Token));
     }
 
+    /// <summary>
+    /// Call this to stop listening for achievements.
+    /// </summary>
     public void Stop()
     {
         _cts?.Cancel();

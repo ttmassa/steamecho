@@ -17,12 +17,18 @@ public class GameProcessService
         _games = games;
     }
 
+    /// <summary>
+    /// Starts monitoring running processes for the games in the collection.
+    /// </summary>
     public void Start()
     {
         _timer?.Change(Timeout.Infinite, 0);
         _timer = new Timer(CheckProcesses, null, 0, 2000);
     }
 
+    /// <summary>
+    /// Stops monitoring running processes.
+    /// </summary>
     public void Stop()
     {
         _timer?.Change(Timeout.Infinite, 0);
