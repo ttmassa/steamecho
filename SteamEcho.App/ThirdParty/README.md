@@ -1,4 +1,4 @@
-# ThirdParty
+# 📦 ThirdParty
 
 This directory contains third-party dependencies used in SteamEcho.
 
@@ -16,13 +16,13 @@ To fit the needs of **SteamEcho**, the following extensions were made:
 - **Named Pipe IPC:**  
   Added a named pipe for IPC, allowing SteamEcho to receive achievement updates instantly from the proxy DLLs.
 
-**📄 License:**  
+**License:**  
 SmokeAPI is completely free to use, and so are the proxy DLLs built for SteamEcho. See the [LICENSE.txt](./SmokeAPI/UNLICENSE.txt) for more details and credits.
 
 **Special Thanks:**  
 Huge thanks to the SmokeAPI team for making this project possible! Their work laid the foundation for SteamEcho’s achievement tracking system. If you use or extend these proxy DLLs, please consider checking out and supporting the original [SmokeAPI project](https://github.com/acidicoala/SmokeAPI).
 
-## Adding/Updating Third-Party Libraries
+## ➕ Adding/Updating Third-Party Libraries
 
 If you add or update any third-party dependencies, please:
 1. Place them in a clearly named subdirectory.
