@@ -17,7 +17,7 @@ public class AchievementRarityConverter : IValueConverter
     {
         if (value is double percentage)
         {
-            if (percentage >= 40)
+            if (percentage >= 20)
             {
                 return Rarity.Common;
             }

@@ -10,5 +10,5 @@
   "extra_dlcs": {},
   "store_config": null,
   "achievement_notifications": true,
-  "achievement_notification_method": "pipe"
+  "achievement_notification_method": "file"
 }

@@ -40,7 +40,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
     private SteamUserInfo? _currentUser;
     private bool _isLoadingGames;
     private bool _isSettingsVisible;
-    private string? _steamApiKey;
 
     public Game? SelectedGame
     {
@@ -50,11 +49,11 @@ public class MainWindowViewModel : INotifyPropertyChanged
             if (_selectedGame != value)
             {
                 _selectedGame = value;
-                OnPropertyChanged();
                 if (_selectedGame != null)
                 {
                     CheckProxyStatus(_selectedGame);
                 }
+                OnPropertyChanged();
             }
         }
     }
@@ -100,19 +99,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
-    public string? SteamApiKey
-    {
-        get => _steamApiKey;
-        set
-        {
-            if (_steamApiKey != value)
-            {
-                _steamApiKey = value;
-                OnPropertyChanged();
-            }
-        }
-    }
-
     public string StatusText => IsUserLoggedIn ? "Connected" : "Disconnected";
 
     public MainWindowViewModel()
@@ -149,7 +135,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         HideSettingsCommand = new RelayCommand(() => IsSettingsVisible = false);
         RefreshDataCommand = new RelayCommand(RefreshData);
         SetExecutableCommand = new RelayCommand<Game>(SetExecutable);
-        ToggleProxyCommand = new RelayCommand<Game>(ToggleProxy);
+        ToggleProxyCommand = new RelayCommand(ToggleProxy);
     }
 
     private async void AddGame()
@@ -198,8 +184,34 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
     private void DeleteGame(Game game)
     {
+        if (game == null) return;
+
+        // Ask for confirmation before deleting the game
+        var confirmDialog = new ConfirmDialog(
+            "Are you sure you want to delete this game? This action cannot be undone.",
+            "Confirm Delete"
+        );
+        var result = confirmDialog.ShowDialog();
+        if (result != true) return;
+
+        // Delete achievements json file
+        if (!string.IsNullOrEmpty(game.ExecutablePath))
+        {
+            var gameDir = Path.GetDirectoryName(game.ExecutablePath);
+            if (gameDir != null)
+            {
+                var jsonFilePath = Path.Combine(gameDir, "achievement_notifications.json");
+                if (File.Exists(jsonFilePath))
+                {
+                    File.Delete(jsonFilePath);
+                }
+            }
+        }
+
+        // Remove game from collection and database
         Games.Remove(game);
-        _storageService.DeleteGame(game.SteamId);
+        _storageService.DeleteGame(game.SteamId);        
+
         if (SelectedGame == game)
         {
             SelectedGame = Games.FirstOrDefault();
@@ -283,7 +295,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
             if (!achievementFound)
             {
-                Console.WriteLine($"Received achievement '{achievementApiName}', but it was not found in any loaded game or was already unlocked.");
+                return;
             }
         });
     }
@@ -306,6 +318,16 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
         else
         {
+            if (!game.IsProxyReady)
+            {
+                var dialog = new ConfirmDialog(
+                    "Proxy is not set up for this game, SteamEcho won't be able to track achievements. Please set it up by clicking on the 'Setup' button.",
+                    "Warning"
+                );
+                dialog.ShowDialog();
+                return;
+            }
+
             try
             {
                 Process.Start(new ProcessStartInfo(game.ExecutablePath)
@@ -364,7 +386,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
             {
                 _storageService.DeleteUser();
                 CurrentUser = null;
-                SteamApiKey = null;
             }
         }
     }
@@ -426,11 +447,11 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
-    private void ToggleProxy(Game game)
+    private void ToggleProxy()
     {
-        if (game == null) return;
+        if (SelectedGame == null) return;
 
-        if (string.IsNullOrEmpty(game.ExecutablePath) || !File.Exists(game.ExecutablePath))
+        if (string.IsNullOrEmpty(SelectedGame.ExecutablePath) || !File.Exists(SelectedGame.ExecutablePath))
         {
             var dialog = new MessageDialog(
                 "Executable path not set for this game. Please set it by right-clicking on the game in the library and selecting 'Set Executable'.",
@@ -440,7 +461,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             return;
         }
 
-        var gameDirectory = Path.GetDirectoryName(game.ExecutablePath);
+        var gameDirectory = Path.GetDirectoryName(SelectedGame.ExecutablePath);
         if (gameDirectory == null || !Directory.Exists(gameDirectory))
         {
             var dialog = new MessageDialog(
@@ -451,7 +472,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             return;
         }
 
-        if (game.IsProxyReady)
+        if (SelectedGame.IsProxyReady)
         {
             // Ask for confirmation before disabling the proxy
             var confirmDialog = new ConfirmDialog(
@@ -467,7 +488,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 UnprocessSteamApiDll(gameDirectory, "x86");
                 UnprocessSteamApiDll(gameDirectory, "x64");
 
-                game.IsProxyReady = false;
+                SelectedGame.IsProxyReady = false;
             }
             catch (Exception ex)
             {
@@ -489,7 +510,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
                 if (setupDone)
                 {
-                    game.IsProxyReady = true;
+                    SelectedGame.IsProxyReady = true;
                 }
                 else
                 {
@@ -526,11 +547,20 @@ public class MainWindowViewModel : INotifyPropertyChanged
             return;
         }
 
-        // Check if either the 32-bit or 64-bit proxy is correctly set up.
-        bool isProxyReady32 = File.Exists(Path.Combine(gameDirectory, "steam_api_o.dll")) && File.Exists(Path.Combine(gameDirectory, "steam_api.dll"));
-        bool isProxyReady64 = File.Exists(Path.Combine(gameDirectory, "steam_api64_o.dll")) && File.Exists(Path.Combine(gameDirectory, "steam_api64.dll"));
+        // Search all subdirectories for proxy DLL pairs
+        bool foundProxy = false;
+        foreach (var dir in Directory.GetDirectories(gameDirectory, "*", SearchOption.AllDirectories).Prepend(gameDirectory))
+        {
+            bool isProxyReady32 = File.Exists(Path.Combine(dir, "steam_api_o.dll")) && File.Exists(Path.Combine(dir, "steam_api.dll")) && File.Exists(Path.Combine(dir, "SmokeAPI.config.json"));
+            bool isProxyReady64 = File.Exists(Path.Combine(dir, "steam_api64_o.dll")) && File.Exists(Path.Combine(dir, "steam_api64.dll")) && File.Exists(Path.Combine(dir, "SmokeAPI.config.json"));
+            if (isProxyReady32 || isProxyReady64)
+            {
+                foundProxy = true;
+                break;
+            }
+        }
 
-        game.IsProxyReady = isProxyReady32 || isProxyReady64;
+        game.IsProxyReady = foundProxy;
     }
 
     private static bool ProcessSteamApiDll(string gameDirectory, string bitness) {
