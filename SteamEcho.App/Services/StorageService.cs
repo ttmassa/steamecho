@@ -2,10 +2,11 @@ using System.Data.SQLite;
 using System.IO;
 using SteamEcho.Core.DTOs;
 using SteamEcho.Core.Models;
+using SteamEcho.Core.Services;
 
 namespace SteamEcho.App.Services;
 
-public class StorageService
+public class StorageService : IStorageService
 {
     private readonly string _connectionString;
 
@@ -22,9 +23,6 @@ public class StorageService
         InitializeDatabase();
     }
 
-    /// <summary>
-    /// Initialize the database.
-    /// </summary>
     public void InitializeDatabase()
     {
         using var connection = new SQLiteConnection(_connectionString);
@@ -58,9 +56,6 @@ public class StorageService
         command.ExecuteNonQuery();
     }
 
-    /// <summary>
-    /// Saves a game to the database.
-    /// </summary>
     public void SaveGame(Game game)
     {
         // Save the game details
@@ -84,9 +79,6 @@ public class StorageService
         }
     }
 
-    /// <summary>
-    /// Saves a list of games to the database.
-    /// </summary>
     public void SaveGames(List<Game> games)
     {
         using var connection = new SQLiteConnection(_connectionString);
@@ -137,9 +129,6 @@ public class StorageService
         transaction.Commit();
     }
     
-    /// <summary>
-    /// Deletes a game from the database.
-    /// </summary>
     public void DeleteGame(long steamId)
     {
         using var connection = new SQLiteConnection(_connectionString);
@@ -154,9 +143,6 @@ public class StorageService
         command.ExecuteNonQuery();
     }
 
-    /// <summary>
-    /// Deletes multiple games from the database by their Steam IDs.
-    /// </summary>
     public void DeleteGamesByIds(List<long> steamIds)
     {
         if (steamIds.Count == 0) return;
@@ -173,9 +159,6 @@ public class StorageService
         command.ExecuteNonQuery();
     }
 
-    /// <summary>
-    /// Updates the executable path of a game in the database.
-    /// </summary>
     public void UpdateGameExecutable(long steamId, string executablePath)
     {
         using var connection = new SQLiteConnection(_connectionString);
@@ -192,9 +175,6 @@ public class StorageService
         command.ExecuteNonQuery();
     }
 
-    /// <summary>
-    /// Updates an achievement in the database.
-    /// </summary>
     public void UpdateAchievement(long gameId, string achievementId, bool isUnlocked, DateTime? unlockDate = null, string? description = null)
     {
         using var connection = new SQLiteConnection(_connectionString);
@@ -214,9 +194,6 @@ public class StorageService
         command.ExecuteNonQuery();
     }
 
-    /// <summary>
-    /// Save user to the database.
-    /// </summary>
     public void SaveUser(SteamUserInfo userInfo)
     {
         using var connection = new SQLiteConnection(_connectionString);
@@ -232,9 +209,6 @@ public class StorageService
         command.ExecuteNonQuery();
     }
 
-    /// <summary>
-    /// Deletes a user from the database.
-    /// </summary>
     public void DeleteUser(string steamId)
     {
         using var connection = new SQLiteConnection(_connectionString);
@@ -246,9 +220,6 @@ public class StorageService
         command.ExecuteNonQuery();
     }
 
-    /// <summary>
-    /// Loads all games from the database.
-    /// </summary>
     public List<Game> LoadGames()
     {
         var games = new List<Game>();
@@ -308,9 +279,6 @@ public class StorageService
         return games;
     }
 
-    /// <summary>
-    /// Loads user from the database.
-    /// </summary>
     public SteamUserInfo? LoadUser()
     {
         using var connection = new SQLiteConnection(_connectionString);
@@ -329,9 +297,6 @@ public class StorageService
         return null;
     }
 
-    /// <summary>
-    /// Saves an achievement to the database.
-    /// </summary>
     private void SaveAchievement(long gameId, Achievement achievement)
     {
         using var connection = new SQLiteConnection(_connectionString);

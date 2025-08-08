@@ -33,9 +33,6 @@ public class SteamService : ISteamService
         }
     }
 
-    /// <summary>
-    /// Resolves a Steam game ID from its name.
-    /// </summary>
     public async Task<List<GameInfo>> SearchSteamGamesAsync(string gameName)
     {
         HttpClient client = new();
@@ -87,9 +84,6 @@ public class SteamService : ISteamService
         return games;
     }
 
-    /// <summary>
-    /// Fetches achievements for a game by its ID.
-    /// </summary>
     public async Task<List<Achievement>> GetAchievementsAsync(long gameId, SteamUserInfo? user = null)
     {
         // Fetch achievements for a game
@@ -167,10 +161,6 @@ public class SteamService : ISteamService
         return achievements;
     }
 
-    /// <summary>
-    /// Logs in to Steam using OpenID authentication.
-    /// Returns a SteamUserInfo object if successful, or null if authentication fails.
-    /// </summary>
     public async Task<SteamUserInfo?> LogToSteamAsync()
     {
         // OpenId authentication to Steam with system browser + local listener
@@ -288,9 +278,6 @@ public class SteamService : ISteamService
         return null;
     }
 
-    /// <summary>
-    /// Fetches owned games for a user.
-    /// </summary>
     public async Task<List<Game>> GetOwnedGamesAsync(SteamUserInfo user)
     {
         HttpClient client = new();

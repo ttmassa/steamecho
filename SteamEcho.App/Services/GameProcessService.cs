@@ -1,10 +1,11 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using SteamEcho.Core.Models;
+using SteamEcho.Core.Services;
 
 namespace SteamEcho.App.Services;
 
-public class GameProcessService
+public class GameProcessService : IGameProcessService
 {
     private readonly ObservableCollection<Game> _games;
     private Timer? _timer;
@@ -17,18 +18,12 @@ public class GameProcessService
         _games = games;
     }
 
-    /// <summary>
-    /// Starts monitoring running processes for the games in the collection.
-    /// </summary>
     public void Start()
     {
         _timer?.Change(Timeout.Infinite, 0);
         _timer = new Timer(CheckProcesses, null, 0, 2000);
     }
 
-    /// <summary>
-    /// Stops monitoring running processes.
-    /// </summary>
     public void Stop()
     {
         _timer?.Change(Timeout.Infinite, 0);

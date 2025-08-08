@@ -6,9 +6,6 @@ namespace SteamEcho.App.Services;
 
 public class NotificationService : INotificationService
 {
-    /// <summary>
-    /// Shows an achievement notification.
-    /// </summary>
     public async void ShowNotification(Achievement achievement)
     {
         var notificationWindow = new AchievementNotificationWindow

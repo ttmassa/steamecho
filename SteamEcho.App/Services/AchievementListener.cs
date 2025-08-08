@@ -1,23 +1,20 @@
 using System.IO;
 using System.Text.Json;
-using System.Windows;
 using SteamEcho.App.Views;
+using SteamEcho.Core.Services;
 
 namespace SteamEcho.App.Services;
 
-public class AchievementListener
+public class AchievementListener : IAchievementListener
 {
     private FileSystemWatcher? _watcher;
     private CancellationTokenSource? _cts;
     private string? _jsonFilePath;
-    private HashSet<long> _seenTimestamps = new();
+    private HashSet<long> _seenTimestamps = [];
     private string? _currentWatchedDir;
 
     public event Action<string>? AchievementUnlocked;
 
-    /// <summary>
-    /// Call this when a game starts running. Pass the game's executable path.
-    /// </summary>
     public void Start(string? gameExePath)
     {
         Stop();
@@ -46,9 +43,6 @@ public class AchievementListener
         _ = Task.Run(() => ProcessFileAsync(_cts.Token));
     }
 
-    /// <summary>
-    /// Call this to stop listening for achievements.
-    /// </summary>
     public void Stop()
     {
         _cts?.Cancel();
