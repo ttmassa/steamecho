@@ -155,6 +155,25 @@ public class StorageService
     }
 
     /// <summary>
+    /// Deletes multiple games from the database by their Steam IDs.
+    /// </summary>
+    public void DeleteGamesByIds(List<long> steamIds)
+    {
+        if (steamIds.Count == 0) return;
+
+        using var connection = new SQLiteConnection(_connectionString);
+        connection.Open();
+
+        var idsParam = string.Join(",", steamIds);
+        using var command = connection.CreateCommand();
+        command.CommandText = $@"
+            DELETE FROM Achievements WHERE GameId IN ({idsParam});
+            DELETE FROM Games WHERE Id IN ({idsParam});
+        ";
+        command.ExecuteNonQuery();
+    }
+
+    /// <summary>
     /// Updates the executable path of a game in the database.
     /// </summary>
     public void UpdateGameExecutable(long steamId, string executablePath)
@@ -214,15 +233,16 @@ public class StorageService
     }
 
     /// <summary>
-    /// Deletes all users from the database.
+    /// Deletes a user from the database.
     /// </summary>
-    public void DeleteUser()
+    public void DeleteUser(string steamId)
     {
         using var connection = new SQLiteConnection(_connectionString);
         connection.Open();
 
         using var command = connection.CreateCommand();
-        command.CommandText = "DELETE FROM User";
+        command.CommandText = "DELETE FROM User WHERE SteamId = @SteamId;";
+        command.Parameters.AddWithValue("@SteamId", steamId);
         command.ExecuteNonQuery();
     }
 

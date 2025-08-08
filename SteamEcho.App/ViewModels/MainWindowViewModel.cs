@@ -372,10 +372,11 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
     }
 
-    private void LogOutFromSteam()
+    private async void LogOutFromSteam()
     {
-        if (IsUserLoggedIn)
+        if (IsUserLoggedIn && CurrentUser != null)
         {
+            // Ask for confirmation before logging out
             var messageBoxText = "Are you sure you want to logout from Steam? You'll lose all data related to your Steam account.";
             var caption = "Confirm Logout";
 
@@ -384,8 +385,31 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
             if (result == true)
             {
-                _storageService.DeleteUser();
-                CurrentUser = null;
+                IsLoadingGames = true; // Show loading bar
+
+                try
+                {
+                    // Get steam owned games and remove them from the collection and database
+                    var steamOwnedGames = await _steamService.GetOwnedGamesAsync(CurrentUser);
+                    var steamIds = steamOwnedGames.Select(g => g.SteamId).ToList();
+                    _storageService.DeleteGamesByIds(steamIds);
+
+                    // Remove deleted games from the ObservableCollection
+                    foreach (var id in steamIds)
+                    {
+                        var gameToRemove = Games.FirstOrDefault(g => g.SteamId == id);
+                        if (gameToRemove != null)
+                            Games.Remove(gameToRemove);
+                    }
+
+                    // Remove user from the database
+                    _storageService.DeleteUser(CurrentUser.SteamId);
+                    CurrentUser = null;
+                }
+                finally
+                {
+                    IsLoadingGames = false;
+                }
             }
         }
     }
