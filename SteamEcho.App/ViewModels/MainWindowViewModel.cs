@@ -150,13 +150,23 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             var fileName = Path.GetFileNameWithoutExtension(dialog.FileName);
 
-            // Use SteamService to resolve Steam ID
-            GameInfo? gameInfo = await _steamService.ResolveSteamIdAsync(fileName);
-            if (gameInfo == null)
+            // Search for possible games
+            List<GameInfo> gamesInfo = await _steamService.SearchSteamGamesAsync(fileName);
+            if (gamesInfo == null || gamesInfo.Count == 0)
             {
-                Console.WriteLine("Error resolving Steam ID. Please check the game name or try again later.");
+                MessageBox.Show("No matching games found. Please check the name or try again.", "Game Not Found", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+
+            // Show selection dialog
+            var selectionDialog = new GameSelectionDialog(gamesInfo) { Owner = Application.Current.MainWindow };
+            if (selectionDialog.ShowDialog() != true || selectionDialog.SelectedGame == null)
+            {
+                // User cancelled
+                return;
+            }
+
+            var gameInfo = selectionDialog.SelectedGame;
             long steamId = gameInfo.SteamId;
             string gameName = gameInfo.Name;
             string? iconUrl = gameInfo.IconUrl;
@@ -164,17 +174,17 @@ public class MainWindowViewModel : INotifyPropertyChanged
             // Game already exists
             if (Games.Any(g => g.SteamId == steamId))
             {
-                Console.WriteLine("Game already exists in the collection.");
+                MessageBox.Show("Game already exists in the collection.", "Duplicate", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
             // Get achievements for the game
             List<Achievement> achievements = await _steamService.GetAchievementsAsync(steamId);
 
-            // Create game instance using the correct constructor
+            // Create game instance
             Game game = new(steamId, gameName, achievements, dialog.FileName, iconUrl);
 
-            // Add the game to the collection and save to database
+            // Add and save
             Games.Add(game);
             _storageService.SaveGame(game);
 
@@ -385,7 +395,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
             if (result == true)
             {
-                IsLoadingGames = true; // Show loading bar
+                IsLoadingGames = true;
 
                 try
                 {

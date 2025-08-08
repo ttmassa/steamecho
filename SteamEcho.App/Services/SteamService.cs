@@ -36,10 +36,11 @@ public class SteamService : ISteamService
     /// <summary>
     /// Resolves a Steam game ID from its name.
     /// </summary>
-    public async Task<GameInfo?> ResolveSteamIdAsync(string gameName)
+    public async Task<List<GameInfo>> SearchSteamGamesAsync(string gameName)
     {
         HttpClient client = new();
         string url = $"https://store.steampowered.com/api/storesearch/?term={gameName}&cc=us&l=en";
+        var games = new List<GameInfo>();
 
         try
         {
@@ -50,40 +51,40 @@ public class SteamService : ISteamService
             if (string.IsNullOrEmpty(content))
             {
                 Console.WriteLine("No content returned from Steam API.");
-                return null;
+                return games;
             }
 
-            // Get first result from
+            // Get results from Steam search
             using var doc = JsonDocument.Parse(content);
             var items = doc.RootElement.GetProperty("items");
             if (items.GetArrayLength() == 0)
             {
                 Console.WriteLine("No Steam game with that name exists.");
-                return null;
+                return games;
             }
 
-            // Get steam ID from the first game
-            var firstGame = items[0];
-            long claimedId = firstGame.GetProperty("id").GetInt64();
-            string name = firstGame.GetProperty("name").GetString() ?? "Unknown Name";
-            string? iconUrl = $"https://cdn.cloudflare.steamstatic.com/steam/apps/{claimedId}/library_600x900.jpg";
-
-            // Check if the icon URL is valid
-            using var request = new HttpRequestMessage(HttpMethod.Head, iconUrl);
-            HttpResponseMessage iconResponse = await client.SendAsync(request);
-            if (!iconResponse.IsSuccessStatusCode)
+            foreach (var item in items.EnumerateArray())
             {
-                iconUrl = null;
-            }
+                long id = item.GetProperty("id").GetInt64();
+                string name = item.GetProperty("name").GetString() ?? "Unknown Name";
+                string? iconUrl = $"https://cdn.cloudflare.steamstatic.com/steam/apps/{id}/library_600x900.jpg";
 
-            // Create and return GameInfo object
-            return new GameInfo(claimedId, name, iconUrl);
+                // Check if icon URL is valid
+                using var request = new HttpRequestMessage(HttpMethod.Head, iconUrl);
+                HttpResponseMessage iconResponse = await client.SendAsync(request);
+                if (!iconResponse.IsSuccessStatusCode)
+                {
+                    iconUrl = null;
+                }
+
+                games.Add(new GameInfo(id, name, iconUrl));
+            }
         }
         catch (HttpRequestException e)
         {
             Console.WriteLine("Error: " + e.Message);
-            return null;
         }
+        return games;
     }
 
     /// <summary>
