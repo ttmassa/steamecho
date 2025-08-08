@@ -9,7 +9,8 @@
     xmlns:componentModel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     mc:Ignorable="d"
-    Title="SteamEcho" Height="450" Width="800" WindowStartupLocation="CenterScreen"
+    Title="SteamEcho" Height="450" Width="800" Icon="pack://application:,,,/Assets/Logo/steamecho_logo.ico" 
+    WindowStartupLocation="CenterScreen"
     Background="#323234"
 >
     <Window.Resources>

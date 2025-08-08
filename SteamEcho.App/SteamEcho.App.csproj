@@ -12,7 +12,8 @@
   <ItemGroup>
     <PackageReference Include="Steamworks.NET" Version="2024.8.0" />
     <Resource Include="Assets\Images\*" />
-    <SplashScreen Include="Assets/Splash/splash_screen.png" />
+    <Resource Include="Assets\Logo\*" />
+    <SplashScreen Include="Assets\Splash\splash_screen.png" />
     <Content Include="Assets\Sound\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
