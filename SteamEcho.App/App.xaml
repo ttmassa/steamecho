@@ -11,5 +11,8 @@
         <Style TargetType="{x:Type TextBlock}">
             <Setter Property="FontFamily" Value="/Assets/Fonts/#Alexandria"/>
         </Style>
+        <Style TargetType="{x:Type ToolTip}">
+            <Setter Property="FontWeight" Value="Light"/>
+        </Style>
     </Application.Resources>
 </Application>
