@@ -17,11 +17,11 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" Foreground="#F0F0F0" FontSize="16" FontWeight="Bold" Margin="10"/>
+            <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" Foreground="#F0F0F0" FontSize="16" FontWeight="Medium" Margin="10"/>
             <TextBlock x:Name="MessageText" Grid.Row="1" TextWrapping="Wrap" Foreground="#F0F0F0" FontSize="12" FontWeight="Regular" Margin="10" VerticalAlignment="Center" HorizontalAlignment="Center"/>
 
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="10">
-                <Button Content="Confirm" Width="80" Margin="0,0,10,0" Click="ConfirmButton_Click" Background="#E63946" Foreground="White"/>
+                <Button Content="Confirm" Width="80" Margin="0,0,10,0" Click="ConfirmButton_Click" Background="#E63946" Foreground="White" FontWeight="Regular"/>
             </StackPanel>
         </Grid>
     </Border>

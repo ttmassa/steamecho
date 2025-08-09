@@ -4,6 +4,12 @@
              xmlns:local="clr-namespace:SteamEcho.App"
 >
     <Application.Resources>
-
+        <!-- Set Alexandria as default font -->
+        <Style TargetType="{x:Type Control}">
+            <Setter Property="FontFamily" Value="/Assets/Fonts/#Alexandria"/>
+        </Style>
+        <Style TargetType="{x:Type TextBlock}">
+            <Setter Property="FontFamily" Value="/Assets/Fonts/#Alexandria"/>
+        </Style>
     </Application.Resources>
 </Application>

@@ -19,8 +19,8 @@
             <Image Grid.Column="0" Source="{Binding Icon}" Width="48" Height="48" VerticalAlignment="Center" Margin="0,0,10,0"/>
 
             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                <TextBlock Text="{Binding Name}" Foreground="#F0F0F0" FontSize="16" FontWeight="Bold" TextWrapping="Wrap"/>
-                <TextBlock Text="{Binding Description}" Foreground="#F0F0F0" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding Name}" Foreground="#F0F0F0" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding Description}" Foreground="#F0F0F0" FontSize="12" FontWeight="Medium" TextWrapping="Wrap"/>
             </StackPanel>
         </Grid>
     </Border>

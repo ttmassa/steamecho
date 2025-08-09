@@ -44,7 +44,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="Games" Foreground="#F0F0F0" FontSize="16" FontWeight="Bold" VerticalAlignment="Center" Margin="10"/>
+                <TextBlock Text="Games" Foreground="#F0F0F0" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10"/>
                 <!-- Add Game Button -->
                 <Button Command="{Binding AddGameCommand}" Style="{StaticResource NoHoverButton}" Padding="0" ToolTip="Add Game" Margin="0,10,10,10">
                     <Image Source="/SteamEcho.App;component/Assets/Images/add_icon.png" Width="16"/>
@@ -63,9 +63,9 @@
                                 <!-- Context menu -->
                                 <Grid.ContextMenu>
                                     <ContextMenu>
-                                        <MenuItem Header="Delete" Command="{Binding PlacementTarget.Tag.DeleteGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
-                                        <MenuItem Header="Browse Files" Command="{Binding PlacementTarget.Tag.BrowseFilesCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
-                                        <MenuItem Header="Set Executable" Command="{Binding PlacementTarget.Tag.SetExecutableCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
+                                        <MenuItem Header="Delete" Command="{Binding PlacementTarget.Tag.DeleteGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"  FontWeight="Light"/>
+                                        <MenuItem Header="Browse Files" Command="{Binding PlacementTarget.Tag.BrowseFilesCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" FontWeight="Light"/>
+                                        <MenuItem Header="Set Executable" Command="{Binding PlacementTarget.Tag.SetExecutableCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" FontWeight="Light"/>
                                     </ContextMenu>
                                 </Grid.ContextMenu>
                                 <Grid.ColumnDefinitions>
@@ -74,8 +74,8 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <Image Grid.Column="0" Source="{Binding IconUrl}" VerticalAlignment="Center" Width="28" Margin="0,0,10,0"/>
-                                <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" Foreground="#F0F0F0" FontSize="14" FontWeight="Bold" Margin="0,0,10,0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
-                                <TextBlock Grid.Column="2" Text="{Binding AchievementsSummary}" VerticalAlignment="Center" Foreground="#F0F0F0" FontSize="12" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" Foreground="#F0F0F0" FontSize="14" FontWeight="Medium" Margin="0,0,10,0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                                <TextBlock Grid.Column="2" Text="{Binding AchievementsSummary}" VerticalAlignment="Center" Foreground="#C4C4C6" FontSize="12" FontWeight="Regular"/>
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
@@ -113,7 +113,7 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Game title -->
-                    <TextBlock Grid.Column="0" Text="{Binding SelectedGame.Name}" Foreground="#F0F0F0" FontSize="20" FontWeight="Bold" Margin="10"/>
+                    <TextBlock Grid.Column="0" Text="{Binding SelectedGame.Name}" Foreground="#F0F0F0" FontSize="20" FontWeight="SemiBold" Margin="10"/>
 
                     <!-- Setup Button -->
                     <Button Grid.Column="1" Command="{Binding ToggleProxyCommand}" CommandParameter="{Binding SelectedGame}" Foreground="#F0F0F0" Margin="0,10,20,10">
@@ -242,7 +242,7 @@
                             <StackPanel Orientation="Horizontal" Grid.Row="0">
                                 <!-- Achievement Trophy Icon -->
                                 <Image Source="/SteamEcho.App;component/Assets/Images/achievement_icon.png" Width="25" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                <TextBlock Text="Achievements" Foreground="#F0F0F0" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <TextBlock Text="Achievements" Foreground="#F0F0F0" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             </StackPanel>
 
                             <!-- Achievement List -->
@@ -342,7 +342,7 @@
                                             
                                             <!-- Achievement Details -->
                                             <StackPanel Orientation="Vertical" Margin="0,0,10,0" Grid.Column="1">
-                                                <TextBlock x:Name="AchievementName" Text="{Binding Name}" Foreground="#F0F0F0" FontSize="12" FontWeight="Bold" ToolTip="{Binding Name}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Stretch"/>
+                                                <TextBlock x:Name="AchievementName" Text="{Binding Name}" Foreground="#F0F0F0" FontSize="12" FontWeight="Medium" ToolTip="{Binding Name}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Stretch"/>
                                                 <TextBlock x:Name="AchievementDesc" Text="{Binding Description}" Foreground="#F0F0F0" FontSize="10" FontWeight="Regular" TextWrapping="NoWrap" ToolTip="{Binding Description}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" HorizontalAlignment="Stretch"/>
                                             </StackPanel>
                                             <!-- Achievement Global Percentage -->

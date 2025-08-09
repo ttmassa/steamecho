@@ -14,7 +14,7 @@
     <Border CornerRadius="8" Background="#E63946">
         <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
             <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Text="SteamEcho" FontSize="48" FontWeight="Bold" Foreground="#F0F0F0" Margin="0,0,0,20"/>
+                <TextBlock Text="SteamEcho" FontSize="48" FontWeight="SemiBold" Foreground="#F0F0F0" Margin="0,0,0,20"/>
                 <Image Source="/SteamEcho.App;component/Assets/Logo/steamecho_logo.png" Width="60" Height="60"/>
             </StackPanel>
         </Grid>

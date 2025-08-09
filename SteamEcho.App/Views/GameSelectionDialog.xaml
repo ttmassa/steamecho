@@ -15,7 +15,7 @@
         </Grid.RowDefinitions>
 
         <!-- Title -->
-        <TextBlock Grid.Row="0" Text="Select a Game" Foreground="#F0F0F0" FontSize="26" FontWeight="Bold" HorizontalAlignment="Center" Margin="20,20,20,10"/>
+        <TextBlock Grid.Row="0" Text="Select a Game" Foreground="#F0F0F0" FontSize="26" FontWeight="Medium" HorizontalAlignment="Center" Margin="20,20,20,10"/>
 
         <!-- Game List -->
         <ListBox Grid.Row="1" x:Name="GamesListBox" Background="#2B2B2C" BorderThickness="0" Margin="20,0,20,0" ItemsSource="{Binding Games}" SelectedItem="{Binding SelectedGame, Mode=TwoWay}" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
@@ -72,7 +72,7 @@
                             </Image.Style>
                         </Image>
                         <StackPanel Orientation="Vertical" VerticalAlignment="Center" Width="260">
-                            <TextBlock Text="{Binding Name}" Foreground="#F0F0F0" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,2" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Width="250"/>
+                            <TextBlock Text="{Binding Name}" Foreground="#F0F0F0" FontSize="16" FontWeight="Regular" Margin="0,0,0,2" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Width="250"/>
                         </StackPanel>
                     </StackPanel>
                 </DataTemplate>
@@ -83,10 +83,7 @@
                         <Setter.Value>
                             <ControlTemplate TargetType="ListBox">
                                 <Border Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}">
-                                    <ScrollViewer Focusable="false"
-                                                  Padding="{TemplateBinding Padding}"
-                                                  VerticalScrollBarVisibility="Auto"
-                                                  HorizontalScrollBarVisibility="Disabled">
+                                    <ScrollViewer Focusable="false" Padding="{TemplateBinding Padding}" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                                         <ItemsPresenter/>
                                     </ScrollViewer>
                                 </Border>
@@ -98,7 +95,7 @@
         </ListBox>
 
         <!-- Select Button -->
-        <Button Grid.Row="2" Content="Select" Background="#E63946" Foreground="#F0F0F0" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,24,0,24" Width="100" Height="38" Cursor="Hand" Click="SelectButton_Click">
+        <Button Grid.Row="2" Content="Select" Background="#E63946" Foreground="#F0F0F0" FontSize="16" FontWeight="Regular" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,24,0,24" Width="100" Height="38" Cursor="Hand" Click="SelectButton_Click">
             <Button.Template>
                 <ControlTemplate TargetType="Button">
                     <Border Background="{TemplateBinding Background}" CornerRadius="6" SnapsToDevicePixels="True">
