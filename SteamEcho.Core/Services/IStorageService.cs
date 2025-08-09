@@ -6,11 +6,6 @@ namespace SteamEcho.Core.Services;
 public interface IStorageService
 {
     /// <summary>
-    /// Initialize the database.
-    /// </summary>
-    public void InitializeDatabase();
-
-    /// <summary>
     /// Saves a game to the database.
     /// </summary>
     public void SaveGame(Game game);

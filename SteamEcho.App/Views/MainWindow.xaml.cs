@@ -13,6 +13,14 @@ public partial class MainWindow : Window
         DataContext = new MainWindowViewModel();
     }
 
+    public async Task InitializeViewModelAsync()
+    {
+        if (DataContext is MainWindowViewModel vm)
+        {
+            await vm.InitializeAsync();
+        }
+    }
+
     // Handles hyperlink navigation requests
     private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
     {

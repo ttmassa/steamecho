@@ -23,7 +23,7 @@ public class StorageService : IStorageService
         InitializeDatabase();
     }
 
-    public void InitializeDatabase()
+    private void InitializeDatabase()
     {
         using var connection = new SQLiteConnection(_connectionString);
         connection.Open();

@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Media;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using SteamEcho.App.Views;
 
 namespace SteamEcho.App.ViewModels;
@@ -31,7 +32,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand SetExecutableCommand { get; }
     public ICommand ToggleProxyCommand { get; }
     private readonly SteamService _steamService;
-    private readonly StorageService _storageService;
+    private StorageService _storageService;
     private readonly SoundPlayer _soundPlayer;
     private readonly NotificationService _notificationService;
     private readonly GameProcessService _gameProcessService;
@@ -103,26 +104,14 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
     public MainWindowViewModel()
     {
+        _storageService = null!;
         _steamService = new SteamService();
-        string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steamecho.db");
-        _storageService = new StorageService(dbPath);
-        _storageService.InitializeDatabase();
         _soundPlayer = new SoundPlayer("Assets/Sound/notification.wav");
         _notificationService = new NotificationService();
-
-        CurrentUser = _storageService.LoadUser();
-        Games = new ObservableCollection<Game>(_storageService.LoadGames());
-        SelectedGame = Games.FirstOrDefault();
-
-        // Initialize game process service
         _gameProcessService = new GameProcessService(Games);
-        _gameProcessService.RunningGameChanged += OnRunningGameChanged;
-        _gameProcessService.Start();
-
-        // Initialize achievement listener
         _achievementListener = new AchievementListener();
-        _achievementListener.AchievementUnlocked += OnAchievementUnlocked;
 
+        // Initialize commands
         AddGameCommand = new RelayCommand(AddGame);
         DeleteGameCommand = new RelayCommand<Game>(DeleteGame);
         BrowseFilesCommand = new RelayCommand<Game>(BrowseFiles);
@@ -136,6 +125,33 @@ public class MainWindowViewModel : INotifyPropertyChanged
         RefreshDataCommand = new RelayCommand(RefreshData);
         SetExecutableCommand = new RelayCommand<Game>(SetExecutable);
         ToggleProxyCommand = new RelayCommand(ToggleProxy);
+    }
+
+    public async Task InitializeAsync()
+    {
+        await Task.Run(() =>
+        {
+            // Initialize storage service
+            string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steamecho.db");
+            _storageService = new StorageService(dbPath);
+
+            var user = _storageService.LoadUser();
+            var games = _storageService.LoadGames();
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                CurrentUser = user;
+                foreach (var game in games)
+                {
+                    Games.Add(game);
+                }
+                SelectedGame = Games.FirstOrDefault();
+
+                _gameProcessService.Start();
+                _achievementListener.AchievementUnlocked += OnAchievementUnlocked;
+                _gameProcessService.RunningGameChanged += OnRunningGameChanged;
+            });
+        });
     }
 
     private async void AddGame()

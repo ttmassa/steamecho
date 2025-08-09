@@ -1,0 +1,22 @@
+<Window
+    x:Class="SteamEcho.App.Views.SplashWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="SteamEcho" Width="800" Height="450"
+    WindowStyle="None" 
+    AllowsTransparency="True"
+    Topmost="True" 
+    ShowInTaskbar="False"
+    WindowStartupLocation="CenterScreen"
+    Background="Transparent"
+>
+
+    <Border CornerRadius="8" Background="#E63946">
+        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="SteamEcho" FontSize="48" FontWeight="Bold" Foreground="#F0F0F0" Margin="0,0,0,20"/>
+                <Image Source="/SteamEcho.App;component/Assets/Logo/steamecho_logo.png" Width="60" Height="60"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>
