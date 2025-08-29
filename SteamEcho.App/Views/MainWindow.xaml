@@ -57,6 +57,35 @@
             <!-- Menu List -->
             <Grid Grid.Row="1">
                 <ListBox ItemsSource="{Binding Games}" SelectedItem="{Binding SelectedGame, Mode=TwoWay}" Background="#2B2B2C" BorderThickness="0" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Hidden">
+                    
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border Background="{TemplateBinding Background}">
+                                            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" HorizontalAlignment="Stretch"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+
+                            <Style.Triggers>
+                                <!-- Hover effect -->
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#4A4A4D"/>
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                </Trigger>
+
+                                <!-- Selected effect -->
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#4A4A4D"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <Grid Margin="5" Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}" ToolTip="{Binding Name}">
@@ -68,11 +97,13 @@
                                         <MenuItem Header="Set Executable" Command="{Binding PlacementTarget.Tag.SetExecutableCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" FontWeight="Light"/>
                                     </ContextMenu>
                                 </Grid.ContextMenu>
+
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
+                                
                                 <Image Grid.Column="0" Source="{Binding IconUrl}" VerticalAlignment="Center" Width="28" Margin="0,0,10,0"/>
                                 <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" Foreground="#F0F0F0" FontSize="14" FontWeight="Medium" Margin="0,0,10,0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
                                 <TextBlock Grid.Column="2" Text="{Binding AchievementsSummary}" VerticalAlignment="Center" Foreground="#C4C4C6" FontSize="12" FontWeight="Regular"/>
@@ -86,7 +117,7 @@
         <!-- Main Content Area -->
         <Grid Grid.Column="1">
             <!-- Game Content (Visible when not in settings) -->
-            <Grid x:Name="GameContentGrid">
+            <Grid>
                 <Grid.Style>
                     <Style TargetType="Grid">
                         <Setter Property="Visibility" Value="Visible"/>
@@ -218,6 +249,7 @@
 
                     <!-- Achievement Section -->
                     <Border Grid.Column="0" Background="#E63946" Margin="10" CornerRadius="12">
+                        <!-- Sort the achievements -->
                         <Border.Resources>
                             <CollectionViewSource x:Key="SortedAchievements" Source="{Binding SelectedGame.Achievements}" IsLiveSortingRequested="True">
                                 <CollectionViewSource.SortDescriptions>
@@ -230,6 +262,7 @@
                                 </CollectionViewSource.LiveSortingProperties>
                             </CollectionViewSource>
                         </Border.Resources>
+
                         <Grid Margin="10">
                             <Grid.RowDefinitions>
                                 <!-- Achievement Section Header -->
@@ -249,9 +282,11 @@
                             <ListBox Grid.Row="1" ItemsSource="{Binding Source={StaticResource SortedAchievements}}" Background="#E63946" BorderThickness="0" Margin="0,10,0,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch">
                                 <ListBox.ItemContainerStyle>
                                     <Style TargetType="ListBoxItem">
+                                        <Setter Property="Background" Value="Transparent"/>
                                         <Setter Property="ClipToBounds" Value="False"/>
                                         <Setter Property="Padding" Value="5,5,0,5"/>
                                         <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                        <!-- Context menu -->
                                         <Setter Property="ContextMenu">
                                             <Setter.Value>
                                                 <ContextMenu>
@@ -282,8 +317,17 @@
                                                 </ContextMenu>
                                             </Setter.Value>
                                         </Setter>
+                                        <!-- Template to remove default blue glow effect -->
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <ContentPresenter Margin="{TemplateBinding Padding}" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" HorizontalAlignment="Stretch"/>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
                                     </Style>
                                 </ListBox.ItemContainerStyle>
+
                                 <ListBox.Resources>
                                     <!-- Style for the scroll bar -->
                                     <Style TargetType="ScrollBar">
@@ -316,6 +360,7 @@
                                         </Setter>
                                     </Style>
                                 </ListBox.Resources>
+
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Margin="0" VerticalAlignment="Center">
@@ -334,10 +379,7 @@
                                                 <Border x:Name="GlowBorder" CornerRadius="5" />
                                                 
                                                 <!-- Achievement Icon -->
-                                                <Image x:Name="AchievementIcon"
-                                                    Source="{Binding Icon}"
-                                                    VerticalAlignment="Center"
-                                                    Width="34"/>
+                                                <Image x:Name="AchievementIcon" Source="{Binding Icon}" VerticalAlignment="Center" Width="34" Cursor="Hand"/>
                                             </Grid>
                                             
                                             <!-- Achievement Details -->
@@ -522,6 +564,7 @@
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                             <TextBlock Text="Color: " Foreground="#F0F0F0" FontWeight="Regular" Margin="0,0,5,0" VerticalAlignment="Center"/>
                             <ListBox ItemsSource="{Binding NotificationColors}" SelectedItem="{Binding NotificationColor, Mode=TwoWay}" Background="Transparent" BorderThickness="0" HorizontalAlignment="Left" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                <!-- Make the list horrizontal -->
                                 <ListBox.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <StackPanel Orientation="Horizontal"/>
@@ -530,21 +573,11 @@
 
                                 <ListBox.ItemContainerStyle>
                                     <Style TargetType="ListBoxItem">
-                                        <Setter Property="Padding" Value="0"/>
-                                        <Setter Property="Margin" Value="0"/>
-                                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                                        <Setter Property="VerticalContentAlignment" Value="Center"/>
-                                        <Setter Property="Background" Value="Transparent"/>
-                                        <Setter Property="BorderThickness" Value="0"/>
                                         <Setter Property="Template">
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="ListBoxItem">
-                                                    <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
-                                                        <ContentPresenter
-                                                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                                            Content="{TemplateBinding Content}"
-                                                            ContentTemplate="{TemplateBinding ContentTemplate}"/>
+                                                    <Border Background="{TemplateBinding Background}">
+                                                        <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"/>
                                                     </Border>
                                                 </ControlTemplate>
                                             </Setter.Value>
