@@ -8,16 +8,24 @@ using SteamEcho.Core.DTOs;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using System.Media;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using SteamEcho.App.Views;
+using SteamEcho.App.Models;
 
 namespace SteamEcho.App.ViewModels;
 
 public class MainWindowViewModel : INotifyPropertyChanged
 {
     public ObservableCollection<Game> Games { get; } = [];
+    public ObservableCollection<string> NotificationColors { get; } = new ObservableCollection<string>
+    {
+        "#4A4A4D",
+        "#000044",
+        "#000000",
+        "#C02222",
+        "#19680b",
+        "#BF00FF"
+    };
     public ICommand AddGameCommand { get; }
     public ICommand DeleteGameCommand { get; }
     public ICommand BrowseFilesCommand { get; }
@@ -31,16 +39,18 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand RefreshDataCommand { get; }
     public ICommand SetExecutableCommand { get; }
     public ICommand ToggleProxyCommand { get; }
+    public ICommand TestNotificationCommand { get; }
+    public ICommand SaveNotificationSettingsCommand { get; }
     private readonly SteamService _steamService;
     private StorageService _storageService;
-    private readonly SoundPlayer _soundPlayer;
-    private readonly NotificationService _notificationService;
+    private NotificationService _notificationService;
     private readonly GameProcessService _gameProcessService;
     private readonly AchievementListener _achievementListener;
     private Game? _selectedGame;
     private SteamUserInfo? _currentUser;
     private bool _isLoadingGames;
     private bool _isSettingsVisible;
+    private NotificationConfig? _draftNotificationConfig;
 
     public Game? SelectedGame
     {
@@ -87,6 +97,36 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    public string StatusText => IsUserLoggedIn ? "Connected" : "Disconnected";
+    public double NotificationSize
+    {
+        get => _draftNotificationConfig?.NotificationSize ?? _notificationService.Config.NotificationSize;
+        set
+        {
+            if (_draftNotificationConfig != null && _draftNotificationConfig.NotificationSize != value)
+            {
+                _draftNotificationConfig.NotificationSize = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsNotificationSaved));
+            }
+        }
+    }
+    public string NotificationColor
+    {
+        get => _draftNotificationConfig?.NotificationColor ?? _notificationService.Config.NotificationColor;
+        set
+        {
+            if (_draftNotificationConfig != null && _draftNotificationConfig.NotificationColor != value)
+            {
+                _draftNotificationConfig.NotificationColor = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsNotificationSaved));
+            }
+        }
+    }
+    public bool IsNotificationSaved => _draftNotificationConfig != null && 
+        (_draftNotificationConfig.NotificationSize != _notificationService.Config.NotificationSize ||
+         _draftNotificationConfig.NotificationColor != _notificationService.Config.NotificationColor);
     public bool IsSettingsVisible
     {
         get => _isSettingsVisible;
@@ -95,19 +135,34 @@ public class MainWindowViewModel : INotifyPropertyChanged
             if (_isSettingsVisible != value)
             {
                 _isSettingsVisible = value;
+                if (_isSettingsVisible)
+                {
+                    // Create a draft copy when opening settings
+                    _draftNotificationConfig = new NotificationConfig
+                    {
+                        NotificationSize = _notificationService.Config.NotificationSize,
+                        NotificationColor = _notificationService.Config.NotificationColor
+                    };
+                    OnPropertyChanged(nameof(NotificationSize));
+                    OnPropertyChanged(nameof(NotificationColor));
+                    OnPropertyChanged(nameof(IsNotificationSaved));
+                }
+                else
+                {
+                    // Discard draft when closing settings
+                    _draftNotificationConfig = null;
+                    OnPropertyChanged(nameof(IsNotificationSaved));
+                }
                 OnPropertyChanged();
             }
         }
     }
 
-    public string StatusText => IsUserLoggedIn ? "Connected" : "Disconnected";
-
     public MainWindowViewModel()
     {
         _storageService = null!;
+        _notificationService = null!;
         _steamService = new SteamService();
-        _soundPlayer = new SoundPlayer("Assets/Sound/notification.wav");
-        _notificationService = new NotificationService();
         _gameProcessService = new GameProcessService(Games);
         _achievementListener = new AchievementListener();
 
@@ -125,6 +180,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
         RefreshDataCommand = new RelayCommand(RefreshData);
         SetExecutableCommand = new RelayCommand<Game>(SetExecutable);
         ToggleProxyCommand = new RelayCommand(ToggleProxy);
+        TestNotificationCommand = new RelayCommand(TestNotification);
+        SaveNotificationSettingsCommand = new RelayCommand(SaveNotificationSettings);
     }
 
     public async Task InitializeAsync()
@@ -134,6 +191,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
             // Initialize storage service
             string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steamecho.db");
             _storageService = new StorageService(dbPath);
+
+            // Initialize notification service (needs to load notification sound)
+            _notificationService = new NotificationService();
 
             var user = _storageService.LoadUser();
             var games = _storageService.LoadGames();
@@ -146,6 +206,10 @@ public class MainWindowViewModel : INotifyPropertyChanged
                     Games.Add(game);
                 }
                 SelectedGame = Games.FirstOrDefault();
+
+                // Notify the UI that the NotificationSize property has been loaded
+                OnPropertyChanged(nameof(NotificationSize));
+                OnPropertyChanged(nameof(NotificationColor));
 
                 _gameProcessService.Start();
                 _achievementListener.AchievementUnlocked += OnAchievementUnlocked;
@@ -307,10 +371,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
                     achievementFound = true;
                     achievement.Unlock();
 
-                    // Play notification sound
-                    _soundPlayer.Play();
-
-                    // Show on-screen notification
+                    // Show notification
                     _notificationService.ShowNotification(achievement);
 
                     // Update the game in the database
@@ -704,6 +765,33 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
         }
     }
+
+    private void TestNotification()
+    {
+        // Create dummy achievement for testing
+        _notificationService.TestNotification(NotificationSize, NotificationColor);
+    }
+
+    private void SaveNotificationSettings()
+    {
+        if (_draftNotificationConfig != null)
+        {
+            _notificationService.Config.NotificationSize = _draftNotificationConfig.NotificationSize;
+            _notificationService.Config.NotificationColor = _draftNotificationConfig.NotificationColor;
+            _notificationService.SaveConfig();
+
+            // After saving, update the draft to match the saved config
+            _draftNotificationConfig.NotificationSize = _notificationService.Config.NotificationSize;
+            _draftNotificationConfig.NotificationColor = _notificationService.Config.NotificationColor;
+
+            OnPropertyChanged(nameof(NotificationSize));
+            OnPropertyChanged(nameof(NotificationColor));
+            OnPropertyChanged(nameof(IsNotificationSaved));
+
+            var dialog = new MessageDialog("Notification settings saved successfully.", "Success");
+            dialog.ShowDialog();
+         }
+     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

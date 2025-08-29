@@ -258,7 +258,7 @@ public class StorageService : IStorageService
             long gameId = achievementsReader.GetInt64(0);
             string id = achievementsReader.GetString(1);
             string name = achievementsReader.GetString(2);
-            string description = achievementsReader.GetString(3);
+            string? description = achievementsReader.IsDBNull(3) ? "Hidden Description" : achievementsReader.GetString(3);
             string? icon = achievementsReader.IsDBNull(4) ? null : achievementsReader.GetString(4);
             string? grayIcon = achievementsReader.IsDBNull(5) ? null : achievementsReader.GetString(5);
             double? globalPercentage = achievementsReader.IsDBNull(6) ? null : achievementsReader.GetDouble(6);

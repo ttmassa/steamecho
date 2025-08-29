@@ -460,7 +460,7 @@
                 <Border Grid.Row="1" Background="#2B2B2C" Margin="10" CornerRadius="12">
                     <StackPanel Margin="15">
                         <!-- Steam Section -->
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,15">
                             <TextBlock Text="Steam" Foreground="#F0F0F0" FontSize="16" FontWeight="Medium" VerticalAlignment="Center"/>
                             <Button Command="{Binding RefreshDataCommand}" Style="{StaticResource NoHoverButton}" Margin="10,0,0,0" ToolTip="Refresh Steam data">
                                 <Image Source="/SteamEcho.App;component/Assets/Images/refresh_icon.png" Width="16"/>
@@ -468,7 +468,7 @@
                         </StackPanel>
 
                         <!-- Status -->
-                        <StackPanel Orientation="Horizontal" Margin="0,15,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
                             <TextBlock Text="Status: " Foreground="#F0F0F0" FontWeight="Regular" VerticalAlignment="Center"/>
                             <TextBlock Text="{Binding StatusText}" Foreground="#E63946" FontWeight="Medium" VerticalAlignment="Center">
                                 <TextBlock.Style>
@@ -485,7 +485,7 @@
                         </StackPanel>
 
                         <!-- Login/Logout -->
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="{Binding IsUserLoggedIn, Converter={StaticResource BooleanToLoginTextConverter}}" Foreground="#F0F0F0" FontWeight="Regular" VerticalAlignment="Center" Margin="0,0,5,0"/>
                             <Button>
                                 <Button.Style>
@@ -501,6 +501,108 @@
                                 <Image Source="/SteamEcho.App;component/Assets/Images/steam_icon.png" Width="25"/>
                             </Button>
                         </StackPanel>
+
+                        <!-- Notifications Section -->
+                        <StackPanel Orientation="Horizontal" Margin="0,15,0,2">
+                            <TextBlock Text="Notifications" Foreground="#F0F0F0" FontSize="16" FontWeight="Medium" Margin="0,0,10,0"/>
+                            <Button Command="{Binding TestNotificationCommand}" Style="{StaticResource NoHoverButton}" ToolTip="Test it!">
+                                <Image Source="/SteamEcho.App;component/Assets/Images/launch_icon.png" Width="18" VerticalAlignment="Center"/>
+                            </Button>
+                        </StackPanel>
+                        <TextBlock Text="Customize your achievements notifications and test it by clicking on the rocket!" Foreground="#C4C4C6" FontSize="10" FontWeight="Light" Margin="0,0,0,10"/>
+
+                        <!-- Notifications Size -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                            <TextBlock Text="Size: " Foreground="#F0F0F0" FontWeight="Regular" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                            <Slider Width="150" Minimum="1" Maximum="10" Value="{Binding NotificationSize, Mode=TwoWay, FallbackValue=5}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding NotificationSize, StringFormat='{}{0:F0}', FallbackValue=5}" Foreground="#F0F0F0" FontWeight="Regular" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Notification Color -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                            <TextBlock Text="Color: " Foreground="#F0F0F0" FontWeight="Regular" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                            <ListBox ItemsSource="{Binding NotificationColors}" SelectedItem="{Binding NotificationColor, Mode=TwoWay}" Background="Transparent" BorderThickness="0" HorizontalAlignment="Left" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Padding" Value="0"/>
+                                        <Setter Property="Margin" Value="0"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                                        <ContentPresenter
+                                                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                            Content="{TemplateBinding Content}"
+                                                            ContentTemplate="{TemplateBinding ContentTemplate}"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Width="24" Height="24" CornerRadius="6" Margin="4" Cursor="Hand" Background="{Binding}" ToolTip="{Binding}">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="BorderBrush" Value="Transparent"/>
+                                                    <Setter Property="BorderThickness" Value="2"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
+                                                            <Setter Property="BorderBrush" Value="#FFFFFFFF"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+
+                        <!-- Save button -->
+                        <Button Foreground="#F0F0F0" HorizontalAlignment="Left" Command="{Binding SaveNotificationSettingsCommand}" Margin="0,0,10,0">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource NoHoverButton}">
+                                    <!-- Default -->
+                                    <Setter Property="Background" Value="#6E6E70"/>
+                                    <Setter Property="Content" Value="Saved"/>
+                                    <Setter Property="IsEnabled" Value="False"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="10,5">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <!-- Unsaved changes -->
+                                        <DataTrigger Binding="{Binding IsNotificationSaved}" Value="True">
+                                            <Setter Property="Background" Value="#E63946"/>
+                                            <Setter Property="Content" Value="Save"/>
+                                            <Setter Property="IsEnabled" Value="True"/>
+                                        </DataTrigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#C32A3A"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
                     </StackPanel>
                 </Border>
             </Grid>
