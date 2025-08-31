@@ -41,8 +41,11 @@
         <Grid Grid.Column="0" Background="#2B2B2C">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
+            
+            <!-- Menu Header -->
             <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="Games" Foreground="#F0F0F0" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10"/>
                 <!-- Add Game Button -->
@@ -54,9 +57,17 @@
                     <Image Source="/SteamEcho.App;component/Assets/Images/settings_icon.png" Width="18"/>
                 </Button>
             </StackPanel>
+
+            <!-- Menu Search Bar -->
+            <StackPanel Grid.Row="1" Margin="10,0,0,5" Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Width="180" Height="20" Background="#4A4A4D" CornerRadius="4" Padding="4,0" VerticalAlignment="Center">
+                    <TextBox x:Name="SearchBox" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" BorderThickness="0" Foreground="#F0F0F0" ToolTip="Search games" Padding="6,0" CaretBrush="#F0F0F0" VerticalAlignment="Center"/>
+                </Border>
+            </StackPanel>
+
             <!-- Menu List -->
-            <Grid Grid.Row="1">
-                <ListBox ItemsSource="{Binding Games}" SelectedItem="{Binding SelectedGame, Mode=TwoWay}" Background="#2B2B2C" BorderThickness="0" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Hidden">
+            <Grid Grid.Row="2">
+                <ListBox ItemsSource="{Binding GamesView}" SelectedItem="{Binding SelectedGame, Mode=TwoWay}" Background="#2B2B2C" BorderThickness="0" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Hidden">
                     
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">

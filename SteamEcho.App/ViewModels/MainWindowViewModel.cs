@@ -11,6 +11,7 @@ using System.Windows;
 using System.Diagnostics;
 using SteamEcho.App.Views;
 using SteamEcho.App.Models;
+using System.Windows.Data;
 
 namespace SteamEcho.App.ViewModels;
 
@@ -47,6 +48,23 @@ public class MainWindowViewModel : INotifyPropertyChanged
     private readonly GameProcessService _gameProcessService;
     private readonly AchievementListener _achievementListener;
     private Game? _selectedGame;
+    private string? _searchText;
+    public string? SearchText
+    {
+        get => _searchText;
+        set
+        {
+            if (_searchText != value)
+            {
+                _searchText = value;
+                // Refresh the view to re-run the filter
+                _gamesView.Refresh();
+                OnPropertyChanged();
+            }
+        }
+    }
+    private readonly ICollectionView _gamesView;
+    public ICollectionView GamesView => _gamesView;
     private SteamUserInfo? _currentUser;
     private bool _isLoadingGames;
     private bool _isSettingsVisible;
@@ -160,11 +178,16 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
     public MainWindowViewModel()
     {
+        // Initialize services
         _storageService = null!;
         _notificationService = null!;
         _steamService = new SteamService();
         _gameProcessService = new GameProcessService(Games);
         _achievementListener = new AchievementListener();
+
+        // Setup collection view for filtering
+        _gamesView = CollectionViewSource.GetDefaultView(Games);
+        _gamesView.Filter = FilterGames;
 
         // Initialize commands
         AddGameCommand = new RelayCommand(AddGame);
@@ -791,7 +814,18 @@ public class MainWindowViewModel : INotifyPropertyChanged
             var dialog = new MessageDialog("Notification settings saved successfully.", "Success");
             dialog.ShowDialog();
          }
-     }
+    }
+
+    private bool FilterGames(object? obj)
+    {
+        if (obj is not Game game) return false;
+
+        var query = _searchText?.Trim().ToLower();
+        if (string.IsNullOrEmpty(query)) return true;
+
+        // Match by name
+        return game.Name?.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0;
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

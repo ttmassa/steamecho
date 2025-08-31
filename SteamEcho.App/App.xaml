@@ -12,6 +12,11 @@
             <Setter Property="FontFamily" Value="/Assets/Fonts/#Alexandria"/>
         </Style>
         <Style TargetType="{x:Type ToolTip}">
+            <Setter Property="FontFamily" Value="/Assets/Fonts/#Alexandria"/>
+            <Setter Property="FontWeight" Value="Light"/>
+        </Style>
+        <Style TargetType="{x:Type TextBox}">
+            <Setter Property="FontFamily" Value="/Assets/Fonts/#Alexandria"/>
             <Setter Property="FontWeight" Value="Light"/>
         </Style>
     </Application.Resources>
