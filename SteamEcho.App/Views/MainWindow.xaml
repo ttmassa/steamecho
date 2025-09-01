@@ -61,9 +61,29 @@
             <!-- Menu Search Bar -->
             <StackPanel Grid.Row="1" Margin="10,0,0,5" Orientation="Horizontal" VerticalAlignment="Center">
                 <Border Width="180" Height="20" Background="#4A4A4D" CornerRadius="4" Padding="4,0" VerticalAlignment="Center">
-                    <TextBox x:Name="SearchBox" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" BorderThickness="0" Foreground="#F0F0F0" ToolTip="Search games" Padding="6,0" CaretBrush="#F0F0F0" VerticalAlignment="Center"/>
-                </Border>
-            </StackPanel>
+                    <Grid>
+                        <!-- Text Input -->
+                        <TextBox x:Name="SearchBox" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" BorderThickness="0" Foreground="#F0F0F0" ToolTip="Search games" Padding="6,0" CaretBrush="#F0F0F0" VerticalAlignment="Center"/>
+                        <!-- Placeholder -->
+                        <TextBlock Text="Search games..." Foreground="#C4C4C6" VerticalAlignment="Center" Margin="6,0,0,0" IsHitTestVisible="False">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding Text, ElementName=SearchBox}" Value=""/>
+                                                <Condition Binding="{Binding IsKeyboardFocusWithin, ElementName=SearchBox}" Value="False"/>
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </MultiDataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                 </Border>
+             </StackPanel>
 
             <!-- Menu List -->
             <Grid Grid.Row="2">
