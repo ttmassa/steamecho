@@ -17,16 +17,21 @@ namespace SteamEcho.App.ViewModels;
 
 public class MainWindowViewModel : INotifyPropertyChanged
 {
+    // Collections
     public ObservableCollection<Game> Games { get; } = [];
-    public ObservableCollection<string> NotificationColors { get; } = new ObservableCollection<string>
-    {
+    public ObservableCollection<string> NotificationColors { get; } =
+    [
         "#4A4A4D",
         "#000044",
         "#000000",
         "#C02222",
         "#19680b",
         "#BF00FF"
-    };
+    ];
+    private readonly ICollectionView _gamesView;
+    public ICollectionView GamesView => _gamesView;
+
+    // Commands
     public ICommand AddGameCommand { get; }
     public ICommand DeleteGameCommand { get; }
     public ICommand BrowseFilesCommand { get; }
@@ -42,34 +47,17 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand ToggleProxyCommand { get; }
     public ICommand TestNotificationCommand { get; }
     public ICommand SaveNotificationSettingsCommand { get; }
+
+    // Services
     private readonly SteamService _steamService;
     private StorageService _storageService;
     private NotificationService _notificationService;
     private readonly GameProcessService _gameProcessService;
     private readonly AchievementListener _achievementListener;
-    private Game? _selectedGame;
-    private string? _searchText;
-    public string? SearchText
-    {
-        get => _searchText;
-        set
-        {
-            if (_searchText != value)
-            {
-                _searchText = value;
-                // Refresh the view to re-run the filter
-                _gamesView.Refresh();
-                OnPropertyChanged();
-            }
-        }
-    }
-    private readonly ICollectionView _gamesView;
-    public ICollectionView GamesView => _gamesView;
-    private SteamUserInfo? _currentUser;
-    private bool _isLoadingGames;
-    private bool _isSettingsVisible;
     private NotificationConfig? _draftNotificationConfig;
 
+    // Properties
+    private Game? _selectedGame;
     public Game? SelectedGame
     {
         get => _selectedGame;
@@ -86,6 +74,22 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
         }
     }
+    private string? _searchText;
+    public string? SearchText
+    {
+        get => _searchText;
+        set
+        {
+            if (_searchText != value)
+            {
+                _searchText = value;
+                // Refresh the view to re-run the filter
+                _gamesView.Refresh();
+                OnPropertyChanged();
+            }
+        }
+    }
+    private SteamUserInfo? _currentUser;
     public SteamUserInfo? CurrentUser
     {
         get => _currentUser;
@@ -100,8 +104,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
         }
     }
-    public bool IsUserLoggedIn => CurrentUser != null && !string.IsNullOrEmpty(CurrentUser.SteamId);
-
+    private bool _isLoadingGames;
     public bool IsLoadingGames
     {
         get => _isLoadingGames;
@@ -114,37 +117,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
         }
     }
-
-    public string StatusText => IsUserLoggedIn ? "Connected" : "Disconnected";
-    public double NotificationSize
-    {
-        get => _draftNotificationConfig?.NotificationSize ?? _notificationService.Config.NotificationSize;
-        set
-        {
-            if (_draftNotificationConfig != null && _draftNotificationConfig.NotificationSize != value)
-            {
-                _draftNotificationConfig.NotificationSize = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(IsNotificationSaved));
-            }
-        }
-    }
-    public string NotificationColor
-    {
-        get => _draftNotificationConfig?.NotificationColor ?? _notificationService.Config.NotificationColor;
-        set
-        {
-            if (_draftNotificationConfig != null && _draftNotificationConfig.NotificationColor != value)
-            {
-                _draftNotificationConfig.NotificationColor = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(IsNotificationSaved));
-            }
-        }
-    }
-    public bool IsNotificationSaved => _draftNotificationConfig != null && 
-        (_draftNotificationConfig.NotificationSize != _notificationService.Config.NotificationSize ||
-         _draftNotificationConfig.NotificationColor != _notificationService.Config.NotificationColor);
+    private bool _isSettingsVisible;
     public bool IsSettingsVisible
     {
         get => _isSettingsVisible;
@@ -175,6 +148,37 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
         }
     }
+    public bool IsUserLoggedIn => CurrentUser != null && !string.IsNullOrEmpty(CurrentUser.SteamId);
+    public string StatusText => IsUserLoggedIn ? "Connected" : "Disconnected";
+    public double NotificationSize
+    {
+        get => _draftNotificationConfig?.NotificationSize ?? _notificationService.Config.NotificationSize;
+        set
+        {
+            if (_draftNotificationConfig != null && _draftNotificationConfig.NotificationSize != value)
+            {
+                _draftNotificationConfig.NotificationSize = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsNotificationSaved));
+            }
+        }
+    }
+    public string NotificationColor
+    {
+        get => _draftNotificationConfig?.NotificationColor ?? _notificationService.Config.NotificationColor;
+        set
+        {
+            if (_draftNotificationConfig != null && _draftNotificationConfig.NotificationColor != value)
+            {
+                _draftNotificationConfig.NotificationColor = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsNotificationSaved));
+            }
+        }
+    }
+    public bool IsNotificationSaved => _draftNotificationConfig != null && 
+        (_draftNotificationConfig.NotificationSize != _notificationService.Config.NotificationSize ||
+         _draftNotificationConfig.NotificationColor != _notificationService.Config.NotificationColor);
 
     public MainWindowViewModel()
     {
@@ -207,6 +211,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         SaveNotificationSettingsCommand = new RelayCommand(SaveNotificationSettings);
     }
 
+    // Background initialization during loading screen
     public async Task InitializeAsync()
     {
         await Task.Run(() =>
@@ -241,6 +246,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
         });
     }
 
+    /// <summary>
+    /// Manueally add a new game by selecting its executable and linking it to a Steam game.
+    /// </summary>
     private async void AddGame()
     {
         var dialog = new OpenFileDialog
@@ -295,6 +303,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+
     private void DeleteGame(Game game)
     {
         if (game == null) return;
@@ -323,7 +332,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         // Remove game from collection and database
         Games.Remove(game);
-        _storageService.DeleteGame(game.SteamId);        
+        _storageService.DeleteGame(game.SteamId);
 
         if (SelectedGame == game)
         {
