@@ -296,7 +296,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
             // Game already exists
             if (Games.Any(g => g.SteamId == steamId))
             {
-                MessageBox.Show("Game already exists in the collection.", "Duplicate", MessageBoxButton.OK, MessageBoxImage.Information);
+                var errorDialog = new MessageDialog("This game is already in your library.", "Duplicate Game");
+                errorDialog.ShowDialog();
                 return;
             }
 
