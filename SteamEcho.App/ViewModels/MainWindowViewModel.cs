@@ -216,6 +216,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     {
         await Task.Run(async () =>
         {
+            LoadingStatus.Update("Initializing services...");
             // Initialize storage service
             string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steamecho.db");
             _storageService = new StorageService(dbPath);
@@ -223,11 +224,13 @@ public class MainWindowViewModel : INotifyPropertyChanged
             // Initialize notification service (needs to load notification sound)
             _notificationService = new NotificationService();
 
+            LoadingStatus.Update("Loading your data...");
             var user = _storageService.LoadUser();
             var games = _storageService.LoadGames();
 
             if (user != null)
             {
+                LoadingStatus.Update("Syncing with Steam...");
                 // Sync with Steam data
                 var steamGames = await _steamService.GetOwnedGamesAsync(user);
                 _storageService.SyncGames(steamGames, games);
@@ -236,6 +239,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 games = _storageService.LoadGames();
             }
 
+            LoadingStatus.Update("Almost there...");
             Application.Current.Dispatcher.Invoke(() =>
             {
                 CurrentUser = user;
