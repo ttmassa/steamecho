@@ -5,61 +5,6 @@
     Title="Select Game" Height="500" Width="400" WindowStartupLocation="CenterOwner" Background="#2B2B2C"
 >
     <Window.Resources>
-        <!-- Custom vertical scrollbar style -->
-        <Style TargetType="ScrollBar" x:Key="CustomVerticalScrollBar">
-            <Setter Property="Orientation" Value="Vertical"/>
-            <Setter Property="Width" Value="4"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ScrollBar">
-                        <Grid Background="Transparent">
-                            <Track x:Name="PART_Track" IsDirectionReversed="true" Focusable="false">
-                                <Track.DecreaseRepeatButton>
-                                    <RepeatButton Visibility="Collapsed" IsTabStop="False"/>
-                                </Track.DecreaseRepeatButton>
-                                <Track.Thumb>
-                                    <Thumb Height="25" Cursor="Hand" VerticalAlignment="Top">
-                                        <Thumb.Template>
-                                            <ControlTemplate TargetType="Thumb">
-                                                <Border Background="#F0F0F0" CornerRadius="5" Width="8"/>
-                                            </ControlTemplate>
-                                        </Thumb.Template>
-                                    </Thumb>
-                                </Track.Thumb>
-                                <Track.IncreaseRepeatButton>
-                                    <RepeatButton Visibility="Collapsed" IsTabStop="False"/>
-                                </Track.IncreaseRepeatButton>
-                            </Track>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- ListBoxItem Style -->
-        <Style TargetType="ListBoxItem">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ListBoxItem">
-                        <Border Background="{TemplateBinding Background}">
-                            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" HorizontalAlignment="Stretch"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#4A4A4D"/>
-                    <Setter Property="Cursor" Value="Hand"/>
-                </Trigger>
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#4A4A4D"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
         <!-- ListBox Style -->
         <Style TargetType="ListBox" x:Key="GameListBoxStyle">
             <Setter Property="Template">
@@ -107,15 +52,11 @@
         </Grid.RowDefinitions>
 
         <!-- Title -->
-        <TextBlock Grid.Row="0" Text="Select a Game" Foreground="#F0F0F0" FontSize="26" FontWeight="Medium" HorizontalAlignment="Center" Margin="20,20,20,10"/>
+        <TextBlock Grid.Row="0" Text="Select a Game" FontSize="26" FontWeight="Medium" HorizontalAlignment="Center" Margin="20,20,20,10"/>
 
         <!-- Game List -->
-        <ListBox Grid.Row="1" x:Name="GamesListBox" Background="#2B2B2C" BorderThickness="0" Margin="20,0,20,0" ItemsSource="{Binding Games}" SelectedItem="{Binding SelectedGame, Mode=TwoWay}" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Style="{StaticResource GameListBoxStyle}">
-
-            <ListBox.Resources>
-                <Style TargetType="ScrollBar" BasedOn="{StaticResource CustomVerticalScrollBar}" />
-            </ListBox.Resources>
-
+        <ListBox Grid.Row="1" x:Name="GamesListBox" Background="#2B2B2C" BorderThickness="0" Margin="20,0,20,0" ItemsSource="{Binding Games}" SelectedItem="{Binding SelectedGame, Mode=TwoWay}" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Style="{StaticResource GameListBoxStyle}" ItemContainerStyle="{StaticResource CustomListBoxItemStyle}">
+            
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal" Margin="0,8,0,8" VerticalAlignment="Center" Width="340">
@@ -135,7 +76,7 @@
                             </Image.Style>
                         </Image>
                         <StackPanel Orientation="Vertical" VerticalAlignment="Center" Width="260">
-                            <TextBlock Text="{Binding Name}" Foreground="#F0F0F0" FontSize="16" FontWeight="Regular" Margin="0,0,0,2" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Width="250"/>
+                            <TextBlock Text="{Binding Name}" FontSize="16" Margin="0,0,0,2" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Width="250"/>
                         </StackPanel>
                     </StackPanel>
                 </DataTemplate>

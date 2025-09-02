@@ -1,0 +1,144 @@
+<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:SteamEcho.App.Converters"
+>
+    <converters:AchievementRarityConverter x:Key="RarityConverter"/>
+    <converters:BooleanToLoginTextConverter x:Key="BooleanToLoginTextConverter"/>
+    
+    <!-- Style for Button -->
+    <Style TargetType="Button" x:Key="NoHoverButton">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Style for Slider -->
+    <Style TargetType="Slider">
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Margin" Value="0,0,5,0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Slider">
+                    <Grid VerticalAlignment="Center">
+                        <Border x:Name="TrackBackground" Height="3" CornerRadius="1.5" Background="#4A4A4D"/>
+                        <Track x:Name="PART_Track">
+                            <Track.Thumb>
+                                <Thumb x:Name="Thumb" Width="14" Height="14">
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="Thumb">
+                                            <Ellipse x:Name="grip" Fill="#F0F0F0" StrokeThickness="0"/>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="grip" Property="Fill" Value="#E63946"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </Track.Thumb>
+                        </Track>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Style for ListBoxItem -->
+    <Style TargetType="ListBoxItem" x:Key="CustomListBoxItemStyle">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#4A4A4D"/>
+                <Setter Property="Cursor" Value="Hand"/>
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="#4A4A4D"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Style for ScrollBar -->
+    <Style TargetType="{x:Type ScrollBar}">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Width" Value="Auto"/>
+        <Setter Property="Height" Value="Auto"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ScrollBar}">
+                    <Grid x:Name="GridRoot" Background="{TemplateBinding Background}">
+                        <Track x:Name="PART_Track" IsDirectionReversed="true" Focusable="false">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Command="{x:Static ScrollBar.LineUpCommand}" Visibility="Collapsed" IsTabStop="False"/>
+                            </Track.DecreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb Cursor="Hand">
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="{x:Type Thumb}">
+                                            <Border x:Name="ThumbBorder" Background="#F0F0F0" CornerRadius="4" Margin="0,4"/>
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </Track.Thumb>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Command="{x:Static ScrollBar.LineDownCommand}" Visibility="Collapsed" IsTabStop="False"/>
+                            </Track.IncreaseRepeatButton>
+                        </Track>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Orientation" Value="Vertical">
+                            <Setter TargetName="GridRoot" Property="Width" Value="8"/>
+                            <Setter TargetName="PART_Track" Property="Width" Value="8"/>
+                        </Trigger>
+                        <Trigger Property="Orientation" Value="Horizontal">
+                            <Setter TargetName="GridRoot" Property="Height" Value="8"/>
+                            <Setter TargetName="PART_Track" Property="Height" Value="8"/>
+                            <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Style for TextBlock -->
+    <Style TargetType="{x:Type TextBlock}">
+        <Setter Property="FontFamily" Value="/Assets/Fonts/#Alexandria"/>
+        <Setter Property="Foreground" Value="#F0F0F0"/>
+    </Style>
+
+    <!-- Style for Control -->
+    <Style TargetType="{x:Type Control}">
+        <Setter Property="FontFamily" Value="/Assets/Fonts/#Alexandria"/>
+    </Style>
+
+    <!-- Style for ToolTip -->
+    <Style TargetType="{x:Type ToolTip}">
+        <Setter Property="FontFamily" Value="/Assets/Fonts/#Alexandria"/>
+        <Setter Property="FontWeight" Value="Light"/>
+    </Style>
+
+    <!-- Style for TextBox -->
+    <Style TargetType="{x:Type TextBox}">
+        <Setter Property="FontFamily" Value="/Assets/Fonts/#Alexandria"/>
+        <Setter Property="FontWeight" Value="Light"/>
+    </Style>
+</ResourceDictionary>

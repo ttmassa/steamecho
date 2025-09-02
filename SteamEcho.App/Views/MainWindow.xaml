@@ -13,55 +13,6 @@
     WindowStartupLocation="CenterScreen"
     Background="#323234"
 >
-    <Window.Resources>
-        <converters:AchievementRarityConverter x:Key="RarityConverter"/>
-        <converters:BooleanToLoginTextConverter x:Key="BooleanToLoginTextConverter"/>
-        <!-- Style for buttons -->
-        <Style TargetType="Button" x:Key="NoHoverButton">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Style for sliders -->
-        <Style TargetType="Slider">
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Margin" Value="0,0,5,0"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Slider">
-                        <Grid VerticalAlignment="Center">
-                            <Border x:Name="TrackBackground" Height="3" CornerRadius="1.5" Background="#4A4A4D"/>
-                            <Track x:Name="PART_Track">
-                                <Track.Thumb>
-                                    <Thumb x:Name="Thumb" Width="14" Height="14">
-                                        <Thumb.Template>
-                                            <ControlTemplate TargetType="Thumb">
-                                                <Ellipse x:Name="grip" Fill="#F0F0F0" StrokeThickness="0"/>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="grip" Property="Fill" Value="#E63946"/>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Thumb.Template>
-                                    </Thumb>
-                                </Track.Thumb>
-                            </Track>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200"/>
@@ -78,7 +29,7 @@
             
             <!-- Menu Header -->
             <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="Games" Foreground="#F0F0F0" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10"/>
+                <TextBlock Text="Games" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10"/>
                 <!-- Add Game Button -->
                 <Button Command="{Binding AddGameCommand}" Style="{StaticResource NoHoverButton}" Padding="0" ToolTip="Add Game" Margin="0,10,10,10">
                     <Image Source="/SteamEcho.App;component/Assets/Images/add_icon.png" Width="16"/>
@@ -94,7 +45,7 @@
                 <Border Width="180" Height="20" Background="#4A4A4D" CornerRadius="4" Padding="4,0" VerticalAlignment="Center">
                     <Grid>
                         <!-- Text Input -->
-                        <TextBox x:Name="SearchBox" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" BorderThickness="0" Foreground="#F0F0F0" ToolTip="Search games" Padding="6,0" CaretBrush="#F0F0F0" VerticalAlignment="Center"/>
+                        <TextBox x:Name="SearchBox" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" BorderThickness="0" ToolTip="Search games" Padding="6,0" CaretBrush="#F0F0F0" VerticalAlignment="Center"/>
                         <!-- Placeholder -->
                         <TextBlock Text="Search games..." Foreground="#C4C4C6" VerticalAlignment="Center" Margin="6,0,0,0" IsHitTestVisible="False">
                             <TextBlock.Style>
@@ -118,39 +69,11 @@
 
             <!-- Menu List -->
             <Grid Grid.Row="2">
-                <ListBox ItemsSource="{Binding GamesView}" SelectedItem="{Binding SelectedGame, Mode=TwoWay}" Background="#2B2B2C" BorderThickness="0" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Hidden">
-                    
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
-                            <Setter Property="Background" Value="Transparent"/>
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="ListBoxItem">
-                                        <Border Background="{TemplateBinding Background}">
-                                            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" HorizontalAlignment="Stretch"/>
-                                        </Border>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-
-                            <Style.Triggers>
-                                <!-- Hover effect -->
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#4A4A4D"/>
-                                    <Setter Property="Cursor" Value="Hand"/>
-                                </Trigger>
-
-                                <!-- Selected effect -->
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="#4A4A4D"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Grid Margin="5" Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}" ToolTip="{Binding Name}">
+                <ListBox ItemsSource="{Binding GamesView}" SelectedItem="{Binding SelectedGame, Mode=TwoWay}" Background="#2B2B2C" BorderThickness="0" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Hidden" ItemContainerStyle="{StaticResource CustomListBoxItemStyle}">
+                
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="5" Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}" ToolTip="{Binding Name}">
                                 <!-- Context menu -->
                                 <Grid.ContextMenu>
                                     <ContextMenu>
@@ -167,8 +90,8 @@
                                 </Grid.ColumnDefinitions>
                                 
                                 <Image Grid.Column="0" Source="{Binding IconUrl}" VerticalAlignment="Center" Width="28" Margin="0,0,10,0"/>
-                                <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" Foreground="#F0F0F0" FontSize="14" FontWeight="Medium" Margin="0,0,10,0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
-                                <TextBlock Grid.Column="2" Text="{Binding AchievementsSummary}" VerticalAlignment="Center" Foreground="#C4C4C6" FontSize="12" FontWeight="Regular"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" FontSize="14" FontWeight="Medium" Margin="0,0,10,0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                                <TextBlock Grid.Column="2" Text="{Binding AchievementsSummary}" VerticalAlignment="Center" Foreground="#C4C4C6"/>
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
@@ -206,10 +129,10 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Game title -->
-                    <TextBlock Grid.Column="0" Text="{Binding SelectedGame.Name}" Foreground="#F0F0F0" FontSize="20" FontWeight="SemiBold" Margin="10"/>
+                    <TextBlock Grid.Column="0" Text="{Binding SelectedGame.Name}" FontSize="20" FontWeight="SemiBold" Margin="10"/>
 
                     <!-- Setup Button -->
-                    <Button Grid.Column="1" Command="{Binding ToggleProxyCommand}" CommandParameter="{Binding SelectedGame}" Foreground="#F0F0F0" Margin="0,10,20,10">
+                    <Button Grid.Column="1" Command="{Binding ToggleProxyCommand}" CommandParameter="{Binding SelectedGame}" Margin="0,10,20,10">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource NoHoverButton}">
                                 <Setter Property="Template">
@@ -337,7 +260,7 @@
                             <StackPanel Orientation="Horizontal" Grid.Row="0">
                                 <!-- Achievement Trophy Icon -->
                                 <Image Source="/SteamEcho.App;component/Assets/Images/achievement_icon.png" Width="25" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                <TextBlock Text="Achievements" Foreground="#F0F0F0" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock Text="Achievements" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             </StackPanel>
 
                             <!-- Achievement List -->
@@ -390,39 +313,6 @@
                                     </Style>
                                 </ListBox.ItemContainerStyle>
 
-                                <ListBox.Resources>
-                                    <!-- Style for the scroll bar -->
-                                    <Style TargetType="ScrollBar">
-                                        <Setter Property="Background" Value="Transparent"/>
-                                        <Setter Property="Width" Value="4"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="ScrollBar">
-                                                    <Grid Background="Transparent">
-                                                        <Track x:Name="PART_Track" IsDirectionReversed="true" Focusable="false">
-                                                            <Track.DecreaseRepeatButton>
-                                                                <RepeatButton Visibility="Collapsed" IsTabStop="False"/>
-                                                            </Track.DecreaseRepeatButton>
-                                                            <Track.Thumb>
-                                                                <Thumb Height="25" Cursor="Hand" VerticalAlignment="Top">
-                                                                    <Thumb.Template>
-                                                                        <ControlTemplate TargetType="Thumb">
-                                                                            <Border Background="#F0F0F0" CornerRadius="5" Width="8"/>
-                                                                        </ControlTemplate>
-                                                                    </Thumb.Template>
-                                                                </Thumb>
-                                                            </Track.Thumb>
-                                                            <Track.IncreaseRepeatButton>
-                                                                <RepeatButton Visibility="Collapsed" IsTabStop="False"/>
-                                                            </Track.IncreaseRepeatButton>
-                                                        </Track>
-                                                    </Grid>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </ListBox.Resources>
-
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Margin="0" VerticalAlignment="Center">
@@ -439,18 +329,18 @@
                                             <Grid Width="34" Height="34" Margin="0,0,10,0" ClipToBounds="False">
                                                 <!-- Glow Effect Border -->
                                                 <Border x:Name="GlowBorder" CornerRadius="5" />
-                                                
+                                                    
                                                 <!-- Achievement Icon -->
                                                 <Image x:Name="AchievementIcon" Source="{Binding Icon}" VerticalAlignment="Center" Width="34" Cursor="Hand"/>
                                             </Grid>
-                                            
+                                                
                                             <!-- Achievement Details -->
                                             <StackPanel Orientation="Vertical" Margin="0,0,10,0" Grid.Column="1">
-                                                <TextBlock x:Name="AchievementName" Text="{Binding Name}" Foreground="#F0F0F0" FontSize="12" FontWeight="Medium" ToolTip="{Binding Name}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Stretch"/>
-                                                <TextBlock x:Name="AchievementDesc" Text="{Binding Description}" Foreground="#F0F0F0" FontSize="10" FontWeight="Regular" TextWrapping="NoWrap" ToolTip="{Binding Description}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" HorizontalAlignment="Stretch"/>
+                                                <TextBlock x:Name="AchievementName" Text="{Binding Name}" FontWeight="Medium" ToolTip="{Binding Name}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Stretch"/>
+                                                <TextBlock x:Name="AchievementDesc" Text="{Binding Description}" FontSize="10" FontWeight="Regular" TextWrapping="NoWrap" ToolTip="{Binding Description}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" HorizontalAlignment="Stretch"/>
                                             </StackPanel>
                                             <!-- Achievement Global Percentage -->
-                                            <TextBlock x:Name="AchievementGlobalPercentage" Text="{Binding GlobalPercentage, StringFormat='{}{0:F1}%'}" Foreground="#F0F0F0" FontSize="12" FontWeight="Regular" VerticalAlignment="Center" Grid.Column="2" HorizontalAlignment="Right" Margin="10,0,0,0"/>
+                                            <TextBlock x:Name="AchievementGlobalPercentage" Text="{Binding GlobalPercentage, StringFormat='{}{0:F1}%'}" FontWeight="Regular" VerticalAlignment="Center" Grid.Column="2" HorizontalAlignment="Right" Margin="10,0,0,0"/>
                                         </Grid>
                                         <!-- Change color and icon based on achievement's completude -->
                                         <DataTemplate.Triggers>
@@ -554,7 +444,7 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="Settings" Foreground="#F0F0F0" FontSize="20" FontWeight="SemiBold" Margin="10"/>
+                    <TextBlock Grid.Column="0" Text="Settings" FontSize="20" FontWeight="SemiBold" Margin="10"/>
                     <Button Grid.Column="1" Command="{Binding HideSettingsCommand}" Style="{StaticResource NoHoverButton}" Margin="0,0,20,0">
                         <Image Source="/SteamEcho.App;component/Assets/Images/cross_icon.png" Width="14"/>
                     </Button>
@@ -565,7 +455,7 @@
                     <StackPanel Margin="15">
                         <!-- Steam Section -->
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,15">
-                            <TextBlock Text="Steam" Foreground="#F0F0F0" FontSize="16" FontWeight="Medium" VerticalAlignment="Center"/>
+                            <TextBlock Text="Steam" FontSize="16" FontWeight="Medium" VerticalAlignment="Center"/>
                             <Button Command="{Binding RefreshDataCommand}" Style="{StaticResource NoHoverButton}" Margin="10,0,0,0" ToolTip="Refresh Steam data">
                                 <Image Source="/SteamEcho.App;component/Assets/Images/refresh_icon.png" Width="16"/>
                             </Button>
@@ -573,7 +463,7 @@
 
                         <!-- Status -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                            <TextBlock Text="Status: " Foreground="#F0F0F0" FontWeight="Regular" VerticalAlignment="Center"/>
+                            <TextBlock Text="Status: " FontWeight="Regular" VerticalAlignment="Center"/>
                             <TextBlock Text="{Binding StatusText}" Foreground="#E63946" FontWeight="Medium" VerticalAlignment="Center">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
@@ -590,7 +480,7 @@
 
                         <!-- Login/Logout -->
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding IsUserLoggedIn, Converter={StaticResource BooleanToLoginTextConverter}}" Foreground="#F0F0F0" FontWeight="Regular" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBlock Text="{Binding IsUserLoggedIn, Converter={StaticResource BooleanToLoginTextConverter}}" FontWeight="Regular" VerticalAlignment="Center" Margin="0,0,5,0"/>
                             <Button>
                                 <Button.Style>
                                     <Style TargetType="Button" BasedOn="{StaticResource NoHoverButton}">
@@ -608,7 +498,7 @@
 
                         <!-- Notifications Section -->
                         <StackPanel Orientation="Horizontal" Margin="0,15,0,2">
-                            <TextBlock Text="Notifications" Foreground="#F0F0F0" FontSize="16" FontWeight="Medium" Margin="0,0,10,0"/>
+                            <TextBlock Text="Notifications" FontSize="16" FontWeight="Medium" Margin="0,0,10,0"/>
                             <Button Command="{Binding TestNotificationCommand}" Style="{StaticResource NoHoverButton}" ToolTip="Test it!">
                                 <Image Source="/SteamEcho.App;component/Assets/Images/launch_icon.png" Width="18" VerticalAlignment="Center"/>
                             </Button>
@@ -617,21 +507,21 @@
 
                         <!-- Notifications Size -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                            <TextBlock Text="Size: " Foreground="#F0F0F0" FontWeight="Regular" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Size: " FontWeight="Regular" Margin="0,0,5,0" VerticalAlignment="Center"/>
                             <Slider Width="150" Value="{Binding NotificationSize, Mode=TwoWay, FallbackValue=5}" Minimum="1" Maximum="10" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding NotificationSize, StringFormat='{}{0:F0}', FallbackValue=5}" Foreground="#F0F0F0" FontWeight="Regular" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding NotificationSize, StringFormat='{}{0:F0}', FallbackValue=5}" FontWeight="Regular" VerticalAlignment="Center"/>
                         </StackPanel>
 
                         <!-- Notification Time -->
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Time: " Foreground="#F0F0F0" FontWeight="Regular" Margin="0,0,0,5"/>
+                            <TextBlock Text="Time: " FontWeight="Regular" Margin="0,0,0,5"/>
                             <Slider Width="150" Value="{Binding NotificationTime, Mode=TwoWay, FallbackValue=7}" Minimum="1" Maximum="20" TickFrequency="1" IsSnapToTickEnabled="True"/>
-                            <TextBlock Text="{Binding NotificationTime, StringFormat='{}{0:F0} sec', FallbackValue=7}" Foreground="#F0F0F0" FontWeight="Regular"/>
+                            <TextBlock Text="{Binding NotificationTime, StringFormat='{}{0:F0} sec', FallbackValue=7}" FontWeight="Regular"/>
                         </StackPanel>
 
                         <!-- Notification Color -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                            <TextBlock Text="Color: " Foreground="#F0F0F0" FontWeight="Regular" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Color: " FontWeight="Regular" Margin="0,0,5,0" VerticalAlignment="Center"/>
                             <ListBox ItemsSource="{Binding NotificationColors}" SelectedItem="{Binding NotificationColor, Mode=TwoWay}" Background="Transparent" BorderThickness="0" HorizontalAlignment="Left" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
                                 <!-- Make the list horrizontal -->
                                 <ListBox.ItemsPanel>
@@ -676,7 +566,7 @@
 
 
                         <!-- Save button -->
-                        <Button Foreground="#F0F0F0" HorizontalAlignment="Left" Command="{Binding SaveNotificationSettingsCommand}" Margin="0,0,10,0">
+                        <Button HorizontalAlignment="Left" Command="{Binding SaveNotificationSettingsCommand}" Margin="0,0,10,0">
                             <Button.Style>
                                 <Style TargetType="Button" BasedOn="{StaticResource NoHoverButton}">
                                     <!-- Default -->

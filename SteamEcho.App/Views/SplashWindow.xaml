@@ -19,10 +19,10 @@
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0" Grid.RowSpan="2" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Text="SteamEcho" FontSize="48" FontWeight="SemiBold" Foreground="#F0F0F0" Margin="0,0,0,20"/>
+                <TextBlock Text="SteamEcho" FontSize="48" FontWeight="SemiBold" Margin="0,0,0,20"/>
                 <Image Source="/SteamEcho.App;component/Assets/Logo/steamecho_logo.png" Width="60" Height="60"/>
             </StackPanel>
-            <TextBlock Grid.Row="1" x:Name="StatusText" Text="Initialisation..." FontSize="14" Foreground="#F0F0F0" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,50"/>
+            <TextBlock Grid.Row="1" x:Name="StatusText" Text="Initialisation..." FontSize="14" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,50"/>
         </Grid>
     </Border>
 </Window>
