@@ -30,6 +30,37 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Style for sliders -->
+        <Style TargetType="Slider">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,0,5,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid VerticalAlignment="Center">
+                            <Border x:Name="TrackBackground" Height="3" CornerRadius="1.5" Background="#4A4A4D"/>
+                            <Track x:Name="PART_Track">
+                                <Track.Thumb>
+                                    <Thumb x:Name="Thumb" Width="14" Height="14">
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Ellipse x:Name="grip" Fill="#F0F0F0" StrokeThickness="0"/>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="grip" Property="Fill" Value="#E63946"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -587,8 +618,15 @@
                         <!-- Notifications Size -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
                             <TextBlock Text="Size: " Foreground="#F0F0F0" FontWeight="Regular" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                            <Slider Width="150" Minimum="1" Maximum="10" Value="{Binding NotificationSize, Mode=TwoWay, FallbackValue=5}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
+                            <Slider Width="150" Value="{Binding NotificationSize, Mode=TwoWay, FallbackValue=5}" Minimum="1" Maximum="10" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
                             <TextBlock Text="{Binding NotificationSize, StringFormat='{}{0:F0}', FallbackValue=5}" Foreground="#F0F0F0" FontWeight="Regular" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Notification Time -->
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Time: " Foreground="#F0F0F0" FontWeight="Regular" Margin="0,0,0,5"/>
+                            <Slider Width="150" Value="{Binding NotificationTime, Mode=TwoWay, FallbackValue=7}" Minimum="1" Maximum="20" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                            <TextBlock Text="{Binding NotificationTime, StringFormat='{}{0:F0} sec', FallbackValue=7}" Foreground="#F0F0F0" FontWeight="Regular"/>
                         </StackPanel>
 
                         <!-- Notification Color -->
@@ -635,6 +673,7 @@
                                 </ListBox.ItemTemplate>
                             </ListBox>
                         </StackPanel>
+
 
                         <!-- Save button -->
                         <Button Foreground="#F0F0F0" HorizontalAlignment="Left" Command="{Binding SaveNotificationSettingsCommand}" Margin="0,0,10,0">

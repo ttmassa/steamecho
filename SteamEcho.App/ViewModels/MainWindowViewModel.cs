@@ -163,6 +163,19 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
         }
     }
+    public int NotificationTime
+    {
+        get => _draftNotificationConfig?.NotificationTime ?? _notificationService.Config.NotificationTime;
+        set
+        {
+            if (_draftNotificationConfig != null && _draftNotificationConfig.NotificationTime != value)
+            {
+                _draftNotificationConfig.NotificationTime = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsNotificationSaved));
+            }
+        }
+    }
     public string NotificationColor
     {
         get => _draftNotificationConfig?.NotificationColor ?? _notificationService.Config.NotificationColor;
@@ -176,9 +189,10 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
         }
     }
-    public bool IsNotificationSaved => _draftNotificationConfig != null && 
+    public bool IsNotificationSaved => _draftNotificationConfig != null &&
         (_draftNotificationConfig.NotificationSize != _notificationService.Config.NotificationSize ||
-         _draftNotificationConfig.NotificationColor != _notificationService.Config.NotificationColor);
+         _draftNotificationConfig.NotificationColor != _notificationService.Config.NotificationColor ||
+         _draftNotificationConfig.NotificationTime != _notificationService.Config.NotificationTime);
 
     public MainWindowViewModel()
     {
@@ -251,6 +265,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
                 // Notify the UI that the NotificationSize property has been loaded
                 OnPropertyChanged(nameof(NotificationSize));
+                OnPropertyChanged(nameof(NotificationTime));
                 OnPropertyChanged(nameof(NotificationColor));
 
                 _gameProcessService.Start();
@@ -821,14 +836,17 @@ public class MainWindowViewModel : INotifyPropertyChanged
         if (_draftNotificationConfig != null)
         {
             _notificationService.Config.NotificationSize = _draftNotificationConfig.NotificationSize;
+            _notificationService.Config.NotificationTime = _draftNotificationConfig.NotificationTime;
             _notificationService.Config.NotificationColor = _draftNotificationConfig.NotificationColor;
             _notificationService.SaveConfig();
 
             // After saving, update the draft to match the saved config
             _draftNotificationConfig.NotificationSize = _notificationService.Config.NotificationSize;
+            _draftNotificationConfig.NotificationTime = _notificationService.Config.NotificationTime;
             _draftNotificationConfig.NotificationColor = _notificationService.Config.NotificationColor;
 
             OnPropertyChanged(nameof(NotificationSize));
+            OnPropertyChanged(nameof(NotificationTime));
             OnPropertyChanged(nameof(NotificationColor));
             OnPropertyChanged(nameof(IsNotificationSaved));
 

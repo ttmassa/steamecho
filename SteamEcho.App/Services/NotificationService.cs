@@ -46,7 +46,7 @@ public class NotificationService : INotificationService
         notificationWindow.Show();
 
         // Automatically close the notification after 7 seconds
-        await Task.Delay(TimeSpan.FromSeconds(7));
+        await Task.Delay(TimeSpan.FromSeconds(Config.NotificationTime));
         notificationWindow.Close();
     }
 
@@ -76,7 +76,7 @@ public class NotificationService : INotificationService
         notificationWindow.Show();
 
         // Automatically close the notification after 7 seconds
-        await Task.Delay(TimeSpan.FromSeconds(7));
+        await Task.Delay(TimeSpan.FromSeconds(Config.NotificationTime));
         notificationWindow.Close();
     }
 

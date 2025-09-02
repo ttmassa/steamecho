@@ -6,6 +6,7 @@ namespace SteamEcho.App.Models;
 public class NotificationConfig : INotifyPropertyChanged
 {
     private double _notificationSize = 5;
+    private int _notificationTime = 7;
     private string _notificationColor = "#4a4a4dac";
 
     public double NotificationSize
@@ -16,6 +17,17 @@ public class NotificationConfig : INotifyPropertyChanged
             if (_notificationSize != value)
             {
                 _notificationSize = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+    public int NotificationTime
+    {
+        get => _notificationTime;
+        set {
+            if (_notificationTime != value)
+            {
+                _notificationTime = value;
                 OnPropertyChanged();
             }
         }
