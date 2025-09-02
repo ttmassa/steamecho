@@ -227,7 +227,7 @@ public class StorageService : IStorageService
         using var connection = new SQLiteConnection(_connectionString);
         connection.Open();
 
-        // Load games
+        // Load games from db
         using var command = connection.CreateCommand();
         command.CommandText = "SELECT Id, Name, ExecutablePath, IconUrl FROM Games";
 
@@ -288,13 +288,33 @@ public class StorageService : IStorageService
         command.CommandText = "SELECT SteamId FROM User";
 
         using var reader = command.ExecuteReader();
+        // Only one user should be stored at a time
         if (reader.Read())
         {
-
             var user = new SteamUserInfo(reader.GetString(0));
             return user;
         }
         return null;
+    }
+
+    // Sync local database with Steam data to handle case where user has new games or unlocked achievements without using the app
+    public void SyncGames(List<Game> steamGames, List<Game> localGames)
+    {
+        var steamGameIds = new HashSet<long>(steamGames.Select(g => g.SteamId));
+        var localGameIds = new HashSet<long>(localGames.Select(g => g.SteamId));
+
+        // Find games to add or update (in Steam but not in local)
+        var gamesToUpsert = steamGames.Where(g =>
+        {
+            var localGame = localGames.FirstOrDefault(lg => lg.SteamId == g.SteamId);
+            // Add if not in local, or update if achievements differ
+            return localGame == null || !g.Achievements.SequenceEqual(localGame.Achievements);
+        }).ToList();
+
+        if (gamesToUpsert.Count > 0)
+        {
+            SaveGames(gamesToUpsert);
+        }
     }
 
     private void SaveAchievement(long gameId, Achievement achievement)

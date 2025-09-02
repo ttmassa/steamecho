@@ -214,7 +214,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     // Background initialization during loading screen
     public async Task InitializeAsync()
     {
-        await Task.Run(() =>
+        await Task.Run(async () =>
         {
             // Initialize storage service
             string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steamecho.db");
@@ -225,6 +225,16 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
             var user = _storageService.LoadUser();
             var games = _storageService.LoadGames();
+
+            if (user != null)
+            {
+                // Sync with Steam data
+                var steamGames = await _steamService.GetOwnedGamesAsync(user);
+                _storageService.SyncGames(steamGames, games);
+
+                // Reload games from db after sync
+                games = _storageService.LoadGames();
+            }
 
             Application.Current.Dispatcher.Invoke(() =>
             {
@@ -246,9 +256,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
         });
     }
 
-    /// <summary>
-    /// Manueally add a new game by selecting its executable and linking it to a Steam game.
-    /// </summary>
     private async void AddGame()
     {
         var dialog = new OpenFileDialog

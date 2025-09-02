@@ -86,7 +86,7 @@ public class SteamService : ISteamService
 
     public async Task<List<Achievement>> GetAchievementsAsync(long gameId, SteamUserInfo? user = null)
     {
-        // Fetch achievements for a game
+        // Fetch achievements for a game and optionally check if they are unlocked for a user
         HttpClient client = new();
         var achievements = new List<Achievement>();
         string url = $"https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key={_steamApiKey}&appid={gameId}";
