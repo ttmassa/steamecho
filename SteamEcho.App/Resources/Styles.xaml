@@ -119,6 +119,24 @@
         </Setter>
     </Style>
 
+    <!-- Style for ProgressBar -->
+    <Style TargetType="ProgressBar">
+        <Setter Property="Height" Value="8"/>
+        <Setter Property="Background" Value="#4A4A4D"/>
+        <Setter Property="Foreground" Value="#B42A35"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ProgressBar">
+                    <Grid x:Name="TemplateRoot">
+                        <Border x:Name="PART_Track" CornerRadius="4" Background="{TemplateBinding Background}"/>
+                        <Border x:Name="PART_Indicator" CornerRadius="4" Background="{TemplateBinding Foreground}" HorizontalAlignment="Left"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Style for TextBlock -->
     <Style TargetType="{x:Type TextBlock}">
         <Setter Property="FontFamily" Value="/Assets/Fonts/#Alexandria"/>
