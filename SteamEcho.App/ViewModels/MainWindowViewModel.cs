@@ -47,6 +47,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand ToggleProxyCommand { get; }
     public ICommand TestNotificationCommand { get; }
     public ICommand SaveNotificationSettingsCommand { get; }
+    public ICommand PreviousStatPageCommand { get; }
+    public ICommand NextStatPageCommand { get; }
 
     // Services
     private readonly SteamService _steamService;
@@ -193,6 +195,20 @@ public class MainWindowViewModel : INotifyPropertyChanged
         (_draftNotificationConfig.NotificationSize != _notificationService.Config.NotificationSize ||
          _draftNotificationConfig.NotificationColor != _notificationService.Config.NotificationColor ||
          _draftNotificationConfig.NotificationTime != _notificationService.Config.NotificationTime);
+    private const int TotalStatPages = 4;
+    private int _currentStatPage = 0;
+    public int CurrentStatPage
+    {
+        get => _currentStatPage;
+        set
+        {
+            if (_currentStatPage != value)
+            {
+                _currentStatPage = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     public MainWindowViewModel()
     {
@@ -223,6 +239,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
         ToggleProxyCommand = new RelayCommand(ToggleProxy);
         TestNotificationCommand = new RelayCommand(TestNotification);
         SaveNotificationSettingsCommand = new RelayCommand(SaveNotificationSettings);
+        PreviousStatPageCommand = new RelayCommand(PreviousStatPage);
+        NextStatPageCommand = new RelayCommand(NextStatPage);
     }
 
     // Background initialization during loading screen
@@ -864,6 +882,16 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         // Match by name
         return game.Name?.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    private void PreviousStatPage()
+    {
+        CurrentStatPage = (CurrentStatPage - 1 + TotalStatPages) % TotalStatPages;
+    }
+
+    private void NextStatPage()
+    {
+        CurrentStatPage = (CurrentStatPage + 1) % TotalStatPages;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

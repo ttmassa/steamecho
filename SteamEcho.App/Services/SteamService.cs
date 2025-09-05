@@ -33,6 +33,7 @@ public class SteamService : ISteamService
         }
     }
 
+    // Search for Steam games by name and return a list
     public async Task<List<GameInfo>> SearchSteamGamesAsync(string gameName)
     {
         HttpClient client = new();
@@ -84,9 +85,9 @@ public class SteamService : ISteamService
         return games;
     }
 
+    // Fetch achievements for a game and optionally check if they are unlocked for a user
     public async Task<List<Achievement>> GetAchievementsAsync(long gameId, SteamUserInfo? user = null)
     {
-        // Fetch achievements for a game and optionally check if they are unlocked for a user
         HttpClient client = new();
         var achievements = new List<Achievement>();
         string url = $"https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key={_steamApiKey}&appid={gameId}";
@@ -110,8 +111,8 @@ public class SteamService : ISteamService
                 // First get global achievement percentages
                 var globalPercentagesDict = await GetGlobalAchievementPercentagesDictAsync(gameId);
 
-                // If user is logged in, fetch player achievements
-                Dictionary<string, PlayerAchievementStatus> playerAchievements = new();
+                // If user is logged in, fetch player achievements. This gives achievement unlock status and date.
+                Dictionary<string, PlayerAchievementStatus> playerAchievements = [];
                 if (user != null)
                 {
                     playerAchievements = await GetPlayerAchievementsAsync(gameId, user);
@@ -278,6 +279,7 @@ public class SteamService : ISteamService
         return null;
     }
 
+    // Get owned Steam owned games with achievements (full game objects)
     public async Task<List<Game>> GetOwnedGamesAsync(SteamUserInfo user)
     {
         HttpClient client = new();

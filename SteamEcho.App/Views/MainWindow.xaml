@@ -77,9 +77,9 @@
                                 <!-- Context menu -->
                                 <Grid.ContextMenu>
                                     <ContextMenu>
-                                        <MenuItem Header="Delete" Command="{Binding PlacementTarget.Tag.DeleteGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"  FontWeight="Light"/>
-                                        <MenuItem Header="Browse Files" Command="{Binding PlacementTarget.Tag.BrowseFilesCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" FontWeight="Light"/>
-                                        <MenuItem Header="Set Executable" Command="{Binding PlacementTarget.Tag.SetExecutableCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" FontWeight="Light"/>
+                                        <MenuItem Header="Delete" Command="{Binding PlacementTarget.Tag.DeleteGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"  FontWeight="Light" Foreground="#4A4A4D"/>
+                                        <MenuItem Header="Browse Files" Command="{Binding PlacementTarget.Tag.BrowseFilesCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" FontWeight="Light" Foreground="#4A4A4D"/>
+                                        <MenuItem Header="Set Executable" Command="{Binding PlacementTarget.Tag.SetExecutableCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" FontWeight="Light" Foreground="#4A4A4D"/>
                                     </ContextMenu>
                                 </Grid.ContextMenu>
 
@@ -419,6 +419,150 @@
                             </ListBox>
                         </Grid>
                     </Border>
+
+                    <!-- Other Sections -->
+                    <Grid Grid.Column="1">
+                        <Grid.RowDefinitions>
+                            <!-- Achievement Stats Section -->
+                            <RowDefinition Height="*"/>
+                            <!-- Screenshot Section -->
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Achievement Stats Section -->
+                        <Border Grid.Row="0" Background="#E63946" Margin="10" CornerRadius="12">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <!-- Achievement Stats Header -->
+                                    <RowDefinition Height="Auto"/>
+                                    <!-- Achievement Stats Content -->
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Achievement Stats Header -->
+                                <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="10">
+                                    <!-- Stats Icon -->
+                                    <Image Source="/SteamEcho.App;component/Assets/Images/stats_icon.png" Width="25" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <TextBlock Text="Stats" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <!-- Achievement Stats Content -->
+                                <Grid Grid.Row="1" Margin="10,0,10,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Previous Button -->
+                                    <Button Grid.Column="0" Command="{Binding PreviousStatPageCommand}" Style="{StaticResource NoHoverButton}" VerticalAlignment="Center" Margin="0,0,5,0">
+                                        <Image Source="/SteamEcho.App;component/Assets/Images/arrow_left_icon.png" Width="18"/>
+                                    </Button>
+
+                                    <!-- Carousel Pages -->
+                                    <Grid Grid.Column="1">
+                                        <!-- Page 1: Completion -->
+                                        <Grid>
+                                            <Grid.Style>
+                                                <Style TargetType="Grid">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding CurrentStatPage}" Value="0">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Grid.Style>
+                                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,5" FontSize="18">
+                                                    <Run Text="{Binding SelectedGame.UnlockedAchievementsCount, Mode=OneWay}"/><Run Text="/"/>
+                                                    <Run Text="{Binding SelectedGame.TotalAchievementsCount, Mode=OneWay}"/>
+                                                </TextBlock>
+                                                <ProgressBar Value="{Binding SelectedGame.CompletionPercentage, Mode=OneWay}" Maximum="100" Width="120" Height="10"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- Page 2: Rarest Achievement -->
+                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <StackPanel.Style>
+                                                <Style TargetType="StackPanel">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding CurrentStatPage}" Value="1">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </StackPanel.Style>
+                                            <Image Source="{Binding SelectedGame.RarestAchievement.Icon, Mode=OneWay}" Width="50" Margin="0,0,0,4"/>
+                                            <TextBlock Text="{Binding SelectedGame.RarestAchievement.Name, Mode=OneWay}" HorizontalAlignment="Center" FontSize="10" />
+                                        </StackPanel>
+
+                                        <!-- Page 3: Average Rarity -->
+                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <StackPanel.Style>
+                                                <Style TargetType="StackPanel">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding CurrentStatPage}" Value="2">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </StackPanel.Style>
+                                            <TextBlock Text="{Binding SelectedGame.AverageRarity, StringFormat='{}{0:F1}%', Mode=OneWay}" HorizontalAlignment="Center" FontSize="18" Margin="0,0,5,0"/>
+                                            <TextBlock Text="Average rarity of unlocked achievements" HorizontalAlignment="Center" FontSize="10" TextWrapping="Wrap" TextAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <!-- Page 4: Completion Percentile -->
+                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <StackPanel.Style>
+                                                <Style TargetType="StackPanel">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding CurrentStatPage}" Value="3">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </StackPanel.Style>
+                                            <TextBlock Text="{Binding SelectedGame.CompletionPercentile, StringFormat='{}{0:F1}%', Mode=OneWay}" HorizontalAlignment="Center" FontSize="18" Margin="0,0,5,0"/>
+                                            <TextBlock HorizontalAlignment="Center" FontSize="10" TextWrapping="Wrap" TextAlignment="Center">
+                                                <Run Text="You're in the top "/>
+                                                <Run Text="{Binding SelectedGame.CompletionPercentile, StringFormat='{}{0:F1}%', Mode=OneWay}"/>
+                                                <Run Text=" of players"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Next Button -->
+                                    <Button Grid.Column="2" Command="{Binding NextStatPageCommand}" Style="{StaticResource NoHoverButton}" VerticalAlignment="Center" Margin="5,0,0,0">
+                                        <Image Source="/SteamEcho.App;component/Assets/Images/arrow_right_icon.png" Width="18"/>
+                                    </Button>
+                                </Grid>
+                            </Grid>
+                        </Border>
+
+                        <!-- Screenshot Section -->
+                        <Border Grid.Row="1" Background="#E63946" Margin="10" CornerRadius="12">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <!-- Screenshot Header -->
+                                    <RowDefinition Height="Auto"/>
+                                    <!-- Screenshot Content -->
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Screenshot Header -->
+                                <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="10">
+                                    <!-- Screenshot Icon -->
+                                    <Image Source="/SteamEcho.App;component/Assets/Images/screenshot_icon.png" Width="25" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <TextBlock Text="Screenshots" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+
+                        </Border>
+                    </Grid>
                 </Grid>
             </Grid>
 
