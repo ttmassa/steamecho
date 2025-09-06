@@ -61,4 +61,9 @@ public class GameProcessService : IGameProcessService
             RunningGameChanged?.Invoke(runningGame);
         }
     }
+
+    public Game? GetRunningGame()
+    {
+        return _lastRunningGame;
+    }
 }

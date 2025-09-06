@@ -36,7 +36,11 @@ public class Game(long steamId, string name, string? executablePath = null, stri
             }
         }
     }
+
+    // List of achievements
     public ObservableCollection<Achievement> Achievements { get; } = [];
+    // List of screenshots
+    public ObservableCollection<Screenshot> Screenshots { get; } = [];
     public string AchievementsSummary => $"{Achievements.Count(a => a.IsUnlocked)}/{Achievements.Count}";
     public int UnlockedAchievementsCount => Achievements.Count(a => a.IsUnlocked);
     public int TotalAchievementsCount => Achievements.Count;

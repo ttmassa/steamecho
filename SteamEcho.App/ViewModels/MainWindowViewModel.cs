@@ -52,10 +52,11 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
     // Services
     private readonly SteamService _steamService;
-    private StorageService _storageService;
-    private NotificationService _notificationService;
     private readonly GameProcessService _gameProcessService;
     private readonly AchievementListener _achievementListener;
+    private readonly ScreenshotService _screenshotService;
+    private StorageService _storageService;
+    private NotificationService _notificationService;
     private NotificationConfig? _draftNotificationConfig;
 
     // Properties
@@ -218,6 +219,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         _steamService = new SteamService();
         _gameProcessService = new GameProcessService(Games);
         _achievementListener = new AchievementListener();
+        _screenshotService = new ScreenshotService();
 
         // Setup collection view for filtering
         _gamesView = CollectionViewSource.GetDefaultView(Games);
@@ -289,6 +291,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 _gameProcessService.Start();
                 _achievementListener.AchievementUnlocked += OnAchievementUnlocked;
                 _gameProcessService.RunningGameChanged += OnRunningGameChanged;
+                _screenshotService.ScreenshotTaken += OnScreenshotTaken;
             });
         });
     }
@@ -627,11 +630,13 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             // Start achievement listener for the running game
             _achievementListener.Start(runningGame.ExecutablePath);
+            _screenshotService.StartMonitoring(CurrentUser!, runningGame);
         }
         else
         {
             // Stop achievement listener if no game is running or executable path is invalid
             _achievementListener.Stop();
+            _screenshotService.StopMonitoring();
         }
     }
 
@@ -892,6 +897,17 @@ public class MainWindowViewModel : INotifyPropertyChanged
     private void NextStatPage()
     {
         CurrentStatPage = (CurrentStatPage + 1) % TotalStatPages;
+    }
+
+    private void OnScreenshotTaken(Screenshot screenshot)
+    {
+        var runningGame = _gameProcessService.GetRunningGame();
+        if (runningGame == null) return;
+
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            runningGame.Screenshots.Add(screenshot);
+        });
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

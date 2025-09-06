@@ -495,7 +495,12 @@
                                                 </Style>
                                             </StackPanel.Style>
                                             <Image Source="{Binding SelectedGame.RarestAchievement.Icon, Mode=OneWay}" Width="50" Margin="0,0,0,4"/>
-                                            <TextBlock Text="{Binding SelectedGame.RarestAchievement.Name, Mode=OneWay}" HorizontalAlignment="Center" FontSize="10" />
+                                            <TextBlock HorizontalAlignment="Center" FontSize="10" TextWrapping="Wrap" TextAlignment="Center">
+                                                <Run Text='"'/>
+                                                <Run Text="{Binding SelectedGame.RarestAchievement.Name, Mode=OneWay}"/>
+                                                <Run Text='" '/>
+                                                <Run Text="is your rarest achievement."/>
+                                            </TextBlock>
                                         </StackPanel>
 
                                         <!-- Page 3: Average Rarity -->
@@ -559,6 +564,20 @@
                                     <Image Source="/SteamEcho.App;component/Assets/Images/screenshot_icon.png" Width="25" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                     <TextBlock Text="Screenshots" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                 </StackPanel>
+
+                                <!-- Screenshot List -->
+                                <ListBox Grid.Row="1" ItemsSource="{Binding SelectedGame.Screenshots}" Background="Transparent" BorderThickness="0" Margin="10,0,10,10" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                    <ListBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ListBox.ItemsPanel>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Image Source="{Binding FilePath}" Width="80" Height="45" Margin="2" Stretch="UniformToFill"/>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
                             </Grid>
 
                         </Border>
