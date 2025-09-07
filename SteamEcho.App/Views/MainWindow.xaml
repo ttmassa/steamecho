@@ -707,7 +707,7 @@
                 </Grid>
             </Grid>
 
-            <!-- Settings Content (Visible when in settings) -->
+            <!-- Settings Content -->
             <Grid x:Name="SettingsContentGrid">
                 <Grid.Style>
                     <Style TargetType="Grid">
@@ -739,7 +739,7 @@
                 <Border Grid.Row="1" Background="#2B2B2C" Margin="10" CornerRadius="12">
                     <StackPanel Margin="15">
                         <!-- Steam Section -->
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,15">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,10">
                             <TextBlock Text="Steam" FontSize="16" FontWeight="Medium" VerticalAlignment="Center"/>
                             <Button Command="{Binding RefreshDataCommand}" Style="{StaticResource NoHoverButton}" Margin="10,0,0,0" ToolTip="Refresh Steam data">
                                 <Image Source="/SteamEcho.App;component/Assets/Images/refresh_icon.png" Width="16"/>
@@ -747,7 +747,7 @@
                         </StackPanel>
 
                         <!-- Status -->
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                             <TextBlock Text="Status: " FontWeight="Regular" VerticalAlignment="Center"/>
                             <TextBlock Text="{Binding StatusText}" Foreground="#E63946" FontWeight="Medium" VerticalAlignment="Center">
                                 <TextBlock.Style>
@@ -764,11 +764,10 @@
                         </StackPanel>
 
                         <!-- Login/Logout -->
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding IsUserLoggedIn, Converter={StaticResource BooleanToLoginTextConverter}}" FontWeight="Regular" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                            <Button>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,25">
+                            <Button Background="#E63946">
                                 <Button.Style>
-                                    <Style TargetType="Button" BasedOn="{StaticResource NoHoverButton}">
+                                    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                                         <Setter Property="Command" Value="{Binding LogToSteamCommand}"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsUserLoggedIn}" Value="True">
@@ -777,12 +776,15 @@
                                         </Style.Triggers>
                                     </Style>
                                 </Button.Style>
-                                <Image Source="/SteamEcho.App;component/Assets/Images/steam_icon.png" Width="25"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding IsUserLoggedIn, Converter={StaticResource BooleanToLoginTextConverter}}" FontWeight="Regular" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                    <Image Source="/SteamEcho.App;component/Assets/Images/steam_icon.png" Width="18"/>
+                                </StackPanel>
                             </Button>
                         </StackPanel>
 
                         <!-- Notifications Section -->
-                        <StackPanel Orientation="Horizontal" Margin="0,15,0,2">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
                             <TextBlock Text="Notifications" FontSize="16" FontWeight="Medium" Margin="0,0,10,0"/>
                             <Button Command="{Binding TestNotificationCommand}" Style="{StaticResource NoHoverButton}" ToolTip="Test it!">
                                 <Image Source="/SteamEcho.App;component/Assets/Images/launch_icon.png" Width="18" VerticalAlignment="Center"/>
