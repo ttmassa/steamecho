@@ -84,9 +84,9 @@
                                 <!-- Context menu -->
                                 <Grid.ContextMenu>
                                     <ContextMenu>
-                                        <MenuItem Header="Delete" Command="{Binding PlacementTarget.Tag.DeleteGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"  FontWeight="Light" Foreground="#4A4A4D"/>
-                                        <MenuItem Header="Browse Files" Command="{Binding PlacementTarget.Tag.BrowseFilesCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" FontWeight="Light" Foreground="#4A4A4D"/>
-                                        <MenuItem Header="Set Executable" Command="{Binding PlacementTarget.Tag.SetExecutableCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" FontWeight="Light" Foreground="#4A4A4D"/>
+                                        <MenuItem Header="Delete" Command="{Binding PlacementTarget.Tag.DeleteGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource CustomMenuItemStyle}"/>
+                                        <MenuItem Header="Browse Files" Command="{Binding PlacementTarget.Tag.BrowseFilesCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource CustomMenuItemStyle}"/>
+                                        <MenuItem Header="Set Executable" Command="{Binding PlacementTarget.Tag.SetExecutableCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource CustomMenuItemStyle}"/>
                                     </ContextMenu>
                                 </Grid.ContextMenu>
 
@@ -282,30 +282,26 @@
                                         <Setter Property="ContextMenu">
                                             <Setter.Value>
                                                 <ContextMenu>
-                                                    <MenuItem Header="Unlock" Command="{Binding PlacementTarget.Tag.UnlockAchievementCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
-                                                        <MenuItem.Style>
-                                                            <Style TargetType="MenuItem">
-                                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding IsUnlocked}" Value="False">
-                                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </MenuItem.Style>
-                                                    </MenuItem>
-                                                    <MenuItem Header="Lock" Command="{Binding PlacementTarget.Tag.LockAchievementCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
-                                                        <MenuItem.Style>
-                                                            <Style TargetType="MenuItem">
-                                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding IsUnlocked}" Value="True">
-                                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </MenuItem.Style>
-                                                    </MenuItem>
+                                                    <ContextMenu.Resources>
+                                                        <Style x:Key="UnlockMenuItemStyle" TargetType="MenuItem" BasedOn="{StaticResource CustomMenuItemStyle}">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsUnlocked}" Value="False">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                        <Style x:Key="LockMenuItemStyle" TargetType="MenuItem" BasedOn="{StaticResource CustomMenuItemStyle}">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsUnlocked}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </ContextMenu.Resources>
+                                                    <MenuItem Header="Unlock" Command="{Binding PlacementTarget.Tag.UnlockAchievementCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource UnlockMenuItemStyle}"/>
+                                                    <MenuItem Header="Lock" Command="{Binding PlacementTarget.Tag.LockAchievementCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource LockMenuItemStyle}"/>
                                                 </ContextMenu>
                                             </Setter.Value>
                                         </Setter>
