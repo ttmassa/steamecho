@@ -108,13 +108,80 @@
 
         <!-- Main Content Area -->
         <Grid Grid.Column="1">
-            <!-- Game Content (Visible when not in settings) -->
+            <!-- "No Game Selected" View -->
+            <Grid>
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding SelectedGame}" Value="{x:Null}"/>
+                                    <Condition Binding="{Binding IsSettingsVisible}" Value="False"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <Border Background="#2B2B2C" Margin="10" CornerRadius="12">
+                    <StackPanel Margin="20" VerticalAlignment="Center">
+                        <TextBlock FontSize="22" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,20">
+                            Welcome to <Run Foreground="#E63946">SteamEcho</Run>!
+                        </TextBlock>
+
+                        <Grid Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Image Grid.Column="0" Source="/SteamEcho.App;component/Assets/Images/steam_icon.png" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Top"/>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap" FontSize="14">
+                                <Run Foreground="#E63946" FontWeight="SemiBold">Log in to Steam:</Run>
+                                <LineBreak/>
+                                Log in to Steam via the settings page to automatically sync your game library and achievement progress!
+                            </TextBlock>
+                        </Grid>
+
+                        <Grid Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Image Grid.Column="0" Source="/SteamEcho.App;component/Assets/Images/add_icon.png" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Top"/>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap" FontSize="14">
+                                <Run Foreground="#E63946" FontWeight="SemiBold">Add a game:</Run>
+                                <LineBreak/>
+                                Use the <Run FontWeight="Bold">+</Run> icon in the top-left menu to manually add a game from your computer.
+                            </TextBlock>
+                        </Grid>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Image Grid.Column="0" Source="/SteamEcho.App;component/Assets/Images/setup_icon.png" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Top"/>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap" FontSize="14">
+                                <Run Foreground="#E63946" FontWeight="SemiBold">Enable tracking:</Run>
+                                <LineBreak/>
+                                Once a game is added, click the <Run FontWeight="Bold">"Setup"</Run> button to enable achievement tracking. 
+                            </TextBlock>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Game Content (Visible when not in settings and a game is selected) -->
             <Grid>
                 <Grid.Style>
                     <Style TargetType="Grid">
                         <Setter Property="Visibility" Value="Visible"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding IsSettingsVisible}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding SelectedGame}" Value="{x:Null}">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                             </DataTrigger>
                         </Style.Triggers>
