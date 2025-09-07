@@ -553,9 +553,9 @@
                                         </Grid>
 
                                         <!-- Page 2: Rarest Achievement -->
-                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                            <StackPanel.Style>
-                                                <Style TargetType="StackPanel">
+                                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Grid.Style>
+                                                <Style TargetType="Grid">
                                                     <Setter Property="Visibility" Value="Collapsed"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding CurrentStatPage}" Value="1">
@@ -563,15 +563,43 @@
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
-                                            </StackPanel.Style>
-                                            <Image Source="{Binding SelectedGame.RarestAchievement.Icon, Mode=OneWay}" Width="50" Margin="0,0,0,4"/>
-                                            <TextBlock HorizontalAlignment="Center" FontSize="10" TextWrapping="Wrap" TextAlignment="Center">
-                                                <Run Text='"'/>
-                                                <Run Text="{Binding SelectedGame.RarestAchievement.Name, Mode=OneWay}"/>
-                                                <Run Text='" '/>
-                                                <Run Text="is your rarest achievement."/>
+                                            </Grid.Style>
+
+                                            <!-- Content for when there is a rarest achievement -->
+                                            <StackPanel>
+                                                <StackPanel.Style>
+                                                    <Style TargetType="StackPanel">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding SelectedGame.RarestAchievement}" Value="{x:Null}">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </StackPanel.Style>
+                                                <Image Source="{Binding SelectedGame.RarestAchievement.Icon, Mode=OneWay}" Width="50" Margin="0,0,0,4"/>
+                                                <TextBlock HorizontalAlignment="Center" FontSize="10" TextWrapping="Wrap" TextAlignment="Center">
+                                                    <Run Text='"'/>
+                                                    <Run Text="{Binding SelectedGame.RarestAchievement.Name, Mode=OneWay}"/>
+                                                    <Run Text='" '/>
+                                                    <Run Text="is your rarest achievement."/>
+                                                </TextBlock>
+                                            </StackPanel>
+
+                                            <!-- Content for when there is NO rarest achievement -->
+                                            <TextBlock Text="No achievement unlocked" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#F0F0F0" FontWeight="Medium" TextWrapping="Wrap" TextAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding SelectedGame.RarestAchievement}" Value="{x:Null}">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
                                             </TextBlock>
-                                        </StackPanel>
+                                        </Grid>
 
                                         <!-- Page 3: Average Rarity -->
                                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -637,6 +665,16 @@
 
                                 <!-- Screenshot List -->
                                 <ListBox Grid.Row="1" ItemsSource="{Binding SelectedGame.Screenshots}" Background="Transparent" BorderThickness="0" Margin="10,0,10,10" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                    <ListBox.Style>
+                                        <Style TargetType="ListBox">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedGame.Screenshots.Count}" Value="0">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ListBox.Style>
                                     <ListBox.ItemsPanel>
                                         <ItemsPanelTemplate>
                                             <WrapPanel/>
@@ -648,6 +686,20 @@
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
                                 </ListBox>
+
+                                <!-- Placeholder for no screenshots -->
+                                <TextBlock Grid.Row="1" Text="Your screenshots will appear here" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Foreground="#F0F0F0" FontWeight="Medium" TextAlignment="Center"> 
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedGame.Screenshots.Count}" Value="0">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </Grid>
 
                         </Border>

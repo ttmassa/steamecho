@@ -21,8 +21,8 @@
             <TextBlock x:Name="MessageText" Grid.Row="1" TextWrapping="Wrap" Margin="10" VerticalAlignment="Center" HorizontalAlignment="Center"/>
 
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="10">
-                <Button Content="Confirm" Width="80" Margin="0,0,10,0" Click="ConfirmButton_Click" Background="#E63946" Foreground="White"/>
-                <Button Content="Cancel" Width="80" Click="CancelButton_Click" IsCancel="True" Background="#4a4a4a" Foreground="White"/>
+                <Button Content="Confirm" Width="80" Click="ConfirmButton_Click" Background="#E63946" Margin="0,0,10,0" />
+                <Button Content="Cancel" Width="80" Click="CancelButton_Click" Background="#4a4a4a" IsCancel="True"/>
             </StackPanel>
         </Grid>
     </Border>
