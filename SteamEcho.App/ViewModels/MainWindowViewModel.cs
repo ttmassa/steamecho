@@ -72,6 +72,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 if (_selectedGame != null)
                 {
                     CheckProxyStatus(_selectedGame);
+                    LoadLocalScreenshots(_selectedGame);
                 }
                 OnPropertyChanged();
             }
@@ -630,7 +631,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             // Start achievement listener for the running game
             _achievementListener.Start(runningGame.ExecutablePath);
-            _screenshotService.StartMonitoring(CurrentUser!, runningGame);
+            _screenshotService.StartMonitoring(CurrentUser, runningGame);
         }
         else
         {
@@ -754,6 +755,23 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
 
         game.IsProxyReady = foundProxy;
+    }
+
+    private void LoadLocalScreenshots(Game game)
+    {
+        var screenshotDir = ScreenshotService.GetScreenshotDirectory(CurrentUser, game);
+        if (screenshotDir == null || !Directory.Exists(screenshotDir)) return;
+
+        var existingScreenshots = game.Screenshots.Select(s => s.FilePath).ToHashSet();
+
+        var files = Directory.GetFiles(screenshotDir, "*.jpg");
+        foreach (var file in files)
+        {
+            if (!existingScreenshots.Contains(file))
+            {
+                game.Screenshots.Add(new Screenshot(file));
+            }
+        }
     }
 
     private static bool ProcessSteamApiDll(string gameDirectory, string bitness) {
