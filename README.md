@@ -1,94 +1,83 @@
 # SteamEcho
 
-SteamEcho est une application Windows qui gère et affiche les succès de tous vos jeux Steam, qu'ils aient été acheté sur la plateforme ou non. 
+SteamEcho is a Windows app that manages and displays achievements for all your Steam games, whether they were purchased on the platform or not. 
 
-## Avertissement important
+## Important notice
 
-Ce projet a été développé pour un usage personnel. Son but n'est **aucunement** de promouvoir ou de faciliter le piratage de jeux vidéo.
+This project was developed for personal use. Its purpose is **in no way** to promote or facilitate video game piracy.
 
-La plupart des jeux, surtout ceux des studios indépendants, sont le fruit d'un travail acharné et passionné de développeurs qui méritent d'être rémunérés pour leur créativité. Je vous encourage vivement à **acheter les jeux** que vous aimez et à soutenir financièrement leurs créateurs. C'est grâce à votre soutien que l'industrie du jeu vidéo peut continuer à nous offrir des expériences mémorables.
+Most games, especially indie ones, are the result of hard work and passion from developers who deserve to be paid for their creativity. I really encourage you to buy the games you love and support their creators financially. It's thanks to your support that the video game industry can keep giving us memorable experiences.
 
-## Fonctionnement
+## How it works
 
-Le projet utilise une approche de proxy DLL pour intercepter les appels à l'API Steam.
+SteamEcho uses a DLL proxy approach to intercept calls to the Steam API.
 
-1.  **Proxy DLL (`SteamApiProxy`)**: Une DLL C++ remplace celle d'origine dans le dossier d'un jeu. Le projet fournit deux versions de la DLL pour s'adapter à l'architecture du jeu : `steam_api.dll` pour les jeux 32-bit et `steam_api64.dll` pour les jeux 64-bit. Lorsque le jeu déverrouille un succès, notre DLL intercepte l'appel.
-2.  **Communication IPC**: La DLL proxy envoie l'identifiant du succès déverrouillé à l'application principale via un canal de communication nommé (Named Pipe).
-3.  **Application WPF (`SteamEcho.App`)**: L'application de bureau écoute les messages provenant de la DLL. Lorsqu'un succès est reçu, elle récupère les détails (titre, description, icône) et affiche une notification à l'écran. L'application permet également de gérer votre bibliothèque de jeux et de visualiser les succès.
+1.  **Proxy DLL (`SmokeAPI`)**: A C++ DLL replaces the original one in the game folder. The project provides two versions of the DLL to suit the game's architecture: `steam_api.dll` for 32-bit games and `steam_api64.dll` for 64-bit games. When the game unlocks an achievement, our DLL intercepts the call.
+2.  **IPC Communication**: The proxy DLL sends the ID of the unlocked achievement to the main application via a named communication channel (Named Pipe).
+3.  **WPF application (`SteamEcho.App`)**: SteamEcho listens for messages from the DLL. When an achievement is received, it retrieves the details (title, description, icon) from the official Steam API and displays a notification on the screen. 
+On top of that, the app provides many other features such as customizing your notifications, stats about your achievement progress and more!
 
-## Comment l'utiliser ?
+## How to use the app?
 
-1.  **Lancer SteamEcho**: Démarrez l'application `SteamEcho.App.exe`.
-2.  **Ajouter un jeu**:
-    *   Cliquez sur l'icône "+".
-    *   Sélectionnez l'exécutable du jeu. L'application proposera automatiquement une liste de jeux en fonction du nom du fichier.
-3.  **Installer le Proxy**:
-    *   Dans votre librairie, cliquez sur le jeu que vous venez d'ajouter.
-    *   Cliquez sur le bouton **"Installer le proxy"**.
-    *   Si besoin, il faudra ajouter le chemin vers l'exécutable en effectuant un clique-droit, puis en cliquant sur "Sélectionner l'exécutable"
-    *   L'application s'occupera de sauvegarder la DLL originale et de copier le proxy nécessaire (32 ou 64-bit).
-4.  **Jouer**: Lancez votre jeu. Lorsque vous déverrouillerez un succès, une notification apparaîtra.
+1.  **Launch**: Find and launch `SteamEcho.App.exe`.
+2.  **Add a game**:
+    *   Click on the "+" icon.
+    *   Select the game's executable. The app will automatically suggest a list of games based on the file name.
+3.  **Proxy installation**:
+    *   In your library, click on the game you just added.
+    *   Click on the **"Setup"** button.
+    *   If necessary, you will be asked to add the path to the executable file by right-clicking the game in the library, and then clicking on “Set executable.”
+    *   The app will save the original DLL and copy the necessary proxy (32 or 64-bit).
+4.  **Play**: Launch your game. When you unlock an achievement, a notification will pop up, happy hunting!
 
-## Aperçu
+## Overview
 
 Voici un exemple de l'interface et des notifications de succès :
 
 *(Une capture d'écran de l'application principale et d'une notification sera ajoutée ici)*
 
-## Structure du Projet
+## Structure
 
-*   **`SteamEcho.App`**: Le projet principal. C'est une application WPF (.NET) qui contient l'interface utilisateur, les services pour écouter les succès et afficher les notifications.
-*   **`SteamEcho.Core`**: Une bibliothèque de classes .NET qui définit les modèles de données (Jeu, Succès) et les interfaces des services.
-*   **`SteamApiProxy`**: Un projet C++ qui produit la DLL proxy pour intercepter les appels de l'API Steam.
+*   **`SteamEcho.App`**: The main project. It is a WPF (.NET) application that contains the UI, and all services
+*   **`SteamEcho.Core`**: A .NET class library that defines data models (Game, Achievement) and service interfaces.
 
-## Compilation des DLL Proxy (`SteamApiProxy`)
+## Proxy DLL compilation (`SmokeAPI`)
 
-Le projet `SteamApiProxy` est configuré pour être compilé directement avec Visual Studio.
+The proxy DLLs (`steam_api.dll` and `steam_api64.dll`) used by SteamEcho are based on the open-source [SmokeAPI](https://github.com/acidicoala/SmokeAPI) project. They have been modified to add the necessary features for this application, such as IPC communication via Named Pipes to report unlocked achievements.
 
-1.  Ouvrez la solution `SteamEcho.sln` dans Visual Studio.
-2.  Faites un clic droit sur le projet `SteamApiProxy` dans l'Explorateur de solutions.
-3.  Choisissez **Générer**.
+The DLLs are pre-compiled and included in the `SteamEcho.App/ThirdParty/SmokeAPI` directory. There is no need to compile them manually. The application will automatically use these files during the game setup process.
 
-Visual Studio compilera automatiquement les deux versions de la DLL :
-*   `steam_api.dll` (32-bit) sera générée dans le dossier `Debug` ou `Release`.
-*   `steam_api64.dll` (64-bit) sera générée dans le dossier `x64\Debug` ou `x64\Release`.
+For more details on the modifications made to SmokeAPI, please see the `README.md` file in the `SteamEcho.App/ThirdParty` directory.
 
-Les DLL générées sont prêtes à être utilisées par l'application `SteamEcho.App`.
+### Compiling the DLLs (Optional)
 
-## Stack Technique
+If you need to modify the proxy DLLs, the source code for the modified version of SmokeAPI is included in the solution. You can re-compile them using Visual Studio:
 
-*   **Proxy DLL**: C++ pour l'interception des appels bas niveau de l'API Steam.
-*   **Application de bureau**: C# avec WPF pour l'interface utilisateur et .NET pour la logique applicative.
-*   **Base de données**: SQLite pour stocker les informations sur les jeux et les succès localement.
-*   **Communication**: Named Pipes pour la communication inter-processus (IPC) entre la DLL et l'application WPF.
+1.  Open the `steamecho.sln` solution in Visual Studio.
+2.  The solution should contain the C++ project for the proxy DLLs.
+3.  Build the project to generate the new `steam_api.dll` (32-bit) and `steam_api64.dll` (64-bit) files.
+4.  Replace the existing DLLs in the `SteamEcho.App/ThirdParty/SmokeAPI` directory with the newly compiled ones.
 
-## Contribuer
+## Technical Stack
 
-Ce projet est open source et toutes les contributions sont les bienvenues ! Pour participer, veuillez suivre ces étapes :
+*   **Proxy DLL**: C++ for intercepting low-level calls to the Steam API.
+*   **App**: C# with WPF for the UI and .NET for the application logic.
+*   **Database**: SQLite to store game, achievement, and user information locally.
 
-1.  **Forker le projet**: Créez une copie du dépôt sur votre propre compte GitHub.
-2.  **Créer une branche**: `git checkout -b feature/NouvelleFonctionnalite`
-3.  **Commit vos changements**: `git commit -m 'Ajout de ma super fonctionnalité'`
-4.  **Push sur votre branche**: `git push origin feature/NouvelleFonctionnalite`
-5.  **Ouvrir une Pull Request**: Soumettez une demande de fusion de votre branche vers le dépôt principal.
+## Contribute
 
-Chaque contribution sera examinée avant d'être intégrée. Merci de documenter votre code et de respecter le style existant.
+This project is open source and all contributions are welcome! To participate, please follow these steps:
 
-Le projet est encore en cours de développement. N'hésitez pas à proposer de nouvelles fonctionnalités ou à signaler les problèmes que vous rencontrez en ouvrant une "Issue" sur GitHub. Votre aide est précieuse !
+1.  **Fork the project**: Create a copy of the repository on your own GitHub account.
+2.  **Create a branch**: `git checkout -b feature/NewFeature`
+3.  **Commit your changes**: `git commit -m 'Add my new awesome feature'`
+4.  **Push on your branch**: `git push origin feature/NewFeature`
+5.  **Open a Pull Request**: Submit a pull request from your branch to the main repository.
 
-## Licence
+Each contribution will be reviewed before being integrated. Please document your code and follow the existing style.
 
-Ce projet est distribué sous la licence MIT. Voir le fichier `LICENSE` pour plus de détails.
-1.  **Forker le projet**: Créez une copie du dépôt sur votre propre compte GitHub.
-2.  **Créer une branche**: `git checkout -b feature/NouvelleFonctionnalite`
-3.  **Commit vos changements**: `git commit -m 'Ajout de ma super fonctionnalité'`
-4.  **Push sur votre branche**: `git push origin feature/NouvelleFonctionnalite`
-5.  **Ouvrir une Pull Request**: Soumettez une demande de fusion de votre branche vers le dépôt principal.
+The project is still under development. Feel free to suggest new features or report any issues you encounter by opening an “Issue” on GitHub. Your help is greatly appreciated!
 
-Chaque contribution sera examinée avant d'être intégrée. Merci de documenter votre code et de respecter le style existant.
+## License
 
-Le projet est encore en cours de développement. N'hésitez pas à proposer de nouvelles fonctionnalités ou à signaler les problèmes que vous rencontrez en ouvrant une "Issue" sur GitHub. Votre aide est précieuse !
-
-## Licence
-
-Ce projet est distribué sous la licence MIT. Voir le fichier `LICENSE` pour plus de détails.
+This project is distributed under the MIT license. See the `LICENSE` file for more details.
