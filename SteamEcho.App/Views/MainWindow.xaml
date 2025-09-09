@@ -663,10 +663,10 @@
                                     <TextBlock Text="Screenshots" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                 </StackPanel>
 
-                                <!-- Screenshot List -->
-                                <ListBox Grid.Row="1" ItemsSource="{Binding SelectedGame.Screenshots}" Background="Transparent" BorderThickness="0" Margin="10,0,10,10" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                    <ListBox.Style>
-                                        <Style TargetType="ListBox">
+                                <!-- Screenshot Carousel -->
+                                <Grid Grid.Row="1" Margin="10,0,10,10">
+                                    <Grid.Style>
+                                        <Style TargetType="Grid">
                                             <Setter Property="Visibility" Value="Visible"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding SelectedGame.Screenshots.Count}" Value="0">
@@ -674,18 +674,46 @@
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
-                                    </ListBox.Style>
-                                    <ListBox.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <WrapPanel/>
-                                        </ItemsPanelTemplate>
-                                    </ListBox.ItemsPanel>
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <Image Source="{Binding FilePath}" Width="80" Height="45" Margin="2" Stretch="UniformToFill"/>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
+                                    </Grid.Style>
+
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Previous Button -->
+                                    <Button Grid.Column="0" Command="{Binding PreviousScreenshotCommand}" Style="{StaticResource NoHoverButton}" HorizontalAlignment="Left">
+                                        <Image Source="/SteamEcho.App;component/Assets/Images/arrow_left_icon.png" Width="18"/>
+                                    </Button>
+
+                                    <!-- Screenshot and Counter -->
+                                    <Grid Grid.Column="1" Margin="5,0">
+                                        <!-- Screenshot -->
+                                        <Button Command="{Binding ViewScreenshotCommand}" CommandParameter="{Binding CurrentScreenshot}" Style="{StaticResource NoHoverButton}" Padding="0">
+                                            <Image Source="{Binding CurrentScreenshot.FilePath}" Stretch="Uniform"/>
+                                        </Button>
+
+                                        <!-- Screenshot Counter -->
+                                        <TextBlock Text="{Binding ScreenshotCounterText}" Foreground="#F0F0F0" FontSize="10" Background="#80000000" Padding="5,2" Margin="0,0,0,12" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Grid}}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Grid>
+
+                                    <!-- Next Button -->
+                                    <Button Grid.Column="2" Command="{Binding NextScreenshotCommand}" Style="{StaticResource NoHoverButton}" HorizontalAlignment="Right">
+                                        <Image Source="/SteamEcho.App;component/Assets/Images/arrow_right_icon.png" Width="18"/>
+                                    </Button>
+                                </Grid>
 
                                 <!-- Placeholder for no screenshots -->
                                 <TextBlock Grid.Row="1" Text="Your screenshots will appear here" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Foreground="#F0F0F0" FontWeight="Medium" TextAlignment="Center"> 
@@ -702,6 +730,7 @@
                                 </TextBlock>
                             </Grid>
 
+                            
                         </Border>
                     </Grid>
                 </Grid>

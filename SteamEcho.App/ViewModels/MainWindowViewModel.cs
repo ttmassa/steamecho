@@ -49,6 +49,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand SaveNotificationSettingsCommand { get; }
     public ICommand PreviousStatPageCommand { get; }
     public ICommand NextStatPageCommand { get; }
+    public ICommand PreviousScreenshotCommand { get; }
+    public ICommand NextScreenshotCommand { get; }
+    public ICommand ViewScreenshotCommand { get; }
 
     // Services
     private readonly SteamService _steamService;
@@ -75,6 +78,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
                     LoadLocalScreenshots(_selectedGame);
                 }
                 OnPropertyChanged();
+                CurrentScreenshotIndex = 0;
+                OnPropertyChanged(nameof(CurrentScreenshot));
+                OnPropertyChanged(nameof(ScreenshotCounterText));
             }
         }
     }
@@ -211,6 +217,28 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
         }
     }
+    private int _currentScreenshotIndex = 0;
+    public int CurrentScreenshotIndex
+    {
+        get => _currentScreenshotIndex;
+        set
+        {
+            if (_currentScreenshotIndex != value)
+            {
+                _currentScreenshotIndex = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CurrentScreenshot));
+                OnPropertyChanged(nameof(ScreenshotCounterText));
+            }
+        }
+    }
+    public Screenshot? CurrentScreenshot => SelectedGame?.Screenshots.Count > 0 && CurrentScreenshotIndex >= 0 && CurrentScreenshotIndex < SelectedGame.Screenshots.Count
+        ? SelectedGame.Screenshots[CurrentScreenshotIndex]
+        : null;
+
+    public string ScreenshotCounterText => SelectedGame?.Screenshots.Count > 0
+        ? $"{CurrentScreenshotIndex + 1} / {SelectedGame.Screenshots.Count}"
+        : "0 / 0";
 
     public MainWindowViewModel()
     {
@@ -244,6 +272,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
         SaveNotificationSettingsCommand = new RelayCommand(SaveNotificationSettings);
         PreviousStatPageCommand = new RelayCommand(PreviousStatPage);
         NextStatPageCommand = new RelayCommand(NextStatPage);
+        PreviousScreenshotCommand = new RelayCommand(PreviousScreenshot);
+        NextScreenshotCommand = new RelayCommand(NextScreenshot);
+        ViewScreenshotCommand = new RelayCommand<Screenshot>(ViewScreenshot);
     }
 
     // Background initialization during loading screen
@@ -926,6 +957,32 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             runningGame.Screenshots.Add(screenshot);
         });
+    }
+
+    private void PreviousScreenshot()
+    {
+        if (SelectedGame == null || SelectedGame.Screenshots.Count == 0) return;
+        CurrentScreenshotIndex = (CurrentScreenshotIndex + 1) % SelectedGame.Screenshots.Count;
+    }
+
+    private void NextScreenshot()
+    {
+        if (SelectedGame == null || SelectedGame.Screenshots.Count == 0) return;
+        CurrentScreenshotIndex = (CurrentScreenshotIndex + 1) % SelectedGame.Screenshots.Count;
+    }
+
+    private void ViewScreenshot(Screenshot screenshot)
+    {
+        if (!File.Exists(screenshot.FilePath)) return;
+
+        var viewer = new ScreenshotViewer(this)
+        {
+            Owner = Application.Current.MainWindow
+        };
+        viewer.PreviousRequested += PreviousScreenshot;
+        viewer.NextRequested += NextScreenshot;
+
+        viewer.Show();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
