@@ -34,7 +34,7 @@ On top of that, the app provides many other features such as customizing your no
 
 ## Overview
 
-Voici un exemple de l'interface et des notifications de succès :
+Voici un exemple d'une notification de succès :
 
 <img src="SteamEcho.App/Assets/Gifs/achievement_notification.gif" width="852" alt="SteamEcho Overview" />
 
