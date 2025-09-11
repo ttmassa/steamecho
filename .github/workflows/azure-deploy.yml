@@ -1,0 +1,38 @@
+name: Build and Deploy SteamEcho.Backend to Azure
+
+on:
+    push:
+        branches:
+        - main
+        paths:
+        - 'SteamEcho.Backend/**'
+        - '.github/workflows/azure-deploy.yml'
+    workflow_dispatch:
+
+jobs:
+    build-and-deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout GitHub Action
+              uses: actions/checkout@v4
+
+            - name: Set up .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                dotnet-version: '8.0.x'
+
+            - name: Build and publish
+              run: dotnet publish ./SteamEcho.Backend -c Release
+
+            - name: Azure Login
+              uses: azure/login@v1
+              with:
+                  creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+            - name: 'Deploy to Azure Web App'
+              uses: azure/webapps-deploy@v2
+              with:
+                app-name: 'steamecho'
+                slot-name: 'production'
+                package: './SteamEcho.Backend/bin/Release/net8.0/publish'
+            

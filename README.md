@@ -38,7 +38,8 @@ Voici un exemple de l'interface et des notifications de succès :
 
 ## Structure
 
-*   **`SteamEcho.App`**: The main project. It is a WPF (.NET) application that contains the UI, and all services
+*   **`SteamEcho.App`**: The main project. It is a WPF (.NET) application that contains the UI, and all services.
+* **`SteamEcho.Backend`**: An ASP.NET Core Web API that acts as a proxy between the `SteamEcho.App` and the Steam API.
 *   **`SteamEcho.Core`**: A .NET class library that defines data models (Game, Achievement) and service interfaces.
 
 ## Proxy DLL compilation (`SmokeAPI`)
@@ -63,6 +64,31 @@ If you need to modify the proxy DLLs, the source code for the modified version o
 *   **Proxy DLL**: C++ for intercepting low-level calls to the Steam API.
 *   **App**: C# with WPF for the UI and .NET for the application logic.
 *   **Database**: SQLite to store game, achievement, and user information locally.
+
+### For Contributors (Development Setup)
+
+To contribute to the project, you will need to run the backend on your local machine.
+
+1.  **Get a Steam API Key**: You need your own Steam API key for development. You can get one from the [Steam Community Developer page](https://steamcommunity.com/dev/apikey).
+
+2.  **Configure Your API Key**: The application will automatically use the key you provide. We recommend using .NET's Secret Manager to keep your key separate from the project code.
+    *   **Using User Secrets (Recommended)**: In the `SteamEcho.Backend` directory, run the following command:
+        1. ```bash
+            dotnet user-secrets init
+            ```
+
+        2. ```bash
+            dotnet user-secrets set "SteamApiKey" "YOUR_KEY_HERE"
+            ```
+    *   **Using `appsettings.Development.json`**: Alternatively, you can add the key directly to `SteamEcho.Backend/appsettings.Development.json`.
+
+3.  **Run the Backend**: Launch the `SteamEcho.Backend` project from your IDE.
+
+4.  **Connect the Frontend**: The WPF application (`SteamEcho.App`) is configured to connect to the local backend when debugging. If you change the backend port in `Properties/launchSettings.json`, you must update the URL in `SteamEcho.App/Services/SteamService.cs`.
+
+### For Maintainers (Production Deployment)
+
+Deployment to the production Azure environment is handled automatically by the `.github/workflows/azure-deploy.yml` workflow.
 
 ## Contribute
 

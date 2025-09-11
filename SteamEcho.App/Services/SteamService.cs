@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using SteamEcho.Core.DTOs;
-using SteamEcho.Core.Exceptions;
 using SteamEcho.Core.Models;
 using SteamEcho.Core.Services;
 
@@ -13,74 +12,81 @@ namespace SteamEcho.App.Services;
 
 public class SteamService : ISteamService
 {
-    private readonly string _steamApiKey;
+    private readonly HttpClient _client;
+    private readonly string _backendBaseUrl;
 
     public SteamService()
     {
-        // Load API key from config
-        try
-        {
-            _steamApiKey = AppConfig.Load().SteamAPI.Key;
+        _client = new HttpClient();
 
-            if (string.IsNullOrEmpty(_steamApiKey))
-            {
-                throw new MissingApiKeyException();
-            }
-        }
-        catch (Exception e)
+        // Prefer environment variable, fallback to default
+        var envUrl = Environment.GetEnvironmentVariable("STEAMECHO_BACKEND_URL");
+        if (!string.IsNullOrWhiteSpace(envUrl))
         {
-            throw new MissingApiKeyException("Failed to load Steam API key from configuration.", e);
+            _backendBaseUrl = envUrl;
         }
+#if DEBUG
+        else
+        {
+            _backendBaseUrl = "http://localhost:5149/api/steam";
+        }
+#else
+        else
+        {
+            _backendBaseUrl = "https://steamecho.azurewebsites.net/api/steam";
+        }
+#endif
+
+        // Throw if running locally and using prod URL
+        if (IsLocalDev() && _backendBaseUrl.Contains("azurewebsites.net"))
+        {
+            throw new InvalidOperationException("Local development must not use the production backend URL.");
+        }
+    }
+
+    // Simple check to see if running in local dev environment
+    private static bool IsLocalDev()
+    {
+        // Check for common local dev indicators
+        string machineName = Environment.MachineName.ToLowerInvariant();
+        string userDomain = Environment.UserDomainName.ToLowerInvariant();
+        string userName = Environment.UserName.ToLowerInvariant();
+        bool isDebug = false;
+#if DEBUG
+        isDebug = true;
+#endif
+        return isDebug ||
+               machineName == "localhost" ||
+               userDomain == "localhost" ||
+               userName == "developer" ||
+               Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
     }
 
     // Search for Steam games by name and return a list
     public async Task<List<GameInfo>> SearchSteamGamesAsync(string gameName)
     {
-        HttpClient client = new();
-        string url = $"https://store.steampowered.com/api/storesearch/?term={gameName}&cc=us&l=en";
+        string url = $"{_backendBaseUrl}/search?term={Uri.EscapeDataString(gameName)}";
         var games = new List<GameInfo>();
 
         try
         {
-            HttpResponseMessage response = await client.GetAsync(url);
+            HttpResponseMessage response = await _client.GetAsync(url);
             response.EnsureSuccessStatusCode();
 
             string content = await response.Content.ReadAsStringAsync();
-            if (string.IsNullOrEmpty(content))
-            {
-                Console.WriteLine("No content returned from Steam API.");
-                return games;
-            }
-
-            // Get results from Steam search
             using var doc = JsonDocument.Parse(content);
             var items = doc.RootElement.GetProperty("items");
-            if (items.GetArrayLength() == 0)
-            {
-                Console.WriteLine("No Steam game with that name exists.");
-                return games;
-            }
-
             foreach (var item in items.EnumerateArray())
             {
                 long id = item.GetProperty("id").GetInt64();
                 string name = item.GetProperty("name").GetString() ?? "Unknown Name";
                 string? iconUrl = $"https://cdn.cloudflare.steamstatic.com/steam/apps/{id}/library_600x900.jpg";
-
-                // Check if icon URL is valid
-                using var request = new HttpRequestMessage(HttpMethod.Head, iconUrl);
-                HttpResponseMessage iconResponse = await client.SendAsync(request);
-                if (!iconResponse.IsSuccessStatusCode)
-                {
-                    iconUrl = null;
-                }
-
                 games.Add(new GameInfo(id, name, iconUrl));
             }
         }
         catch (HttpRequestException e)
         {
-            Console.WriteLine("Error: " + e.Message);
+            Console.WriteLine($"Error: {e.Message} (URL: {url})");
         }
         return games;
     }
@@ -88,62 +94,94 @@ public class SteamService : ISteamService
     // Fetch achievements for a game and optionally check if they are unlocked for a user
     public async Task<List<Achievement>> GetAchievementsAsync(long gameId, SteamUserInfo? user = null)
     {
-        HttpClient client = new();
         var achievements = new List<Achievement>();
-        string url = $"https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key={_steamApiKey}&appid={gameId}";
+
+        string schemaUrl = $"{_backendBaseUrl}/schema?appid={gameId}";
+        string globalUrl = $"{_backendBaseUrl}/globalpercentages?appid={gameId}";
+        string? playerUrl = user != null ? $"{_backendBaseUrl}/achievements?appid={gameId}&steamid={user.SteamId}" : null;
 
         try
         {
-            HttpResponseMessage response = await client.GetAsync(url);
-            response.EnsureSuccessStatusCode();
-            string content = await response.Content.ReadAsStringAsync();
-            if (string.IsNullOrEmpty(content))
-            {
+            // Get schema
+            var schemaResponse = await _client.GetAsync(schemaUrl);
+            if (schemaResponse.StatusCode == HttpStatusCode.Forbidden)
+                return achievements; // No achievements, don't log error
+            schemaResponse.EnsureSuccessStatusCode();
+            string schemaContent = await schemaResponse.Content.ReadAsStringAsync();
+
+            // Get global percentages
+            var globalResponse = await _client.GetAsync(globalUrl);
+            if (globalResponse.StatusCode == HttpStatusCode.Forbidden)
+                // No achievements, don't log error
                 return achievements;
+            globalResponse.EnsureSuccessStatusCode();
+            string globalContent = await globalResponse.Content.ReadAsStringAsync();
+
+            // Get player achievements if user is provided
+            Dictionary<string, PlayerAchievementStatus> playerAchievements = [];
+            if (playerUrl != null)
+            {
+                var playerResponse = await _client.GetAsync(playerUrl);
+                if (playerResponse.StatusCode == HttpStatusCode.Forbidden)
+                    return achievements; // No achievements, don't log error
+                playerResponse.EnsureSuccessStatusCode();
+                string playerContent = await playerResponse.Content.ReadAsStringAsync();
+                using var playerDoc = JsonDocument.Parse(playerContent);
+                if (playerDoc.RootElement.TryGetProperty("playerstats", out var playerStatsElement) &&
+                    playerStatsElement.TryGetProperty("achievements", out var achievementsList))
+                {
+                    foreach (var achievement in achievementsList.EnumerateArray())
+                    {
+                        var apiName = achievement.GetProperty("apiname").GetString();
+                        var isUnlocked = achievement.GetProperty("achieved").GetInt32() == 1;
+                        var unlockDate = achievement.TryGetProperty("unlocktime", out var unlockTimeElement) ? DateTimeOffset.FromUnixTimeSeconds(unlockTimeElement.GetInt64()).UtcDateTime : (DateTime?)null;
+                        if (!string.IsNullOrEmpty(apiName))
+                        {
+                            playerAchievements[apiName] = new PlayerAchievementStatus(isUnlocked, unlockDate);
+                        }
+                    }
+                }
             }
 
-            using var doc = JsonDocument.Parse(content);
-            // Check if the JSON structure is as expected
+            // Parse global percentages
+            Dictionary<string, double> globalPercentagesDict = [];
+            using var globalDoc = JsonDocument.Parse(globalContent);
+            if (globalDoc.RootElement.TryGetProperty("achievementpercentages", out var percentagesElement) &&
+                percentagesElement.TryGetProperty("achievements", out var achievementsElement))
+            {
+                foreach (var achievement in achievementsElement.EnumerateArray())
+                {
+                    var id = achievement.GetProperty("name").GetString();
+                    var percentStr = achievement.GetProperty("percent").GetString();
+                    if (!string.IsNullOrEmpty(id) && double.TryParse(percentStr, out var percentValue))
+                    {
+                        globalPercentagesDict[id] = percentValue;
+                    }
+                }
+            }
+
+            // Parse schema
+            using var doc = JsonDocument.Parse(schemaContent);
             if (doc.RootElement.TryGetProperty("game", out var gameElement) &&
                 gameElement.TryGetProperty("availableGameStats", out var statsElement) &&
-                statsElement.TryGetProperty("achievements", out var achievementsElement))
+                statsElement.TryGetProperty("achievements", out var schemaAchievementsElement)) // <-- renamed here
             {
-                // First get global achievement percentages
-                var globalPercentagesDict = await GetGlobalAchievementPercentagesDictAsync(gameId);
-
-                // If user is logged in, fetch player achievements. This gives achievement unlock status and date.
-                Dictionary<string, PlayerAchievementStatus> playerAchievements = [];
-                if (user != null)
-                {
-                    playerAchievements = await GetPlayerAchievementsAsync(gameId, user);
-                }
-
-                // Create Achievement instances from the JSON data
-                foreach (var achievement in achievementsElement.EnumerateArray())
+                foreach (var achievement in schemaAchievementsElement.EnumerateArray()) // <-- and here
                 {
                     var id = achievement.GetProperty("name").GetString() ?? throw new InvalidDataException("Achievement ID not found.");
                     var name = achievement.GetProperty("displayName").GetString() ?? throw new InvalidDataException("Achievement name not found.");
-                    // Try to get description because hidden achievements don't have it
                     var description = achievement.TryGetProperty("description", out var descElement) ? descElement.GetString() : "Hidden Achievement";
                     if (string.IsNullOrEmpty(description))
-                    {
                         description = "Hidden Achievement";
-                    }
-                    // Optional properties
                     var icon = achievement.GetProperty("icon").GetString();
                     var grayIcon = achievement.GetProperty("icongray").GetString();
                     var isHidden = achievement.TryGetProperty("hidden", out var hiddenElement) && hiddenElement.GetInt32() == 1;
-                    // Try to get global percentage
                     double? globalPercentage = null;
                     if (globalPercentagesDict.TryGetValue(id, out var percent))
-
-                    {
                         globalPercentage = percent;
-                    }
 
                     var newAchievement = new Achievement(id, name, description, icon, grayIcon, isHidden, globalPercentage);
 
-                    // If user is logged in, check if the achievement is already unlocked
                     if (playerAchievements.TryGetValue(id, out var status))
                     {
                         newAchievement.IsUnlocked = status.IsUnlocked;
@@ -156,7 +194,7 @@ public class SteamService : ISteamService
         }
         catch (HttpRequestException e)
         {
-            Console.WriteLine("Error: " + e.Message);
+            Console.WriteLine($"Error: {e.Message} (URL: {schemaUrl})");
         }
 
         return achievements;
@@ -282,23 +320,16 @@ public class SteamService : ISteamService
     // Get owned Steam owned games with achievements (full game objects)
     public async Task<List<Game>> GetOwnedGamesAsync(SteamUserInfo user)
     {
-        HttpClient client = new();
-        string url = $"https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={_steamApiKey}&steamid={user.SteamId}&include_appinfo=true&format=json";
+        string url = $"{_backendBaseUrl}/ownedgames?steamid={user.SteamId}";
         var games = new List<Game>();
 
         try
         {
-            HttpResponseMessage response = await client.GetAsync(url);
+            HttpResponseMessage response = await _client.GetAsync(url);
             response.EnsureSuccessStatusCode();
             string content = await response.Content.ReadAsStringAsync();
-            if (string.IsNullOrEmpty(content))
-            {
-                Console.WriteLine("Error: No content returned from Steam API for owned games.");
-                return games;
-            }
 
             using var doc = JsonDocument.Parse(content);
-
             if (doc.RootElement.TryGetProperty("response", out var responseElement) &&
                 responseElement.TryGetProperty("games", out var gamesElement))
             {
@@ -307,20 +338,9 @@ public class SteamService : ISteamService
                     long gameId = game.GetProperty("appid").GetInt64();
                     string name = game.GetProperty("name").GetString() ?? "Unknown Game";
                     string? iconUrl = $"https://cdn.cloudflare.steamstatic.com/steam/apps/{gameId}/library_600x900.jpg";
-
-                    // Check if the icon URL is valid
-                    using var request = new HttpRequestMessage(HttpMethod.Head, iconUrl);
-                    HttpResponseMessage iconResponse = await client.SendAsync(request);
-                    if (!iconResponse.IsSuccessStatusCode)
-                    {
-                        iconUrl = null;
-                    }
-
-                    // Try to get executable path
                     string? exePath = null;
                     if (game.TryGetProperty("playtime_forever", out var playtimeElement) && playtimeElement.GetInt32() > 0)
                     {
-                        // Attempt to get the executable path from the local Steam library
                         string steamLibraryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Steam", "steamapps", "common");
                         string gameFolder = Path.Combine(steamLibraryPath, name);
                         if (Directory.Exists(gameFolder))
@@ -332,8 +352,6 @@ public class SteamService : ISteamService
                             }
                         }
                     }
-
-                    // Fetch achievements for the game
                     var achievements = await GetAchievementsAsync(gameId, user);
                     if (achievements.Count > 0)
                     {
@@ -342,115 +360,11 @@ public class SteamService : ISteamService
                     }
                 }
             }
-            else
-            {
-                Console.WriteLine("Warning: No games found in the response.");
-            }
         }
         catch (HttpRequestException e)
         {
-            Console.WriteLine("Error: " + e.Message);
+            Console.WriteLine($"Error: {e.Message} (URL: {url})");
         }
         return games;
-    }
-
-    // Helper method to get global achievement percentages as a dictionary
-    private static async Task<Dictionary<string, double>> GetGlobalAchievementPercentagesDictAsync(long gameId)
-    {
-        HttpClient client = new();
-        string url = $"https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v2/?gameid={gameId}";
-        var dict = new Dictionary<string, double>();
-
-        try
-        {
-            HttpResponseMessage response = await client.GetAsync(url);
-            response.EnsureSuccessStatusCode();
-            string content = await response.Content.ReadAsStringAsync();
-            if (string.IsNullOrEmpty(content))
-            {
-                Console.WriteLine("Error: No content returned from Steam API for global achievement percentages.");
-                return dict;
-            }
-
-            using var doc = JsonDocument.Parse(content);
-
-            if (doc.RootElement.TryGetProperty("achievementpercentages", out var percentagesElement) &&
-                percentagesElement.TryGetProperty("achievements", out var achievementsElement))
-            {
-                foreach (var achievement in achievementsElement.EnumerateArray())
-                {
-                    var id = achievement.GetProperty("name").GetString();
-                    var percentStr = achievement.GetProperty("percent").GetString();
-                    if (!string.IsNullOrEmpty(id) && double.TryParse(percentStr, out var percentValue))
-                    {
-                        dict[id] = percentValue;
-                    }
-                }
-            }
-        }
-        catch (HttpRequestException e)
-        {
-            Console.WriteLine("Error: " + e.Message);
-        }
-
-        return dict;
-    }
-
-    private async Task<Dictionary<string, PlayerAchievementStatus>> GetPlayerAchievementsAsync(long gameId, SteamUserInfo user)
-    {
-        HttpClient client = new();
-        string url = $"https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key={_steamApiKey}&steamid={user.SteamId}&appid={gameId}";
-        var playerAchievements = new Dictionary<string, PlayerAchievementStatus>();
-
-        try
-        {
-            HttpResponseMessage response = await client.GetAsync(url);
-            response.EnsureSuccessStatusCode();
-            string content = await response.Content.ReadAsStringAsync();
-
-            if (string.IsNullOrEmpty(content))
-            {
-                Console.WriteLine("Error: No content returned from Steam API for player achievements.");
-                return playerAchievements;
-            }
-
-            using var doc = JsonDocument.Parse(content);
-            if (doc.RootElement.TryGetProperty("playerstats", out var playerStatsElement))
-            {
-                // Handle private profile exception
-                if (playerStatsElement.TryGetProperty("success", out var successElement) && !successElement.GetBoolean())
-                {
-                    if (playerStatsElement.TryGetProperty("error", out var errorElement) && errorElement.GetString()?.Contains("Profile is not public") == true)
-                    {
-                        throw new PrivateProfileException();
-                    }
-                }
-
-                if (playerStatsElement.TryGetProperty("achievements", out var achievementsElement))
-                {
-                    foreach (var achievement in achievementsElement.EnumerateArray())
-                    {
-                        var apiName = achievement.GetProperty("apiname").GetString();
-                        var isUnlocked = achievement.GetProperty("achieved").GetInt32() == 1;
-                        var unlockDate = achievement.TryGetProperty("unlocktime", out var unlockTimeElement) ? DateTimeOffset.FromUnixTimeSeconds(unlockTimeElement.GetInt64()).UtcDateTime : (DateTime?)null;
-
-                        if (!string.IsNullOrEmpty(apiName))
-                        {
-                            playerAchievements[apiName] = new PlayerAchievementStatus(isUnlocked, unlockDate);
-                        }
-                        else
-                        {
-                            Console.WriteLine("Warning: Achievement API name is null or empty.");
-                        }
-                    }
-                }
-            }
-        }
-        catch (HttpRequestException e)
-        {
-            Console.WriteLine("Error fetching player achievements: " + e.Message);
-        }
-
-        return playerAchievements;
     }
 }
