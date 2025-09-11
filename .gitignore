@@ -10,3 +10,7 @@ obj/
 
 # Config files
 appsettings.json
+
+# User-specific files
+*.user
+*.suo
