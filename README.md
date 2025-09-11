@@ -1,5 +1,7 @@
 # SteamEcho
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/timotheemassa)
+
 SteamEcho is a Windows app that manages and displays achievements for all your Steam games, whether they were purchased on the platform or not. 
 
 ## Important notice
