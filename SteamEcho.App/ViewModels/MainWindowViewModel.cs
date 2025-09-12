@@ -284,7 +284,14 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             LoadingStatus.Update("Initializing services...");
             // Initialize storage service
-            string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steamecho.db");
+            string dbPath;
+            #if DEBUG
+                dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steamecho.db");
+            #else
+                string appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SteamEcho");
+                Directory.CreateDirectory(appDataPath);
+                dbPath = Path.Combine(appDataPath, "steamecho.db");
+            #endif
             _storageService = new StorageService(dbPath);
 
             // Initialize notification service (needs to load notification sound)
