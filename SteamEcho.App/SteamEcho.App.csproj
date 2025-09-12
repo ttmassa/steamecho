@@ -1,7 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <AssemblyTitle>SteamEcho</AssemblyTitle>
+    <Company>Timothée Massa</Company>
+    <Product>SteamEcho</Product>
+    <Authors>Timothée Massa</Authors>
+    <PackageTags>Steam;Achievements;Games;WPF</PackageTags>
+    <Copyright>Copyright © 2025 Timothée Massa</Copyright>
+    <Version>1.0.0</Version>
+    <FileVersion>1.0.0</FileVersion>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRepositoryUrl>https://github.com/ttmassa/steamecho</PackageRepositoryUrl>
+    <PackageIcon>Assets\Logo\steamecho_logo.png</PackageIcon>
+    <ApplicationIcon>Assets\Logo\steamecho_logo.ico</ApplicationIcon>
+    <PackageReadMeFile>README.md</PackageReadMeFile>
+    <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
