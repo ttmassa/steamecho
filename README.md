@@ -10,6 +10,16 @@ This project was developed for personal use. Its purpose is **in no way** to pro
 
 Most games, especially indie ones, are the result of hard work and passion from developers who deserve to be paid for their creativity. I really encourage you to buy the games you love and support their creators financially. It's thanks to your support that the video game industry can keep giving us memorable experiences.
 
+## Download & Installation
+
+The official SteamEcho Windows installer is available in the [Releases section](https://github.com/ttmassa/steamecho/releases) of this repository.  
+**To install SteamEcho:**
+1. Go to [Releases](https://github.com/ttmassa/steamecho/releases).
+2. Download the latest `SteamEchoSetup.exe` installer.
+3. Run the installer and follow the instructions.
+
+> **Note:** The installer is not stored in the repository itself, but is attached to each release for easy access.
+
 ## How it works
 
 SteamEcho uses a DLL proxy approach to intercept calls to the Steam API.
