@@ -172,7 +172,7 @@
                 </Border>
             </Grid>
 
-            <!-- Game Content (Visible when not in settings and a game is selected) -->
+            <!-- Game Content (Visible when a game is selected) -->
             <Grid>
                 <Grid.Style>
                     <Style TargetType="Grid">

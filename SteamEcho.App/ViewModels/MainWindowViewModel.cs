@@ -253,6 +253,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
         // Setup collection view for filtering
         _gamesView = CollectionViewSource.GetDefaultView(Games);
         _gamesView.Filter = FilterGames;
+        // Sort games alphabetically
+        _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.Name), ListSortDirection.Ascending));
 
         // Initialize commands
         AddGameCommand = new RelayCommand(AddGame);
