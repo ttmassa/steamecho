@@ -17,3 +17,7 @@ appsettings.json
 
 # Inno Setup files
 *.iss
+
+# Installer output
+Output/
+SteamEchoInstaller.exe
