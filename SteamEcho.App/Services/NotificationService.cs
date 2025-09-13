@@ -17,8 +17,21 @@ public class NotificationService : INotificationService
 
     public NotificationService()
     {
+        // Initialize sound player
         _soundPlayer = new SoundPlayer("Assets/Sound/notification.wav");
-        _configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "notification_configs.json");
+
+        // Set config file path
+        #if DEBUG
+            _configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "notification_configs.json");
+        #else
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var appDir = Path.Combine(appData, "SteamEcho");
+            if (!Directory.Exists(appDir))
+            {
+                Directory.CreateDirectory(appDir);
+            }
+            _configPath = Path.Combine(appDir, "notification_configs.json");
+        #endif
         Config = LoadConfig();
     }
 

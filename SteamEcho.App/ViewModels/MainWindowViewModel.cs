@@ -291,7 +291,10 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steamecho.db");
             #else
                 string appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SteamEcho");
-                Directory.CreateDirectory(appDataPath);
+                if (!Directory.Exists(appDataPath))
+                {
+                    Directory.CreateDirectory(appDataPath);
+                }
                 dbPath = Path.Combine(appDataPath, "steamecho.db");
             #endif
             _storageService = new StorageService(dbPath);

@@ -7,7 +7,7 @@ public class NotificationConfig : INotifyPropertyChanged
 {
     private double _notificationSize = 5;
     private int _notificationTime = 7;
-    private string _notificationColor = "#4a4a4dac";
+    private string _notificationColor = "#4A4A4D";
 
     public double NotificationSize
     {
