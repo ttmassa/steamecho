@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Globalization;
 using SteamEcho.Core.DTOs;
 using SteamEcho.Core.Models;
 using SteamEcho.Core.Services;
@@ -152,21 +153,39 @@ public class SteamService : ISteamService
                 foreach (var achievement in achievementsElement.EnumerateArray())
                 {
                     var id = achievement.GetProperty("name").GetString();
-                    var percentStr = achievement.GetProperty("percent").GetString();
-                    if (!string.IsNullOrEmpty(id) && double.TryParse(percentStr, out var percentValue))
+
+                    double? percentValue = null;
+                    var percentEl = achievement.GetProperty("percent");
+                    if (percentEl.ValueKind == JsonValueKind.Number)
                     {
-                        globalPercentagesDict[id] = percentValue;
+                        percentValue = percentEl.GetDouble();
                     }
+                    else if (percentEl.ValueKind == JsonValueKind.String)
+                    {
+                        var s = percentEl.GetString();
+                        if (!string.IsNullOrWhiteSpace(s) &&
+                            double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var v))
+                        {
+                            percentValue = v;
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(id) && percentValue.HasValue)
+                        globalPercentagesDict[id] = percentValue.Value;
                 }
+            }
+            else
+            {
+                Console.WriteLine($"[SteamService][WARN] appid={gameId}: global percentages missing or malformed.");
             }
 
             // Parse schema
             using var doc = JsonDocument.Parse(schemaContent);
             if (doc.RootElement.TryGetProperty("game", out var gameElement) &&
                 gameElement.TryGetProperty("availableGameStats", out var statsElement) &&
-                statsElement.TryGetProperty("achievements", out var schemaAchievementsElement)) // <-- renamed here
+                statsElement.TryGetProperty("achievements", out var schemaAchievementsElement))
             {
-                foreach (var achievement in schemaAchievementsElement.EnumerateArray()) // <-- and here
+                foreach (var achievement in schemaAchievementsElement.EnumerateArray())
                 {
                     var id = achievement.GetProperty("name").GetString() ?? throw new InvalidDataException("Achievement ID not found.");
                     var name = achievement.GetProperty("displayName").GetString() ?? throw new InvalidDataException("Achievement name not found.");
@@ -178,7 +197,9 @@ public class SteamService : ISteamService
                     var isHidden = achievement.TryGetProperty("hidden", out var hiddenElement) && hiddenElement.GetInt32() == 1;
                     double? globalPercentage = null;
                     if (globalPercentagesDict.TryGetValue(id, out var percent))
+                    {
                         globalPercentage = percent;
+                    }
 
                     var newAchievement = new Achievement(id, name, description, icon, grayIcon, isHidden, globalPercentage);
 
@@ -194,7 +215,7 @@ public class SteamService : ISteamService
         }
         catch (HttpRequestException e)
         {
-            Console.WriteLine($"Error: {e.Message} (URL: {schemaUrl})");
+            Console.WriteLine($"[SteamService][ERROR] HTTP error for appid={gameId}: {e.Message} (schema URL: {schemaUrl})");
         }
 
         return achievements;
@@ -363,7 +384,7 @@ public class SteamService : ISteamService
         }
         catch (HttpRequestException e)
         {
-            Console.WriteLine($"Error: {e.Message} (URL: {url})");
+            Console.WriteLine($"[SteamService][ERROR] {e.Message} (URL: {url})");
         }
         return games;
     }

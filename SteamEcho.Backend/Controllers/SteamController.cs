@@ -23,7 +23,10 @@ public class SteamController(IHttpClientFactory clientFactory, IConfiguration co
         var response = await client.GetAsync(steamApiUrl);
 
         if (!response.IsSuccessStatusCode)
+        {
+            Console.WriteLine($"[SteamController][ERROR] /ownedgames {response.StatusCode} for steamid={steamid}");
             return StatusCode((int)response.StatusCode, "Steam API error.");
+        }
 
         var content = await response.Content.ReadAsStringAsync();
         return Content(content, "application/json");

@@ -11,7 +11,7 @@ public class Achievement(string id, string name, string description, string? ico
     public string Icon { get; set; } = icon ?? "/SteamEcho.App;component/Assets/Images/achievement_unlocked_icon.png";
     public string GrayIcon { get; set; } = grayIcon ?? "/SteamEcho.App;component/Assets/Images/achievement_locked_icon.png";
     public bool IsHidden { get; set; } = isHidden;
-    public double? GlobalPercentage { get; set; } = globalPercentage ?? 100.0;
+    public double? GlobalPercentage { get; set; } = globalPercentage;
 
     private bool _isUnlocked;
     public bool IsUnlocked
