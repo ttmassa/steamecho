@@ -54,4 +54,19 @@ public interface IStorageService
     /// Loads user from the database.
     /// </summary>
     public SteamUserInfo? LoadUser();
+
+    /// <summary>
+    /// Sync local database with Steam data to handle case where user has new games or unlocked achievements without using the app.
+    /// </summary>
+    public void SyncGames(List<Game> steamGames, List<Game> localGames);
+
+    /// <summary>
+    /// Save the selected language to the database.
+    /// </summary>
+    public void SaveLanguage(string cultureCode);
+
+    /// <summary>
+    /// Loads the selected language from the database.
+    /// </summary>
+    public string? LoadLanguage();
 }
