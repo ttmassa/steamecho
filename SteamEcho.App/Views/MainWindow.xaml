@@ -6,6 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:SteamEcho.App"
     xmlns:converters="clr-namespace:SteamEcho.App.Converters"
+    xmlns:properties="clr-namespace:SteamEcho.App.Resources"
     xmlns:componentModel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     mc:Ignorable="d"
@@ -29,13 +30,13 @@
             
             <!-- Menu Header -->
             <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="Games" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10"/>
+                <TextBlock Text="{Binding Loc[LibraryTitle], Mode=OneWay}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10"/>
                 <!-- Add Game Button -->
-                <Button Command="{Binding AddGameCommand}" Style="{StaticResource NoHoverButton}" Padding="0" ToolTip="Add Game" Margin="0,10,10,10">
+                <Button Command="{Binding AddGameCommand}" Style="{StaticResource NoHoverButton}" Padding="0" ToolTip="{Binding Loc[AddGameTooltip], Mode=OneWay}" Margin="0,10,10,10">
                     <Image Source="/SteamEcho.App;component/Assets/Images/add_icon.png" Width="16"/>
                 </Button>
                 <!-- Settings Button -->
-                <Button Padding="0" Margin="0,10,10,10" Command="{Binding ShowSettingsCommand}" Style="{StaticResource NoHoverButton}" ToolTip="Settings">
+                <Button Padding="0" Margin="0,10,10,10" Command="{Binding ShowSettingsCommand}" Style="{StaticResource NoHoverButton}" ToolTip="{Binding Loc[SettingsButtonTooltip], Mode=OneWay}">
                     <Image Source="/SteamEcho.App;component/Assets/Images/settings_icon.png" Width="18"/>
                 </Button>
             </StackPanel>
@@ -45,9 +46,9 @@
                 <Border Width="180" Height="20" Background="#4A4A4D" CornerRadius="4" Padding="4,0" VerticalAlignment="Center">
                     <Grid>
                         <!-- Text Input -->
-                        <TextBox x:Name="SearchBox" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" BorderThickness="0" ToolTip="Search games" Padding="6,0" CaretBrush="#F0F0F0" VerticalAlignment="Center"/>
+                        <TextBox x:Name="SearchBox" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" BorderThickness="0" ToolTip="{Binding Loc[SearchBarTooltip], Mode=OneWay}" Padding="6,0" CaretBrush="#F0F0F0" VerticalAlignment="Center"/>
                         <!-- Placeholder -->
-                        <TextBlock Text="Search games..." Foreground="#C4C4C6" VerticalAlignment="Center" Margin="6,0,0,0" IsHitTestVisible="False">
+                        <TextBlock Text="{Binding Loc[SearchBarPlaceholder], Mode=OneWay}" Foreground="#C4C4C6" VerticalAlignment="Center" Margin="6,0,0,0" IsHitTestVisible="False">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -84,9 +85,9 @@
                                 <!-- Context menu -->
                                 <Grid.ContextMenu>
                                     <ContextMenu>
-                                        <MenuItem Header="Delete" Command="{Binding PlacementTarget.Tag.DeleteGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource CustomMenuItemStyle}"/>
-                                        <MenuItem Header="Browse Files" Command="{Binding PlacementTarget.Tag.BrowseFilesCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource CustomMenuItemStyle}"/>
-                                        <MenuItem Header="Set Executable" Command="{Binding PlacementTarget.Tag.SetExecutableCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource CustomMenuItemStyle}"/>
+                                        <MenuItem Header="{Binding Loc[DeleteOption], Mode=OneWay}" Command="{Binding PlacementTarget.Tag.DeleteGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource CustomMenuItemStyle}"/>
+                                        <MenuItem Header="{Binding Loc[BrowseFilesOption], Mode=OneWay}" Command="{Binding PlacementTarget.Tag.BrowseFilesCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource CustomMenuItemStyle}"/>
+                                        <MenuItem Header="{Binding Loc[SetExecutableOption], Mode=OneWay}" Command="{Binding PlacementTarget.Tag.SetExecutableCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource CustomMenuItemStyle}"/>
                                     </ContextMenu>
                                 </Grid.ContextMenu>
 
@@ -127,7 +128,9 @@
                 <Border Background="#2B2B2C" Margin="10" CornerRadius="12">
                     <StackPanel Margin="20" VerticalAlignment="Center">
                         <TextBlock FontSize="22" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,20">
-                            Welcome to <Run Foreground="#E63946">SteamEcho</Run>!
+                            <Run Text="{Binding Loc[WelcomeMessage], Mode=OneWay}"/> 
+                            <Run Foreground="#E63946" Text="SteamEcho"/>
+                            <Run Text="!"/>
                         </TextBlock>
 
                         <Grid Margin="0,0,0,15">
@@ -137,9 +140,9 @@
                             </Grid.ColumnDefinitions>
                             <Image Grid.Column="0" Source="/SteamEcho.App;component/Assets/Images/steam_icon.png" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Top"/>
                             <TextBlock Grid.Column="1" TextWrapping="Wrap" FontSize="14">
-                                <Run Foreground="#E63946" FontWeight="SemiBold">Log in to Steam:</Run>
+                                <Run Foreground="#E63946" FontWeight="SemiBold" Text="{Binding Loc[Instruction1], Mode=OneWay}"/>
                                 <LineBreak/>
-                                Log in to Steam via the settings page to automatically sync your game library and achievement progress!
+                                <Run Text="{Binding Loc[InstructionDetail1], Mode=OneWay}"/>
                             </TextBlock>
                         </Grid>
 
@@ -150,9 +153,9 @@
                             </Grid.ColumnDefinitions>
                             <Image Grid.Column="0" Source="/SteamEcho.App;component/Assets/Images/add_icon.png" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Top"/>
                             <TextBlock Grid.Column="1" TextWrapping="Wrap" FontSize="14">
-                                <Run Foreground="#E63946" FontWeight="SemiBold">Add a game:</Run>
+                                <Run Foreground="#E63946" FontWeight="SemiBold" Text="{Binding Loc[Instruction2], Mode=OneWay}"/>
                                 <LineBreak/>
-                                Use the <Run FontWeight="Bold">+</Run> icon in the top-left menu to manually add a game from your computer.
+                                <Run Text="{Binding Loc[InstructionDetail2], Mode=OneWay}"/>
                             </TextBlock>
                         </Grid>
 
@@ -163,9 +166,9 @@
                             </Grid.ColumnDefinitions>
                             <Image Grid.Column="0" Source="/SteamEcho.App;component/Assets/Images/setup_icon.png" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Top"/>
                             <TextBlock Grid.Column="1" TextWrapping="Wrap" FontSize="14">
-                                <Run Foreground="#E63946" FontWeight="SemiBold">Enable tracking:</Run>
+                                <Run Foreground="#E63946" FontWeight="SemiBold" Text="{Binding Loc[Instruction3], Mode=OneWay}"/>
                                 <LineBreak/>
-                                Once a game is added, click the <Run FontWeight="Bold">"Setup"</Run> button to enable achievement tracking. 
+                                <Run Text="{Binding Loc[InstructionDetail3], Mode=OneWay}"/>
                             </TextBlock>
                         </Grid>
                     </StackPanel>
@@ -220,7 +223,7 @@
                                 </Setter>
                                 <!-- Default state: Setup Required -->
                                 <Setter Property="Background" Value="#4A4A4D"/>
-                                <Setter Property="ToolTip" Value="Click to setup achievement tracking for this game"/>
+                                <Setter Property="ToolTip" Value="{Binding Loc[SetupButton1], Mode=OneWay}"/>
                                 <Setter Property="Content">
                                     <Setter.Value>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -232,7 +235,7 @@
                                 <Style.Triggers>
                                     <!-- When proxy is setup: Ready -->
                                     <DataTrigger Binding="{Binding SelectedGame.IsProxyReady}" Value="True">
-                                        <Setter Property="ToolTip" Value="Click to remove achievement tracking setup"/>
+                                        <Setter Property="ToolTip" Value="{Binding Loc[SetupButton2], Mode=OneWay}"/>
                                         <Setter Property="Content">
                                             <Setter.Value>
                                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -269,7 +272,7 @@
                                 <Setter Property="Content">
                                     <Setter.Value>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                            <TextBlock Text="Play" FontSize="14" FontWeight="Medium" Margin="0,0,5,0"/>
+                                            <TextBlock Text="{Binding Loc[PlayButton1], Mode=OneWay}" FontSize="14" FontWeight="Medium" Margin="0,0,5,0"/>
                                             <Image Source="/SteamEcho.App;component/Assets/Images/play_icon.png" Width="10"/>
                                         </StackPanel>
                                     </Setter.Value>
@@ -281,7 +284,7 @@
                                         <Setter Property="Content">
                                             <Setter.Value>
                                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                    <TextBlock Text="Running..." FontSize="14" FontWeight="Medium" Margin="0,0,5,0"/>
+                                                    <TextBlock Text="{Binding Loc[PlayButton2], Mode=OneWay}" FontSize="14" FontWeight="Medium" Margin="0,0,5,0"/>
                                                     <Image Source="/SteamEcho.App;component/Assets/Images/stop_icon.png" Width="12"/>
                                                 </StackPanel>
                                             </Setter.Value>
@@ -367,8 +370,8 @@
                                                             </Style.Triggers>
                                                         </Style>
                                                     </ContextMenu.Resources>
-                                                    <MenuItem Header="Unlock" Command="{Binding PlacementTarget.Tag.UnlockAchievementCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource UnlockMenuItemStyle}"/>
-                                                    <MenuItem Header="Lock" Command="{Binding PlacementTarget.Tag.LockAchievementCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource LockMenuItemStyle}"/>
+                                                    <MenuItem Header="{Binding Loc[AchievementUnlockOption], Mode=OneWay}" Command="{Binding PlacementTarget.Tag.UnlockAchievementCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource UnlockMenuItemStyle}"/>
+                                                    <MenuItem Header="{Binding Loc[AchievementLockOption], Mode=OneWay}" Command="{Binding PlacementTarget.Tag.LockAchievementCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource LockMenuItemStyle}"/>
                                                 </ContextMenu>
                                             </Setter.Value>
                                         </Setter>
@@ -513,7 +516,7 @@
                                 <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="10">
                                     <!-- Stats Icon -->
                                     <Image Source="/SteamEcho.App;component/Assets/Images/stats_icon.png" Width="25" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                    <TextBlock Text="Stats" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Loc[StatsTitle], Mode=OneWay}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                 </StackPanel>
 
                                 <!-- Achievement Stats Content -->
@@ -582,12 +585,12 @@
                                                     <Run Text='"'/>
                                                     <Run Text="{Binding SelectedGame.RarestAchievement.Name, Mode=OneWay}"/>
                                                     <Run Text='" '/>
-                                                    <Run Text="is your rarest achievement."/>
+                                                    <Run Text="{Binding Loc[StatsRarestAchievement], Mode=OneWay}"/>
                                                 </TextBlock>
                                             </StackPanel>
 
                                             <!-- Content for when there is NO rarest achievement -->
-                                            <TextBlock Text="No achievement unlocked" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#F0F0F0" FontWeight="Medium" TextWrapping="Wrap" TextAlignment="Center">
+                                            <TextBlock Text="{Binding Loc[StatsNoRarestAchievement], Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#F0F0F0" FontWeight="Medium" TextWrapping="Wrap" TextAlignment="Center">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -614,7 +617,7 @@
                                                 </Style>
                                             </StackPanel.Style>
                                             <TextBlock Text="{Binding SelectedGame.AverageRarity, StringFormat='{}{0:F1}%', Mode=OneWay}" HorizontalAlignment="Center" FontSize="18" Margin="0,0,5,0"/>
-                                            <TextBlock Text="Average rarity of unlocked achievements" HorizontalAlignment="Center" FontSize="10" TextWrapping="Wrap" TextAlignment="Center"/>
+                                            <TextBlock Text="{Binding Loc[StatsRarity], Mode=OneWay}" HorizontalAlignment="Center" FontSize="10" TextWrapping="Wrap" TextAlignment="Center"/>
                                         </StackPanel>
 
                                         <!-- Page 4: Completion Percentile -->
@@ -631,9 +634,9 @@
                                             </StackPanel.Style>
                                             <TextBlock Text="{Binding SelectedGame.CompletionPercentile, StringFormat='{}{0:F1}%', Mode=OneWay}" HorizontalAlignment="Center" FontSize="18" Margin="0,0,5,0"/>
                                             <TextBlock HorizontalAlignment="Center" FontSize="10" TextWrapping="Wrap" TextAlignment="Center">
-                                                <Run Text="You're in the top "/>
+                                                <Run Text="{Binding Loc[StatsPercentile1], Mode=OneWay}"/>
                                                 <Run Text="{Binding SelectedGame.CompletionPercentile, StringFormat='{}{0:F1}%', Mode=OneWay}"/>
-                                                <Run Text=" of players"/>
+                                                <Run Text="{Binding Loc[StatsPercentile2], Mode=OneWay}"/>
                                             </TextBlock>
                                         </StackPanel>
                                     </Grid>
@@ -716,7 +719,7 @@
                                 </Grid>
 
                                 <!-- Placeholder for no screenshots -->
-                                <TextBlock Grid.Row="1" Text="Your screenshots will appear here" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Foreground="#F0F0F0" FontWeight="Medium" TextAlignment="Center"> 
+                                <TextBlock Grid.Row="1" Text="{Binding Loc[NoScreenshotText], Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Foreground="#F0F0F0" FontWeight="Medium" TextAlignment="Center"> 
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -758,7 +761,7 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="Settings" FontSize="20" FontWeight="SemiBold" Margin="10"/>
+                    <TextBlock Grid.Column="0" Text="{Binding Loc[SettingsTitle], Mode=OneWay}" FontSize="20" FontWeight="SemiBold" Margin="10"/>
                     <Button Grid.Column="1" Command="{Binding HideSettingsCommand}" Style="{StaticResource NoHoverButton}" Margin="0,0,20,0">
                         <Image Source="/SteamEcho.App;component/Assets/Images/cross_icon.png" Width="14"/>
                     </Button>
@@ -766,153 +769,178 @@
 
                 <!-- Settings Area -->
                 <Border Grid.Row="1" Background="#2B2B2C" Margin="10" CornerRadius="12">
-                    <StackPanel Margin="15">
-                        <!-- Steam Section -->
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,10">
-                            <TextBlock Text="Steam" FontSize="16" FontWeight="Medium" VerticalAlignment="Center"/>
-                            <Button Command="{Binding RefreshDataCommand}" Style="{StaticResource NoHoverButton}" Margin="10,0,0,0" ToolTip="Refresh Steam data">
-                                <Image Source="/SteamEcho.App;component/Assets/Images/refresh_icon.png" Width="16"/>
-                            </Button>
-                        </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
 
-                        <!-- Status -->
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <TextBlock Text="Status: " FontWeight="Regular" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding StatusText}" Foreground="#E63946" FontWeight="Medium" VerticalAlignment="Center">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="#E63946"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsUserLoggedIn}" Value="True">
-                                                <Setter Property="Foreground" Value="#A1E8AF"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </StackPanel>
+                        <StackPanel Grid.Column="0" Margin="15">
+                            <!-- Steam Section -->
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,10">
+                                <TextBlock Text="Steam" FontSize="16" FontWeight="Medium" VerticalAlignment="Center"/>
+                                <Button Command="{Binding RefreshDataCommand}" Style="{StaticResource NoHoverButton}" Margin="10,0,0,0" ToolTip="{Binding Loc[SettingsSteamRefreshButton], Mode=OneWay}">
+                                    <Image Source="/SteamEcho.App;component/Assets/Images/refresh_icon.png" Width="16"/>
+                                </Button>
+                            </StackPanel>
 
-                        <!-- Login/Logout -->
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,25">
-                            <Button Background="#E63946">
+                            <!-- Status -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <TextBlock Text="{Binding Loc[SettingsSteamStatus], Mode=OneWay}" FontWeight="Regular" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding StatusText}" Foreground="#E63946" FontWeight="Medium" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#E63946"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsUserLoggedIn}" Value="True">
+                                                    <Setter Property="Foreground" Value="#A1E8AF"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+
+                            <!-- Login/Logout -->
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,25">
+                                <Button Background="#E63946">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                            <Setter Property="Command" Value="{Binding LogToSteamCommand}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsUserLoggedIn}" Value="True">
+                                                    <Setter Property="Command" Value="{Binding LogOutFromSteamCommand}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding IsUserLoggedIn, Converter={StaticResource BooleanToLoginTextConverter}}" FontWeight="Regular" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                        <Image Source="/SteamEcho.App;component/Assets/Images/steam_icon.png" Width="18"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+
+                            <!-- Notifications Section -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                <TextBlock Text="Notifications" FontSize="16" FontWeight="Medium" Margin="0,0,10,0"/>
+                                <Button Command="{Binding TestNotificationCommand}" Style="{StaticResource NoHoverButton}" ToolTip="{Binding Loc[SettingsTestNotificationsButton], Mode=OneWay}">
+                                    <Image Source="/SteamEcho.App;component/Assets/Images/launch_icon.png" Width="18" VerticalAlignment="Center"/>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Text="{Binding Loc[SettingsNotificationsDetails], Mode=OneWay}" Foreground="#C4C4C6" FontSize="10" FontWeight="Light" Margin="0,0,0,10"/>
+
+                            <!-- Notifications Size -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                <TextBlock Text="{Binding Loc[SettingsNotificationsSize], Mode=OneWay}" FontWeight="Regular" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                <Slider Width="150" Value="{Binding NotificationSize, Mode=TwoWay, FallbackValue=5}" Minimum="1" Maximum="10" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding NotificationSize, StringFormat='{}{0:F0}', FallbackValue=5}" FontWeight="Regular" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Notification Time -->
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Loc[SettingsNotificationsTime], Mode=OneWay}" FontWeight="Regular" Margin="0,0,0,5"/>
+                                <Slider Width="150" Value="{Binding NotificationTime, Mode=TwoWay, FallbackValue=7}" Minimum="1" Maximum="20" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                <TextBlock Text="{Binding NotificationTime, StringFormat='{}{0:F0} sec', FallbackValue=7}" FontWeight="Regular"/>
+                            </StackPanel>
+
+                            <!-- Notification Color -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                <TextBlock Text="{Binding Loc[SettingsNotificationsColor], Mode=OneWay}" FontWeight="Regular" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                <ListBox ItemsSource="{Binding NotificationColors}" SelectedItem="{Binding NotificationColor, Mode=TwoWay}" Background="Transparent" BorderThickness="0" HorizontalAlignment="Left" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                    <!-- Make the list horrizontal -->
+                                    <ListBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ListBox.ItemsPanel>
+
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <Border Background="{TemplateBinding Background}">
+                                                            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Width="24" Height="24" CornerRadius="6" Margin="4" Cursor="Hand" Background="{Binding}" ToolTip="{Binding}">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="BorderBrush" Value="Transparent"/>
+                                                        <Setter Property="BorderThickness" Value="2"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
+                                                                <Setter Property="BorderBrush" Value="#FFFFFFFF"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </StackPanel>
+
+
+                            <!-- Save button -->
+                            <Button HorizontalAlignment="Left" Command="{Binding SaveNotificationSettingsCommand}" Margin="0,0,10,0">
                                 <Button.Style>
-                                    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-                                        <Setter Property="Command" Value="{Binding LogToSteamCommand}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsUserLoggedIn}" Value="True">
-                                                <Setter Property="Command" Value="{Binding LogOutFromSteamCommand}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding IsUserLoggedIn, Converter={StaticResource BooleanToLoginTextConverter}}" FontWeight="Regular" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                    <Image Source="/SteamEcho.App;component/Assets/Images/steam_icon.png" Width="18"/>
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-
-                        <!-- Notifications Section -->
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-                            <TextBlock Text="Notifications" FontSize="16" FontWeight="Medium" Margin="0,0,10,0"/>
-                            <Button Command="{Binding TestNotificationCommand}" Style="{StaticResource NoHoverButton}" ToolTip="Test it!">
-                                <Image Source="/SteamEcho.App;component/Assets/Images/launch_icon.png" Width="18" VerticalAlignment="Center"/>
-                            </Button>
-                        </StackPanel>
-                        <TextBlock Text="Customize your achievements notifications and test it by clicking on the rocket!" Foreground="#C4C4C6" FontSize="10" FontWeight="Light" Margin="0,0,0,10"/>
-
-                        <!-- Notifications Size -->
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                            <TextBlock Text="Size: " FontWeight="Regular" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                            <Slider Width="150" Value="{Binding NotificationSize, Mode=TwoWay, FallbackValue=5}" Minimum="1" Maximum="10" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding NotificationSize, StringFormat='{}{0:F0}', FallbackValue=5}" FontWeight="Regular" VerticalAlignment="Center"/>
-                        </StackPanel>
-
-                        <!-- Notification Time -->
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Time: " FontWeight="Regular" Margin="0,0,0,5"/>
-                            <Slider Width="150" Value="{Binding NotificationTime, Mode=TwoWay, FallbackValue=7}" Minimum="1" Maximum="20" TickFrequency="1" IsSnapToTickEnabled="True"/>
-                            <TextBlock Text="{Binding NotificationTime, StringFormat='{}{0:F0} sec', FallbackValue=7}" FontWeight="Regular"/>
-                        </StackPanel>
-
-                        <!-- Notification Color -->
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                            <TextBlock Text="Color: " FontWeight="Regular" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                            <ListBox ItemsSource="{Binding NotificationColors}" SelectedItem="{Binding NotificationColor, Mode=TwoWay}" Background="Transparent" BorderThickness="0" HorizontalAlignment="Left" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
-                                <!-- Make the list horrizontal -->
-                                <ListBox.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal"/>
-                                    </ItemsPanelTemplate>
-                                </ListBox.ItemsPanel>
-
-                                <ListBox.ItemContainerStyle>
-                                    <Style TargetType="ListBoxItem">
+                                    <Style TargetType="Button" BasedOn="{StaticResource NoHoverButton}">
+                                        <!-- Default -->
+                                        <Setter Property="Background" Value="#6E6E70"/>
+                                        <Setter Property="Content" Value="{Binding Loc[SettingsNotificationsSaveButton1], Mode=OneWay}"/>
+                                        <Setter Property="IsEnabled" Value="False"/>
                                         <Setter Property="Template">
                                             <Setter.Value>
-                                                <ControlTemplate TargetType="ListBoxItem">
-                                                    <Border Background="{TemplateBinding Background}">
-                                                        <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"/>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="10,5">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                     </Border>
                                                 </ControlTemplate>
                                             </Setter.Value>
                                         </Setter>
+                                        <Style.Triggers>
+                                            <!-- Unsaved changes -->
+                                            <DataTrigger Binding="{Binding IsNotificationSaved}" Value="True">
+                                                <Setter Property="Background" Value="#E63946"/>
+                                                <Setter Property="Content" Value="{Binding Loc[SettingsNotificationsSaveButton2], Mode=OneWay}"/>
+                                                <Setter Property="IsEnabled" Value="True"/>
+                                            </DataTrigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#C32A3A"/>
+                                            </Trigger>
+                                        </Style.Triggers>
                                     </Style>
-                                </ListBox.ItemContainerStyle>
-
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Width="24" Height="24" CornerRadius="6" Margin="4" Cursor="Hand" Background="{Binding}" ToolTip="{Binding}">
-                                            <Border.Style>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="BorderBrush" Value="Transparent"/>
-                                                    <Setter Property="BorderThickness" Value="2"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
-                                                            <Setter Property="BorderBrush" Value="#FFFFFFFF"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Border.Style>
-                                        </Border>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
+                                </Button.Style>
+                            </Button>
                         </StackPanel>
 
-
-                        <!-- Save button -->
-                        <Button HorizontalAlignment="Left" Command="{Binding SaveNotificationSettingsCommand}" Margin="0,0,10,0">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource NoHoverButton}">
-                                    <!-- Default -->
-                                    <Setter Property="Background" Value="#6E6E70"/>
-                                    <Setter Property="Content" Value="Saved"/>
-                                    <Setter Property="IsEnabled" Value="False"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="10,5">
-                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                    <Style.Triggers>
-                                        <!-- Unsaved changes -->
-                                        <DataTrigger Binding="{Binding IsNotificationSaved}" Value="True">
-                                            <Setter Property="Background" Value="#E63946"/>
-                                            <Setter Property="Content" Value="Save"/>
-                                            <Setter Property="IsEnabled" Value="True"/>
-                                        </DataTrigger>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#C32A3A"/>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                    </StackPanel>
+                        <!-- Language Selection -->
+                        <ComboBox Grid.Column="1" Margin="0,15,30,0" VerticalAlignment="Top" ItemsSource="{Binding AvailableLanguages}" SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}" ToolTip="{Binding Loc[SettingsLanguageTooltip], Mode=OneWay}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid VerticalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <!-- Flag -->
+                                            <ColumnDefinition Width="Auto"/>
+                                            <!-- Language Name -->
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Image Grid.Column="0" Source="{Binding FlagPath}" Width="20" Height="20" Stretch="Uniform" Margin="0,0,5,0"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DisplayName}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </Grid>
                 </Border>
             </Grid>
         </Grid>

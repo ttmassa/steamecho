@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root><accessability>internal</accessability>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
+              <xsd:attribute name="type" type="xsd:string"/>
+              <xsd:attribute name="mimetype" type="xsd:string"/>
+              <xsd:attribute ref="xml:space"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
+              <xsd:attribute ref="xml:space"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required"/>
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <accessModifier>public</accessModifier>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- MainWindow -->
+  <data name="LibraryTitle" xml:space="preserve" id="deb1335a-3965-44bd-80f2-a71c3378f4ef">
+    <value>Jeux Vidéos</value>
+    <comment/>
+  </data>
+  <data name="AddGameTooltip" xml:space="preserve" id="1a2b3c4d-5e6f-7081-92a3-b4c5d6e7f8g9">
+    <value>Ajouter un jeu</value>
+    <comment/>
+  </data>
+  <data name="SettingsButtonTooltip" xml:space="preserve" id="c1d2e3f4-5a6b-7c8d-9e0f-1a2b3c4d5e6f">
+    <value>Paramètres</value>
+    <comment/>
+  </data>
+  <data name="SearchBarPlaceholder" xml:space="preserve" id="bbae1894-773c-42ef-8c9f-0aadc1425ed3">
+    <value>Rechercher des jeux...</value>
+    <comment/>
+  </data>
+  <data name="SearchBarTooltip" xml:space="preserve" id="d4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f9g">
+    <value>Tapez pour rechercher vos jeux</value>
+    <comment/>
+  </data>
+  <data name="DeleteOption" xml:space="preserve" id="27c033e4-0df8-4698-a95e-12a3d8d63bbd">
+    <value>Supprimer</value>
+    <comment/>
+  </data>
+  <data name="BrowseFilesOption" xml:space="preserve" id="f7411b4b-9e6c-44ad-b411-2112622fd44c">
+    <value>Parcourir les fichiers</value>
+    <comment/>
+  </data>
+  <data name="SetExecutableOption" xml:space="preserve" id="5d31dc39-4489-49b5-814b-f7b094070763">
+    <value>Définir l'exécutable</value>
+    <comment/>
+  </data>
+  <data name="WelcomeMessage" xml:space="preserve" id="80c4fae9-094a-408b-a256-81082a303cb8">
+    <value>Bienvenue dans </value>
+    <comment/>
+  </data>
+  <data name="Instruction1" xml:space="preserve" id="8f774937-bf36-4f84-94da-10e61119d692">
+    <value>Se connecter à Steam :</value>
+    <comment/>
+  </data>
+  <data name="InstructionDetail1" xml:space="preserve" id="08e995c3-3cca-4618-a569-81527696ba23">
+    <value>Connectez vous à Steam via les paramètres pour synchroniser votre librairie et votre progression dans les succès!</value>
+    <comment/>
+  </data>
+  <data name="Instruction2" xml:space="preserve" id="7134607b-1527-435d-b592-84515df33290">
+    <value>Ajouter un jeu :</value>
+    <comment/>
+  </data>
+  <data name="InstructionDetail2" xml:space="preserve" id="e4bd35ab-4b3f-4d99-b2e1-ead855be1cc4">
+    <value>Utilisez l'icône "+" dans le menu pour manuellement ajouter un jeux Steam installé sur votre ordinateur.</value>
+    <comment/>
+  </data>
+  <data name="Instruction3" xml:space="preserve" id="cc601f25-ace7-44ac-99e0-e45cbbd8414e">
+    <value>Activer le suivi :</value>
+    <comment/>
+  </data>
+  <data name="InstructionDetail3" xml:space="preserve" id="dab10b3e-aef7-4649-840c-439035d45c65">
+    <value>Une fois un jeu ajouté, cliquez sur le bouton « Setup » pour activer le suivi des succès.</value>
+    <comment/>
+  </data>
+  <data name="SetupButton1" xml:space="preserve" id="3c3e2f3e-2e2b-4d0f-8e2e-1c3b6f0f2a5f">
+    <value>Cliquez pour configurer le suivi des succès pour ce jeu</value>
+    <comment/>
+  </data>
+  <data name="SetupButton2" xml:space="preserve" id="4f5e6d7c-8a9b-4c0d-9e0f-1a2b3c4d5e6f">
+    <value>Cliquez pour supprimer le suivi des succès pour ce jeu</value>
+    <comment/>
+  </data>
+  <data name="PlayButton1" xml:space="preserve" id="88551fb4-7fc1-47ea-998e-6ddf7e391955">
+    <value>Play</value>
+    <comment/>
+  </data>
+  <data name="PlayButton2" xml:space="preserve" id="a5f8a68d-0770-4025-b53e-c541c3fd2ff2">
+    <value>En cours...</value>
+    <comment/>
+  </data>
+  <data name="AchievementLockOption" xml:space="preserve" id="b9982065-1a61-49b7-a026-ec3feb8a8592">
+    <value>Bloquer</value>
+    <comment/>
+  </data>
+  <data name="AchievementUnlockOption" xml:space="preserve" id="f60eed01-de71-4634-82b9-4cf432d0298f">
+    <value>Débloquer</value>
+    <comment/>
+  </data>
+  <data name="StatsTitle" xml:space="preserve" id="d0640012-bdc4-4fa3-a8c7-0c9e78669fd7">
+    <value>Statistiques</value>
+    <comment/>
+  </data>
+  <data name="StatsRarestAchievement" xml:space="preserve" id="85373dce-014d-4e55-b21a-f8429473a110">
+    <value>est votre succès le plus rare.</value>
+    <comment/>
+  </data>
+  <data name="StatsNoRarestAchievement" xml:space="preserve" id="07f2ad30-f1be-4ad9-a9ef-975dfa7e60e5">
+    <value>Aucun succès débloqué.</value>
+    <comment/>
+  </data>
+  <data name="StatsRarity" xml:space="preserve" id="7867a083-4846-42a7-af61-aae818052e49">
+    <value>Rareté moyenne des succès débloqués.</value>
+    <comment/>
+  </data>
+  <data name="StatsPercentile1" xml:space="preserve" id="ec9666e2-ae86-4a8c-a7ee-0ea064bb835a">
+    <value>Vous êtes dans le top </value>
+    <comment/>
+  </data>
+  <data name="StatsPercentile2" xml:space="preserve" id="04437bd8-b5ac-4ba2-bc36-34657bdd65bb">
+    <value> des joueurs.</value>
+    <comment/>
+  </data>
+  <data name="NoScreenshotText" xml:space="preserve" id="5a1f4e2b-3c4d-4e5f-9a6b-7c8d9e0f1a2b">
+    <value>Vos captures d'écran apparaîtront ici</value>
+    <comment/>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve" id="a9e5c554-dd0e-4c14-9ff6-a321bb217f66">
+    <value>Paramètres</value>
+    <comment/>
+  </data>
+  <data name="SettingsSteamRefreshButton" xml:space="preserve" id="f3e2d1c0-b4a5-6789-0abc-def123456789">
+    <value>Rafraîchir les données Steam</value>
+    <comment/>
+  </data>
+  <data name="SettingsSteamStatus" xml:space="preserve" id="a674cb7a-0dfa-43f0-9521-a40185475318">
+    <value>Statut : </value>
+    <comment/>
+  </data>
+  <data name="SettingsTestNotificationsButton" xml:space="preserve" id="76e870e7-0c31-4bac-9dee-94a8ec041d3e">
+    <value>Testez !</value>
+    <comment/>
+  </data>
+  <data name="SettingsNotificationsDetails" xml:space="preserve" id="46ff9070-5319-4910-9299-1e182d57c644">
+    <value>Personnalisez vos notifications de succès et testez-les en cliquant sur la fusée !</value>
+    <comment/>
+  </data>
+  <data name="SettingsNotificationsSize" xml:space="preserve" id="214626fb-85af-4b0e-84af-8c9102db4332">
+    <value>Taille : </value>
+    <comment/>
+  </data>
+  <data name="SettingsNotificationsTime" xml:space="preserve" id="652853c9-b9d2-4182-9d1d-e73ec25cbde5">
+    <value>Durée : </value>
+    <comment/>
+  </data>
+  <data name="SettingsNotificationsColor" xml:space="preserve" id="7923beb5-f2f3-4986-9dc4-e6e3037d2872">
+    <value>Couleur : </value>
+    <comment/>
+  </data>
+  <data name="SettingsNotificationsSaveButton1" xml:space="preserve" id="1c7eb251-629e-4263-980d-ec591a24ca21">
+    <value>Enregistré</value>
+    <comment/>
+  </data>
+  <data name="SettingsNotificationsSaveButton2" xml:space="preserve" id="b07aeec4-4af8-4119-8e5f-aa9b59117d41">
+    <value>Enregistrer</value>
+    <comment/>
+  </data>
+  <data name="SettingsLanguageTooltip" xml:space="preserve" id="c3f4e5d6-7a8b-9c0d-1e2f-3a4b5c6d7e8f">
+    <value>Changer de langue</value>
+    <comment/>
+  </data>
+  <!-- ConfirmDialog -->
+  <data name="ConfirmDialogTitle" xml:space="preserve" id="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d">
+    <value>Confirmer l'action</value>
+    <comment/>
+  </data>
+  <data name="ConfirmButton" xml:space="preserve" id="e1cbbf3a-3f2e-4d2b-9c3a-5e6f7a8b9c0d">
+  <value>Confirmer</value>
+  <comment/>
+  </data>
+  <data name="CancelButton" xml:space="preserve" id="f2d3e4f5-6a7b-8c9d-0e1f-2a3b4c5d6e7f">
+    <value>Annuler</value>
+    <comment/>
+  </data>
+  <!-- GameSelectionDialog -->
+  <data name="GameSelectionTitle" xml:space="preserve" id="d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5f6a">
+    <value>Sélectionner un jeu</value>
+    <comment/>
+  </data>
+  <data name="GameSelectionButton" xml:space="preserve" id="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d">
+    <value>Sélectionner</value>
+    <comment/>
+  </data>
+</root>

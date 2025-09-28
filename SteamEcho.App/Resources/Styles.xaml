@@ -5,7 +5,7 @@
 >
     <converters:AchievementRarityConverter x:Key="RarityConverter"/>
     <converters:BooleanToLoginTextConverter x:Key="BooleanToLoginTextConverter"/>
-    
+
     <!-- Style for Button -->
     <Style TargetType="Button">
         <Setter Property="Foreground" Value="#F0F0F0"/>
@@ -202,6 +202,102 @@
         </Setter>
         <Style.Triggers>
             <Trigger Property="IsHighlighted" Value="True">
+                <Setter Property="Background" Value="#4A4A4D"/>
+                <Setter Property="Foreground" Value="#F0F0F0"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Style for Language ComboBox -->
+    <!-- Closed (selected) template -->
+    <DataTemplate x:Key="LanguageSelectedTemplate">
+        <Image Source="{Binding FlagPath}" Width="22" Height="22" Stretch="Uniform"/>
+    </DataTemplate>
+    <Style TargetType="ComboBox">
+        <Setter Property="Background" Value="#2B2B2C"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="MaxDropDownHeight" Value="240"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <!-- Clickable header -->
+                        <ToggleButton x:Name="ToggleButton" Grid.ZIndex="1" Focusable="False" Background="Transparent" BorderThickness="0" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" FocusVisualStyle="{x:Null}">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="HeaderBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="5">
+                                        <Grid>
+                                            <!-- Selected item: flag only -->
+                                            <ContentPresenter x:Name="SelectedFlag" Margin="8,0,28,0" VerticalAlignment="Center" HorizontalAlignment="Left" Content="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=ComboBox}}" ContentTemplate="{StaticResource LanguageSelectedTemplate}"/>
+                                            <!-- Dropdown arrow -->
+                                            <Path x:Name="Arrow" HorizontalAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" Stroke="#F0F0F0" StrokeThickness="2" Data="M 0 0 L 5 5 L 10 0" RenderTransformOrigin="0.5,0.5">
+                                                <Path.RenderTransform>
+                                                    <RotateTransform Angle="0"/>
+                                                </Path.RenderTransform>
+                                            </Path>
+                                        </Grid>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="HeaderBorder" Property="Background" Value="#4A4A4D"/>
+                                            <Setter Property="Cursor" Value="Hand"/>
+                                        </Trigger>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="HeaderBorder" Property="Background" Value="#4A4A4D"/>
+                                            <Setter TargetName="Arrow" Property="RenderTransform">
+                                                <Setter.Value>
+                                                    <RotateTransform Angle="180"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled" Value="False">
+                                            <Setter Property="Opacity" Value="0.6"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+
+                        <!-- Popup -->
+                        <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
+                            <!-- Constrain dropdown width to the ComboBox width -->
+                            <Grid x:Name="DropDown" SnapsToDevicePixels="True" MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                <Border x:Name="DropDownBorder" Background="#2B2B2C" BorderThickness="1" BorderBrush="#4A4A4D" CornerRadius="8"/>
+                                <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                    <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                </ScrollViewer>
+                            </Grid>
+                        </Popup>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Remove default blue highlight for ComboBox items -->
+    <Style TargetType="ComboBoxItem">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="#F0F0F0"/>
+        <Setter Property="Padding" Value="4,2"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBoxItem">
+                    <Border Background="{TemplateBinding Background}" SnapsToDevicePixels="True" CornerRadius="4">
+                        <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Margin="{TemplateBinding Padding}" VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#4A4A4D"/>
+                <Setter Property="Cursor" Value="Hand"/>
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
                 <Setter Property="Background" Value="#4A4A4D"/>
                 <Setter Property="Foreground" Value="#F0F0F0"/>
             </Trigger>

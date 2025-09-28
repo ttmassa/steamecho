@@ -12,6 +12,7 @@ using System.Diagnostics;
 using SteamEcho.App.Views;
 using SteamEcho.App.Models;
 using System.Windows.Data;
+using System.Globalization;
 
 namespace SteamEcho.App.ViewModels;
 
@@ -27,6 +28,10 @@ public class MainWindowViewModel : INotifyPropertyChanged
         "#C02222",
         "#19680b",
         "#BF00FF"
+    ];
+    public ObservableCollection<LanguageOption> AvailableLanguages { get; } = [
+        new LanguageOption { DisplayName = "English", CultureName = "en-US", FlagPath = "/SteamEcho.App;component/Assets/Images/us_flag_icon.png"},
+        new LanguageOption { DisplayName = "Français", CultureName = "fr-FR", FlagPath = "/SteamEcho.App;component/Assets/Images/french_flag_icon.png"}
     ];
     private readonly ICollectionView _gamesView;
     public ICollectionView GamesView => _gamesView;
@@ -235,11 +240,27 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public Screenshot? CurrentScreenshot => SelectedGame?.Screenshots.Count > 0 && CurrentScreenshotIndex >= 0 && CurrentScreenshotIndex < SelectedGame.Screenshots.Count
         ? SelectedGame.Screenshots[CurrentScreenshotIndex]
         : null;
-
     public string ScreenshotCounterText => SelectedGame?.Screenshots.Count > 0
         ? $"{CurrentScreenshotIndex + 1} / {SelectedGame.Screenshots.Count}"
         : "0 / 0";
-
+    private LanguageOption? _selectedLanguage;
+    public LanguageOption? SelectedLanguage
+    {
+        get => _selectedLanguage;
+        set
+        {
+            if (_selectedLanguage != value)
+            {
+                _selectedLanguage = value;
+                OnPropertyChanged();
+                if (value != null)
+                {
+                    ApplyLanguage(value.CultureName);                    
+                }
+            }
+        }
+    }
+    public LocalizationService Loc => LocalizationService.Instance;
     public MainWindowViewModel()
     {
         // Initialize services
@@ -305,6 +326,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             LoadingStatus.Update("Loading your data...");
             var user = _storageService.LoadUser();
             var games = _storageService.LoadGames();
+            var cultureCode = _storageService.LoadLanguage();
 
             if (user != null)
             {
@@ -326,6 +348,15 @@ public class MainWindowViewModel : INotifyPropertyChanged
                     Games.Add(game);
                 }
                 SelectedGame = Games.FirstOrDefault();
+
+                if (!string.IsNullOrEmpty(cultureCode))
+                {
+                    SelectedLanguage = AvailableLanguages.FirstOrDefault(lang => lang.CultureName == cultureCode);
+                }
+                else
+                {
+                    SelectedLanguage = AvailableLanguages.FirstOrDefault(lang => lang.CultureName == "en-US");
+                }
 
                 // Notify the UI that the NotificationSize property has been loaded
                 OnPropertyChanged(nameof(NotificationSize));
@@ -995,6 +1026,36 @@ public class MainWindowViewModel : INotifyPropertyChanged
         viewer.NextRequested += NextScreenshot;
 
         viewer.Show();
+    }
+
+    private void ApplyLanguage(string cultureCode)
+    {
+        if (string.IsNullOrEmpty(cultureCode)) return;
+        try
+        {
+            var culture = new CultureInfo(cultureCode);
+            Thread.CurrentThread.CurrentCulture = culture;
+            Thread.CurrentThread.CurrentUICulture = culture;
+            Resources.Resources.Culture = culture;
+
+            // Save language in db
+            _storageService.SaveLanguage(cultureCode);
+
+            Loc.Refresh();
+        }
+        catch (CultureNotFoundException)
+        {
+            // Fallback to english
+            var culture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentCulture = culture;
+            Thread.CurrentThread.CurrentUICulture = culture;
+            Resources.Resources.Culture = culture;
+
+            // Save language in db
+            _storageService.SaveLanguage("en-US");
+
+            Loc.Refresh();
+        }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
