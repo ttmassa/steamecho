@@ -12,13 +12,13 @@ public class SteamController(IHttpClientFactory clientFactory, IConfiguration co
     private readonly IConfiguration _configuration = configuration;
 
     [HttpGet("ownedgames")]
-    public async Task<IActionResult> GetOwnedGames([FromQuery] string steamid)
+    public async Task<IActionResult> GetOwnedGames([FromQuery] string steamid, [FromQuery] string lang)
     {
         var apiKey = _configuration["SteamApiKey"];
         if (string.IsNullOrEmpty(apiKey))
             return BadRequest("API key not configured.");
 
-        var steamApiUrl = $"https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={apiKey}&steamid={steamid}&include_appinfo=true&format=json";
+        var steamApiUrl = $"https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={apiKey}&steamid={steamid}&include_appinfo=true&format=json&l={lang}";
         var client = _clientFactory.CreateClient();
         var response = await client.GetAsync(steamApiUrl);
 
@@ -33,13 +33,13 @@ public class SteamController(IHttpClientFactory clientFactory, IConfiguration co
     }
 
     [HttpGet("achievements")]
-    public async Task<IActionResult> GetAchievements([FromQuery] long appid, [FromQuery] string steamid)
+    public async Task<IActionResult> GetAchievements([FromQuery] long appid, [FromQuery] string steamid, [FromQuery] string lang)
     {
         var apiKey = _configuration["SteamApiKey"];
         if (string.IsNullOrEmpty(apiKey))
             return BadRequest("API key not configured.");
 
-        var steamApiUrl = $"https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key={apiKey}&steamid={steamid}&appid={appid}";
+        var steamApiUrl = $"https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key={apiKey}&steamid={steamid}&appid={appid}&l={lang}";
         var client = _clientFactory.CreateClient();
         var response = await client.GetAsync(steamApiUrl);
 
@@ -51,13 +51,13 @@ public class SteamController(IHttpClientFactory clientFactory, IConfiguration co
     }
 
     [HttpGet("schema")]
-    public async Task<IActionResult> GetSchema([FromQuery] long appid)
+    public async Task<IActionResult> GetSchema([FromQuery] long appid, [FromQuery] string lang)
     {
         var apiKey = _configuration["SteamApiKey"];
         if (string.IsNullOrEmpty(apiKey))
             return BadRequest("API key not configured.");
 
-        var steamApiUrl = $"https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key={apiKey}&appid={appid}";
+        var steamApiUrl = $"https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key={apiKey}&appid={appid}&l={lang}";
         var client = _clientFactory.CreateClient();
         var response = await client.GetAsync(steamApiUrl);
 
@@ -83,9 +83,9 @@ public class SteamController(IHttpClientFactory clientFactory, IConfiguration co
     }
 
     [HttpGet("search")]
-    public async Task<IActionResult> SearchGames([FromQuery] string term)
+    public async Task<IActionResult> SearchGames([FromQuery] string term, [FromQuery] string lang)
     {
-        var steamApiUrl = $"https://store.steampowered.com/api/storesearch/?term={term}&cc=us&l=en";
+        var steamApiUrl = $"https://store.steampowered.com/api/storesearch/?term={term}&cc=us&l={lang}";
         var client = _clientFactory.CreateClient();
         var response = await client.GetAsync(steamApiUrl);
 

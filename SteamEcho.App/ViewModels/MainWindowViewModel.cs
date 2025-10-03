@@ -30,8 +30,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
         "#BF00FF"
     ];
     public ObservableCollection<LanguageOption> AvailableLanguages { get; } = [
-        new LanguageOption { DisplayName = "English", CultureName = "en-US", FlagPath = "/SteamEcho.App;component/Assets/Images/us_flag_icon.png"},
-        new LanguageOption { DisplayName = "Français", CultureName = "fr-FR", FlagPath = "/SteamEcho.App;component/Assets/Images/french_flag_icon.png"}
+        new LanguageOption { DisplayName = "English", CultureName = "en-US", SteamCode = "english", FlagPath = "/SteamEcho.App;component/Assets/Images/us_flag_icon.png"},
+        new LanguageOption { DisplayName = "Français", CultureName = "fr-FR", SteamCode = "french", FlagPath = "/SteamEcho.App;component/Assets/Images/french_flag_icon.png"}
     ];
     private readonly ICollectionView _gamesView;
     public ICollectionView GamesView => _gamesView;
@@ -255,12 +255,20 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 OnPropertyChanged();
                 if (value != null)
                 {
-                    ApplyLanguage(value.CultureName);                    
+                    // Propagate to Steam Service for data language
+                    _steamService.ApiLanguage = value.SteamCode;
+                    ApplyLanguage(value.CultureName);
+                    if (!_isInitializing)
+                    {
+                        RefreshData();
+                    }
                 }
             }
         }
     }
-    public LocalizationService Loc => LocalizationService.Instance;
+    public static LocalizationService Loc => LocalizationService.Instance;
+    private bool _isInitializing = false;
+
     public MainWindowViewModel()
     {
         // Initialize services
@@ -303,6 +311,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     // Background initialization during loading screen
     public async Task InitializeAsync()
     {
+        _isInitializing = true;
         await Task.Run(async () =>
         {
             LoadingStatus.Update("Initializing services...");
@@ -328,6 +337,12 @@ public class MainWindowViewModel : INotifyPropertyChanged
             var games = _storageService.LoadGames();
             var cultureCode = _storageService.LoadLanguage();
 
+            LoadingStatus.Update("Setting things up...");
+            // Set language
+            SelectedLanguage = AvailableLanguages.FirstOrDefault(lang => lang.CultureName == cultureCode)
+                                  ?? AvailableLanguages.First(lang => lang.CultureName == "en-US");
+            _steamService.ApiLanguage = SelectedLanguage.SteamCode;
+
             if (user != null)
             {
                 LoadingStatus.Update("Syncing with Steam...");
@@ -349,15 +364,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 }
                 SelectedGame = Games.FirstOrDefault();
 
-                if (!string.IsNullOrEmpty(cultureCode))
-                {
-                    SelectedLanguage = AvailableLanguages.FirstOrDefault(lang => lang.CultureName == cultureCode);
-                }
-                else
-                {
-                    SelectedLanguage = AvailableLanguages.FirstOrDefault(lang => lang.CultureName == "en-US");
-                }
-
                 // Notify the UI that the NotificationSize property has been loaded
                 OnPropertyChanged(nameof(NotificationSize));
                 OnPropertyChanged(nameof(NotificationTime));
@@ -368,6 +374,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 _gameProcessService.RunningGameChanged += OnRunningGameChanged;
                 _screenshotService.ScreenshotTaken += OnScreenshotTaken;
             });
+        _isInitializing = false;
         });
     }
 
@@ -416,9 +423,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
             List<Achievement> achievements = await _steamService.GetAchievementsAsync(steamId);
 
             // Create game instance
-            Game game = new(steamId, gameName, achievements, dialog.FileName, iconUrl);
+            Game game = new(steamId, gameName, achievements, dialog.FileName, iconUrl, true);
 
-            // Add and save
+            // Add and save to db
             Games.Add(game);
             _storageService.SaveGame(game);
 
@@ -658,21 +665,45 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
     private async void RefreshData()
     {
-        if (CurrentUser == null) return;
-
         IsLoadingGames = true;
+
         try
         {
-            // Get potentiel new owned games and store them
-            List<Game> ownedGames = await _steamService.GetOwnedGamesAsync(CurrentUser);
-            _storageService.SaveGames(ownedGames);
-            foreach (var game in ownedGames)
+            List<Game> updatedGames = [];
+
+            // Get potential new games and Steam games if user is logged in
+            if (CurrentUser != null)
             {
-                if (!Games.Any(g => g.SteamId == game.SteamId))
-                {
-                    Games.Add(game);
-                }
+                // Get owned games and update local data
+                var ownedGames = await _steamService.GetOwnedGamesAsync(CurrentUser);
+                updatedGames.AddRange(ownedGames);
             }
+
+            // Refresh manually added games
+            var manualGames = Games.Where(g => g.IsLocal).ToList();
+            foreach (var game in manualGames)
+            {
+                if (game.Achievements.Count == 0) continue;
+                
+                var achievements = await _steamService.GetAchievementsAsync(game.SteamId);
+                foreach (var a in achievements)
+                {
+                    game.UpdateAchievementLanguage(a);
+                }
+                updatedGames.Add(game);
+            }
+
+            // Update the games in the db
+            _storageService.SaveGames(updatedGames);
+
+            // Update the games in the collection
+            Games.Clear();
+            foreach (var game in updatedGames)
+            {
+                Games.Add(game);
+            }
+
+            SelectedGame = Games.FirstOrDefault();
         }
         finally
         {

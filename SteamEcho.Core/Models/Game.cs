@@ -4,12 +4,13 @@ using System.Runtime.CompilerServices;
 
 namespace SteamEcho.Core.Models;
 
-public class Game(long steamId, string name, string? executablePath = null, string? iconUrl = null) : INotifyPropertyChanged
+public class Game(long steamId, string name, string? executablePath = null, string? iconUrl = null, bool? isLocal = false) : INotifyPropertyChanged
 {
     public long SteamId { get; set; } = steamId;
     public string Name { get; set; } = name;
     public string ExecutablePath { get; set; } = executablePath ?? string.Empty;
     public string IconUrl { get; set; } = iconUrl ?? "/SteamEcho.App;component/Assets/Images/library_placeholder.png";
+    public bool IsLocal { get; set; } = isLocal ?? false;
     private bool _isRunning;
     public bool IsRunning
     {
@@ -85,8 +86,8 @@ public class Game(long steamId, string name, string? executablePath = null, stri
     }
 
     // Constructor for when creating a NEW game with achievements
-    public Game(long steamId, string name, List<Achievement> achievements, string? executablePath, string? iconUrl = null)
-        : this(steamId, name, executablePath, iconUrl)
+    public Game(long steamId, string name, List<Achievement> achievements, string? executablePath, string? iconUrl = null, bool? isLocal = false)
+        : this(steamId, name, executablePath, iconUrl, isLocal)
     {
         foreach (var ach in achievements)
         {
@@ -99,6 +100,16 @@ public class Game(long steamId, string name, string? executablePath = null, stri
         // Subscribing to the event
         achievement.PropertyChanged += OnAchievementPropertyChanged;
         Achievements.Add(achievement);
+    }
+
+    public void UpdateAchievementLanguage(Achievement achievement)
+    {
+        var existing = GetAchievementById(achievement.Id);
+        if (existing != null)
+        {
+            achievement.Name = existing.Name;
+            achievement.Description = existing.Description;
+        }
     }
 
     private void OnAchievementPropertyChanged(object? sender, PropertyChangedEventArgs e)

@@ -15,6 +15,7 @@ public class SteamService : ISteamService
 {
     private readonly HttpClient _client;
     private readonly string _backendBaseUrl;
+    public string ApiLanguage { get; set; } = "english";
 
     public SteamService()
     {
@@ -63,10 +64,45 @@ public class SteamService : ISteamService
                Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
     }
 
+    private string BuildUrl(string relativePath, params (string key, string? value)[] query)
+    {
+        var sb = new StringBuilder();
+
+        // Ensure single base without trailing slash
+        sb.Append(_backendBaseUrl.TrimEnd('/'));
+
+        // Ensure single slash before relative path, then append the relative path
+        sb.Append('/');
+        sb.Append(relativePath.TrimStart('/'));   // <-- FIX: was missing before
+
+        // Collect query parameters
+        var qp = new List<string>();
+        foreach (var (key, value) in query)
+        {
+            if (value != null)
+            {
+                qp.Add($"{WebUtility.UrlEncode(key)}={WebUtility.UrlEncode(value)}");
+            }
+        }
+
+        // Always add language unless already provided
+        if (!query.Any(q => string.Equals(q.key, "lang", StringComparison.OrdinalIgnoreCase)))
+        {
+            qp.Add("lang=" + WebUtility.UrlEncode(ApiLanguage));
+        }
+
+        if (qp.Count > 0)
+        {
+            sb.Append('?').Append(string.Join('&', qp));
+        }
+
+        return sb.ToString();
+    }
+
     // Search for Steam games by name and return a list
     public async Task<List<GameInfo>> SearchSteamGamesAsync(string gameName)
     {
-        string url = $"{_backendBaseUrl}/search?term={Uri.EscapeDataString(gameName)}";
+        string url = BuildUrl("/search", ("term", gameName));
         var games = new List<GameInfo>();
 
         try
@@ -97,9 +133,9 @@ public class SteamService : ISteamService
     {
         var achievements = new List<Achievement>();
 
-        string schemaUrl = $"{_backendBaseUrl}/schema?appid={gameId}";
-        string globalUrl = $"{_backendBaseUrl}/globalpercentages?appid={gameId}";
-        string? playerUrl = user != null ? $"{_backendBaseUrl}/achievements?appid={gameId}&steamid={user.SteamId}" : null;
+        string schemaUrl = BuildUrl("/schema", ("appid", gameId.ToString()));
+        string globalUrl = BuildUrl("/globalpercentages", ("appid", gameId.ToString()));
+        string? playerUrl = user != null ? BuildUrl("/achievements", ("appid", gameId.ToString()), ("steamid", user.SteamId)) : null;
 
         try
         {
@@ -341,7 +377,8 @@ public class SteamService : ISteamService
     // Get owned Steam owned games with achievements (full game objects)
     public async Task<List<Game>> GetOwnedGamesAsync(SteamUserInfo user)
     {
-        string url = $"{_backendBaseUrl}/ownedgames?steamid={user.SteamId}";
+        string url = BuildUrl("/ownedgames", ("steamid", user.SteamId));
+        Console.WriteLine($"Fetching owned games from URL: {url}");
         var games = new List<Game>();
 
         try
