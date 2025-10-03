@@ -110,7 +110,8 @@ internal static class DatabaseMigrator
                 Id BIGINT PRIMARY KEY,
                 Name TEXT NOT NULL,
                 ExecutablePath TEXT NOT NULL,
-                IconUrl TEXT
+                IconUrl TEXT,
+                IsLocal BOOLEAN NOT NULL DEFAULT 0
             );
             CREATE TABLE IF NOT EXISTS Achievements (
                 GameId BIGINT NOT NULL,

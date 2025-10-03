@@ -37,16 +37,19 @@ public class StorageService : IStorageService
 
         var cmd = connection.CreateCommand();
         cmd.CommandText = @"
-            INSERT OR REPLACE INTO Games (Id, Name, ExecutablePath, IconUrl)
-            VALUES (@Id, @Name, @Exe, @Icon);";
+            INSERT OR REPLACE INTO Games (Id, Name, ExecutablePath, IconUrl, IsLocal)
+            VALUES (@Id, @Name, @Exe, @Icon, @IsLocal);";
         cmd.Parameters.AddWithValue("@Id", game.SteamId);
         cmd.Parameters.AddWithValue("@Name", game.Name);
         cmd.Parameters.AddWithValue("@Exe", game.ExecutablePath);
         cmd.Parameters.AddWithValue("@Icon", game.IconUrl ?? (object)DBNull.Value);
+        cmd.Parameters.AddWithValue("@IsLocal", game.IsLocal ? 1 : 0);
         cmd.ExecuteNonQuery();
 
         foreach (var a in game.Achievements)
+        {
             SaveAchievement(game.SteamId, a);
+        }
     }
 
     public void SaveGames(List<Game> games)
@@ -88,7 +91,7 @@ public class StorageService : IStorageService
                 achCmd.Parameters.AddWithValue("@GlobalPercentage", a.GlobalPercentage.HasValue ? a.GlobalPercentage.Value : (object)DBNull.Value);
                 achCmd.Parameters.AddWithValue("@IsHidden", a.IsHidden ? 1 : 0);
                 achCmd.Parameters.AddWithValue("@IsUnlocked", a.IsUnlocked ? 1 : 0);
-                achCmd.Parameters.AddWithValue("@UnlockDate", a.UnlockDate.HasValue ? a.UnlockDate.Value : (object)DBNull.Value);
+                achCmd.Parameters.AddWithValue("@UnlockDate", a.UnlockDate ?? (object)DBNull.Value);
                 achCmd.ExecuteNonQuery();
             }
         }
@@ -148,6 +151,31 @@ public class StorageService : IStorageService
         cmd.Parameters.AddWithValue("@Description", description ?? (object)DBNull.Value);
         cmd.Parameters.AddWithValue("@UnlockDate", unlockDate.HasValue ? (object)unlockDate.Value : DBNull.Value);
         cmd.ExecuteNonQuery();
+    }
+
+    public void UpdateLocalizedGameData(List<Game> games)
+    {
+        using var connection = new SQLiteConnection(_connectionString);
+        connection.Open();
+        using var tx = connection.BeginTransaction();
+
+        foreach (var g in games)
+        {
+
+            // Update achievement name/description only
+            foreach (var a in g.Achievements)
+            {
+                using var achCmd = connection.CreateCommand();
+                achCmd.Transaction = tx;
+                achCmd.CommandText = "UPDATE Achievements SET Name=@Name, Description=@Description WHERE GameId=@GameId AND Id=@Id;";
+                achCmd.Parameters.AddWithValue("@GameId", g.SteamId);
+                achCmd.Parameters.AddWithValue("@Id", a.Id);
+                achCmd.Parameters.AddWithValue("@Name", a.Name);
+                achCmd.Parameters.AddWithValue("@Description", a.Description);
+                achCmd.ExecuteNonQuery();
+            }
+        }
+        tx.Commit();
     }
 
     public List<Game> LoadGames()
