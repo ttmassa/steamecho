@@ -101,6 +101,23 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 // Refresh the view to re-run the filter
                 _gamesView.Refresh();
                 OnPropertyChanged();
+
+                // Ensure a game is selected when the filtered list has items.
+                var visible = _gamesView.Cast<Game>().ToList();
+                var firstVisible = visible.FirstOrDefault();
+                if (firstVisible == null)
+                {
+                    // No match -> clear selection
+                    SelectedGame = null;
+                }
+                else
+                {
+                    // If current selection is not among visible items, set to first visible.
+                    if (_selectedGame == null || !visible.Contains(_selectedGame))
+                    {
+                        SelectedGame = firstVisible;
+                    }
+                }
             }
         }
     }
@@ -997,7 +1014,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         if (string.IsNullOrEmpty(query)) return true;
 
         // Match by name
-        return game.Name?.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0;
+        return game.Name.Contains(query, StringComparison.OrdinalIgnoreCase);
     }
 
     private void PreviousStatPage()
