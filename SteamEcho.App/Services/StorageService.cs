@@ -153,31 +153,6 @@ public class StorageService : IStorageService
         cmd.ExecuteNonQuery();
     }
 
-    public void UpdateLocalizedGameData(List<Game> games)
-    {
-        using var connection = new SQLiteConnection(_connectionString);
-        connection.Open();
-        using var tx = connection.BeginTransaction();
-
-        foreach (var g in games)
-        {
-
-            // Update achievement name/description only
-            foreach (var a in g.Achievements)
-            {
-                using var achCmd = connection.CreateCommand();
-                achCmd.Transaction = tx;
-                achCmd.CommandText = "UPDATE Achievements SET Name=@Name, Description=@Description WHERE GameId=@GameId AND Id=@Id;";
-                achCmd.Parameters.AddWithValue("@GameId", g.SteamId);
-                achCmd.Parameters.AddWithValue("@Id", a.Id);
-                achCmd.Parameters.AddWithValue("@Name", a.Name);
-                achCmd.Parameters.AddWithValue("@Description", a.Description);
-                achCmd.ExecuteNonQuery();
-            }
-        }
-        tx.Commit();
-    }
-
     public List<Game> LoadGames()
     {
         var list = new List<Game>();

@@ -378,7 +378,6 @@ public class SteamService : ISteamService
     public async Task<List<Game>> GetOwnedGamesAsync(SteamUserInfo user)
     {
         string url = BuildUrl("/ownedgames", ("steamid", user.SteamId));
-        Console.WriteLine($"Fetching owned games from URL: {url}");
         var games = new List<Game>();
 
         try
