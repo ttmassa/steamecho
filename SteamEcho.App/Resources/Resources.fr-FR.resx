@@ -238,4 +238,122 @@
     <value>Sélectionner</value>
     <comment/>
   </data>
+  <!-- Loading Status -->
+  <data name="LoadingStatusInitialization" xml:space="preserve" id="b1c2d3e4-f5a6-7b8c-9d0e-1f2a3b4c5d6e">
+    <value>Initialisation des services...</value>
+    <comment/>
+  </data>
+    <data name="LoadingStatusData" xml:space="preserve" id="c1d2e3f4-5a6b-7c8d-9e0f-1a2b3c4d5e6f">
+    <value>Chargement de vos données...</value>
+    <comment/>
+  </data>
+  <data name="LoadingStatusSetup" xml:space="preserve" id="d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5f6a">
+    <value>Configuration du terrain...</value>
+    <comment/>
+  </data>
+  <data name="LoadingStatusSteam" xml:space="preserve" id="e1f2a3b4-c5d6-7e8f-9a0b-1c2d3e4f5a6b">
+    <value>Synchronisation avec Steam...</value>
+    <comment/>
+  </data>
+  <data name="LoadingStatusFinalization" xml:space="preserve" id="f1a2b3c4-d5e6-7f8a-9b0c-1d2e3f4a5b6c">
+    <value>Presque terminé...</value>
+    <comment/>
+  </data>
+  <!-- Error messages -->
+  <data name="ErrorNoGames" xml:space="preserve" id="12345678-90ab-cdef-1234-567890abcdef">
+    <value>Aucun jeu trouvé. Veuillez ajouter un jeu Steam installé sur votre ordinateur.</value>
+    <comment/>
+  </data>
+  <!-- Dynamic text -->
+  <data name="ConnectedText" xml:space="preserve" id="abcdef12-3456-7890-abcd-ef1234567890">
+    <value>Connecté</value>
+    <comment/>
+  </data>
+  <data name="DisconnectedText" xml:space="preserve" id="fedcba98-7654-3210-fedc-ba9876543210">
+    <value>Déconnecté</value>
+    <comment/>
+  </data>
+  <data name="LoginText" xml:space="preserve" id="0a1b2c3d-4e5f-6789-0abc-def123456789">
+    <value>Connection</value>
+    <comment/>
+  </data>
+  <data name="LogoutText" xml:space="preserve" id="9f8e7d6c-5b4a-3210-9fed-cba987654321">
+    <value>Déconnection</value>
+    <comment/>
+  </data>
+  <!-- Error messages -->
+  <data name="ErrorDuplicateGameTitle" xml:space="preserve" id="12345678-90ab-cdef-1234-567890abcdef">
+    <value>Jeu en double</value>
+    <comment/>
+  </data>
+  <data name="ErrorDuplicateGameMessage" xml:space="preserve" id="abcdef12-3456-7890-abcd-ef1234567890">
+    <value>Ce jeu est déjà présent dans votre bibliothèque.</value>
+    <comment/>
+  </data>
+  <data name="ErrorNoExecutableTitle" xml:space="preserve" id="fedcba98-7654-3210-fedc-ba9876543210">
+    <value>Exécutable non défini</value>
+    <comment/>
+  </data>
+  <data name="ErrorNoExecutableMessage" xml:space="preserve" id="0a1b2c3d-4e5f-6789-0abc-def123456789">
+    <value>Le chemin de l'exécutable n'est pas défini pour ce jeu. Veuillez le définir en cliquant-droit sur le jeu dans la bibliothèque et en sélectionnant « Définir l'exécutable ».</value>
+    <comment/>
+  </data>
+  <data name="ErrorInvalidExecutableTitle" xml:space="preserve" id="9f8e7d6c-5b4a-3210-9fed-cba987654321">
+    <value>Chemin d'exécutable invalide</value>
+    <comment/>
+  </data>
+  <data name="ErrorInvalidExecutableMessage" xml:space="preserve" id="0f1e2d3c-4b5a-6978-0f1e-2d3c4b5a6978">
+    <value>Le dossier du jeu n'existe pas. Veuillez définir un chemin d'exécutable valide.</value>
+    <comment/>
+  </data>
+  <data name="ErrorUninstallProxyTitle" xml:space="preserve" id="8e7d6c5b-4a3f-2109-8fed-cba987654321">
+    <value>Erreur</value>
+    <comment/>
+  </data>
+  <data name="ErrorUninstallProxyMessage" xml:space="preserve" id="7d6c5b4a-3f2e-1098-7fed-cba987654321">
+    <value>Une erreur est survenue lors de la désinstallation du proxy : {0}</value>
+    <comment/>
+  </data>
+  <data name="ErrorProxySetupTitle" xml:space="preserve" id="4a3f2e1d-0c9b-8765-4fed-cba987654321">
+    <value>Erreur de configuration du proxy</value>
+    <comment/>
+  </data>
+  <data name="ErrorProxySetupMessage" xml:space="preserve" id="3f2e1d0c-9b8a-7654-3fed-cba987654321">
+    <value>Une erreur est survenue lors de la configuration du proxy : {0}</value>
+    <comment/>
+  </data>
+  <!-- Confirm messages -->
+  <data name="ConfirmDeleteGameTitle" xml:space="preserve" id="2e1d0c9b-8a7f-6543-2fed-cba987654321">
+    <value>Supprimer le jeu</value>
+    <comment/>
+  </data>
+  <data name="ConfirmDeleteGameMessage" xml:space="preserve" id="1d0c9b8a-7f6e-5432-1fed-cba987654321">
+    <value>Êtes-vous sûr de vouloir supprimer ce jeu de votre bibliothèque ? Cette action est irréversible.</value>
+    <comment/>
+  </data>
+  <data name="ConfirmPlayWithoutProxyTitle" xml:space="preserve" id="0c9b8a7f-6e5d-4321-0fed-cba987654321">
+    <value>Avertissement</value>
+    <comment/>
+  </data>
+  <data name="ConfirmPlayWithoutProxyMessage" xml:space="preserve" id="9b8a7f6e-5d4c-3210-9fed-cba987654321">
+    <value>Le proxy n'est pas configuré pour ce jeu, SteamEcho ne pourra pas afficher les succès. Veuillez le configurer en cliquant sur le bouton « Setup ».</value>
+    <comment/>
+  </data>
+  <data name="ConfirmRemoveProxyTitle" xml:space="preserve" id="8a7f6e5d-4c3b-2109-8fed-cba987654321">
+    <value>Désactivation du proxy</value>
+    <comment/>
+  </data>
+  <data name="ConfirmRemoveProxyMessage" xml:space="preserve" id="7f6e5d4c-3b2a-1098-7fed-cba987654321">
+    <value>La désactivation du proxy supprimera l'affichage des succès pour ce jeu jusqu'à ce que vous le configuriez à nouveau. Voulez-vous continuer ?</value>
+    <comment/>
+  </data>
+  <!-- Messages -->
+  <data name="MessageNotificationSettingsTitle" xml:space="preserve" id="2e1d0c9b-8a7f-6543-2fed-cba987654321">
+    <value>Succès</value>
+    <comment/>
+  </data>
+  <data name="MessageNotificationSettingsMessage" xml:space="preserve" id="1d0c9b8a-7f6e-5432-1fed-cba987654321">
+    <value>Les paramètres de notification ont été enregistrés avec succès.</value>
+    <comment/>
+  </data>
 </root>

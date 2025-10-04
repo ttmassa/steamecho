@@ -164,7 +164,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
     public bool IsUserLoggedIn => CurrentUser != null && !string.IsNullOrEmpty(CurrentUser.SteamId);
-    public string StatusText => IsUserLoggedIn ? "Connected" : "Disconnected";
+    public string StatusText => IsUserLoggedIn ? Resources.Resources.ConnectedText : Resources.Resources.DisconnectedText;
+    public string LoginText => IsUserLoggedIn ? Resources.Resources.LoginText : Resources.Resources.LogoutText;
     public double NotificationSize
     {
         get => _draftNotificationConfig?.NotificationSize ?? _notificationService.Config.NotificationSize;
@@ -314,7 +315,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         _isInitializing = true;
         await Task.Run(async () =>
         {
-            LoadingStatus.Update("Initializing services...");
+            LoadingStatus.Update(Resources.Resources.LoadingStatusInitialization);
             // Initialize storage service
             string dbPath;
             #if DEBUG
@@ -332,12 +333,12 @@ public class MainWindowViewModel : INotifyPropertyChanged
             // Initialize notification service (needs to load notification sound)
             _notificationService = new NotificationService();
 
-            LoadingStatus.Update("Loading your data...");
+            LoadingStatus.Update(Resources.Resources.LoadingStatusData);
             var user = _storageService.LoadUser();
             var games = _storageService.LoadGames();
             var cultureCode = _storageService.LoadLanguage();
 
-            LoadingStatus.Update("Setting things up...");
+            LoadingStatus.Update(Resources.Resources.LoadingStatusSetup);
             // Set language
             SelectedLanguage = AvailableLanguages.FirstOrDefault(lang => lang.CultureName == cultureCode)
                                   ?? AvailableLanguages.First(lang => lang.CultureName == "en-US");
@@ -345,7 +346,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
             if (user != null)
             {
-                LoadingStatus.Update("Syncing with Steam...");
+                LoadingStatus.Update(Resources.Resources.LoadingStatusSteam);
                 // Sync with Steam data
                 var steamGames = await _steamService.GetOwnedGamesAsync(user);
                 _storageService.SyncGames(steamGames, games);
@@ -354,7 +355,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 games = _storageService.LoadGames();
             }
 
-            LoadingStatus.Update("Almost there...");
+            LoadingStatus.Update(Resources.Resources.LoadingStatusFinalization);
             Application.Current.Dispatcher.Invoke(() =>
             {
                 CurrentUser = user;
@@ -414,7 +415,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             // Game already exists
             if (Games.Any(g => g.SteamId == steamId))
             {
-                var errorDialog = new MessageDialog("This game is already in your library.", "Duplicate Game");
+                var errorDialog = new MessageDialog(Resources.Resources.ErrorDuplicateGameMessage, Resources.Resources.ErrorDuplicateGameTitle);
                 errorDialog.ShowDialog();
                 return;
             }
@@ -440,8 +441,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         // Ask for confirmation before deleting the game
         var confirmDialog = new ConfirmDialog(
-            "Are you sure you want to delete this game? This action cannot be undone.",
-            "Confirm Delete"
+            Resources.Resources.ConfirmDeleteGameMessage,
+            Resources.Resources.ConfirmDeleteGameTitle
         );
         var result = confirmDialog.ShowDialog();
         if (result != true) return;
@@ -570,8 +571,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
             if (!game.IsProxyReady)
             {
                 var dialog = new ConfirmDialog(
-                    "Proxy is not set up for this game, SteamEcho won't be able to track achievements. Please set it up by clicking on the 'Setup' button.",
-                    "Warning"
+                    Resources.Resources.ConfirmPlayWithoutProxyMessage,
+                    Resources.Resources.ConfirmPlayWithoutProxyTitle
                 );
                 dialog.ShowDialog();
                 return;
@@ -625,11 +626,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     {
         if (IsUserLoggedIn && CurrentUser != null)
         {
-            // Ask for confirmation before logging out
-            var messageBoxText = "Are you sure you want to logout from Steam? You'll lose all data related to your Steam account.";
-            var caption = "Confirm Logout";
-
-            var dialog = new ConfirmDialog(messageBoxText, caption);
+            var dialog = new ConfirmDialog(Resources.Resources.ConfirmLogoutMessage, Resources.Resources.ConfirmLogoutTitle);
             var result = dialog.ShowDialog();
 
             if (result == true)
@@ -672,7 +669,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             List<Game> updatedGames = [];
 
             // Get potential new games and Steam games if user is logged in
-            if (CurrentUser != null)
+            if (IsUserLoggedIn && CurrentUser != null)
             {
                 // Get owned games and update local data
                 var ownedGames = await _steamService.GetOwnedGamesAsync(CurrentUser);
@@ -752,10 +749,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         if (string.IsNullOrEmpty(SelectedGame.ExecutablePath) || !File.Exists(SelectedGame.ExecutablePath))
         {
-            var dialog = new MessageDialog(
-                "Executable path not set for this game. Please set it by right-clicking on the game in the library and selecting 'Set Executable'.",
-                "Error"
-            );
+            var dialog = new MessageDialog(Resources.Resources.ErrorNoExecutableMessage, Resources.Resources.ErrorNoExecutableTitle);
             dialog.ShowDialog();
             return;
         }
@@ -763,10 +757,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         var gameDirectory = Path.GetDirectoryName(SelectedGame.ExecutablePath);
         if (gameDirectory == null || !Directory.Exists(gameDirectory))
         {
-            var dialog = new MessageDialog(
-                "Game directory does not exist. Please set a valid executable path.",
-                "Error"
-            );
+            var dialog = new MessageDialog(Resources.Resources.ErrorInvalidExecutableMessage, Resources.Resources.ErrorInvalidExecutableTitle);
             dialog.ShowDialog();
             return;
         }
@@ -775,8 +766,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             // Ask for confirmation before disabling the proxy
             var confirmDialog = new ConfirmDialog(
-                "Disabling the proxy will remove achievement tracking for this game until you set it up again. Are you sure you want to continue?",
-                "Disabling Proxy"
+                Resources.Resources.ConfirmRemoveProxyMessage,
+                Resources.Resources.ConfirmRemoveProxyTitle
             );
             var result = confirmDialog.ShowDialog();
             if (result != true) return;
@@ -792,8 +783,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
             catch (Exception ex)
             {
                 var dialog = new MessageDialog(
-                    $"An error occurred while uninstalling the proxy: {ex.Message}",
-                    "Error"
+                    string.Format(Resources.Resources.ErrorUninstallProxyMessage, ex.Message),
+                    Resources.Resources.ErrorUninstallProxyTitle
                 );
                 dialog.ShowDialog();
             }
@@ -813,18 +804,15 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 }
                 else
                 {
-                    var dialog = new MessageDialog(
-                        "Proxy setup failed. Please make sure the game directory contains a valid steam_api.dll or steam_api64.dll file.",
-                        "Setup Failed"
-                    );
+                    var dialog = new MessageDialog(Resources.Resources.ErrorProxySetupMessage,Resources.Resources.ErrorProxySetupTitle);
                     dialog.ShowDialog();
                 }
             }
             catch (Exception ex)
             {
                 var dialog = new MessageDialog(
-                    $"An error occurred while setting up the proxy: {ex.Message}",
-                    "Error"
+                    string.Format(Resources.Resources.ErrorProxySetupMessage, ex.Message),
+                    Resources.Resources.ErrorProxySetupTitle
                 );
                 dialog.ShowDialog();
             }
@@ -996,7 +984,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(NotificationColor));
             OnPropertyChanged(nameof(IsNotificationSaved));
 
-            var dialog = new MessageDialog("Notification settings saved successfully.", "Success");
+            var dialog = new MessageDialog(Resources.Resources.MessageNotificationSettingsMessage, Resources.Resources.MessageNotificationSettingsTitle);
             dialog.ShowDialog();
          }
     }

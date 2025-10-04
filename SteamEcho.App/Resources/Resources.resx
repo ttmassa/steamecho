@@ -238,4 +238,125 @@
     <value>Select</value>
     <comment/>
   </data>
+  <!-- Loading Status -->
+  <data name="LoadingStatusInitialization" xml:space="preserve" id="b1c2d3e4-f5a6-7b8c-9d0e-1f2a3b4c5d6e">
+    <value>Initializing services...</value>
+    <comment/>
+  </data>
+  <data name="LoadingStatusData" xml:space="preserve" id="c1d2e3f4-5a6b-7c8d-9e0f-1a2b3c4d5e6f">
+    <value>Loading your data...</value>
+    <comment/>
+  </data>
+  <data name="LoadingStatusSetup" xml:space="preserve" id="d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5f6a">
+    <value>Setting things up...</value>
+    <comment/>
+  </data>
+  <data name="LoadingStatusSteam" xml:space="preserve" id="e1f2a3b4-c5d6-7e8f-9a0b-1c2d3e4f5a6b">
+    <value>Syncing with Steam...</value>
+    <comment/>
+  </data>
+  <data name="LoadingStatusFinalization" xml:space="preserve" id="f1a2b3c4-d5e6-7f8a-9b0c-1d2e3f4a5b6c">
+    <value>Almost there...</value>
+    <comment/>
+  </data>
+  <!-- Dynamic text -->
+  <data name="ConnectedText" xml:space="preserve" id="abcdef12-3456-7890-abcd-ef1234567890">
+    <value>Connected</value>
+    <comment/>
+  </data>
+  <data name="DisconnectedText" xml:space="preserve" id="fedcba98-7654-3210-fedc-ba9876543210">
+    <value>Disconnected</value>
+    <comment/>
+  </data>
+  <data name="LoginText" xml:space="preserve" id="0a1b2c3d-4e5f-6789-0abc-def123456789">
+    <value>Login</value>
+    <comment/>
+  </data>
+  <data name="LogoutText" xml:space="preserve" id="9f8e7d6c-5b4a-3210-9fed-cba987654321">
+    <value>Logout</value>
+    <comment/>
+  </data>
+  <!-- Error messages -->
+  <data name="ErrorDuplicateGameTitle" xml:space="preserve" id="12345678-90ab-cdef-1234-567890abcdef">
+    <value>Duplicate Game</value>
+    <comment/>
+  </data>
+  <data name="ErrorDuplicateGameMessage" xml:space="preserve" id="abcdef12-3456-7890-abcd-ef1234567890">
+    <value>This game is already in your library.</value>
+    <comment/>
+  </data>
+  <data name="ErrorNoExecutableTitle" xml:space="preserve" id="fedcba98-7654-3210-fedc-ba9876543210">
+    <value>Executable Not Set</value>
+    <comment/>
+  </data>
+  <data name="ErrorNoExecutableMessage" xml:space="preserve" id="0a1b2c3d-4e5f-6789-0abc-def123456789">
+    <value>Executable path not set for this game. Please set it by right-clicking on the game in the library and selecting 'Set Executable'.</value>
+    <comment/>
+  </data>
+  <data name="ErrorInvalidExecutableTitle" xml:space="preserve" id="9f8e7d6c-5b4a-3210-9fed-cba987654321">
+    <value>Invalid Executable Path</value>
+    <comment/>
+  </data>
+  <data name="ErrorInvalidExecutableMessage" xml:space="preserve" id="0f1e2d3c-4b5a-6978-0f1e-2d3c4b5a6978">
+    <value>Game directory does not exist. Please set a valid executable path.</value>
+    <comment/>
+  </data>
+  <data name="ErrorUninstallProxyTitle" xml:space="preserve" id="8e7d6c5b-4a3f-2109-8fed-cba987654321">
+    <value>Error</value>
+    <comment/>
+  </data>
+  <data name="ErrorUninstallProxyMessage" xml:space="preserve" id="7d6c5b4a-3f2e-1098-7fed-cba987654321">
+    <value>An error occurred while uninstalling the proxy: {0}</value>
+    <comment/>
+  </data>
+  <data name="ErrorProxySetupTitle" xml:space="preserve" id="6c5b4a3f-2e1d-0987-6fed-cba987654321">
+    <value>Proxy Setup Failed</value>
+    <comment/>
+  </data>
+  <data name="ErrorProxySetupMessage" xml:space="preserve" id="3f2e1d0c-9b8a-7654-3fed-cba987654321">
+    <value>An error occurred while setting up the proxy: {0}</value>
+    <comment/>
+  </data>
+  <!-- Confirm messages -->
+  <data name="ConfirmDeleteGameTitle" xml:space="preserve" id="2e1d0c9b-8a7f-6543-2fed-cba987654321">
+    <value>Delete Game</value>
+    <comment/>
+  </data>
+  <data name="ConfirmDeleteGameMessage" xml:space="preserve" id="1d0c9b8a-7f6e-5432-1fed-cba987654321">
+    <value>Are you sure you want to delete this game from your library? This action cannot be undone.</value>
+    <comment/>
+  </data>
+  <data name="ConfirmPlayWithoutProxyTitle" xml:space="preserve" id="0c9b8a7f-6e5d-4321-0fed-cba987654321">
+    <value>Warning</value>
+    <comment/>
+  </data>
+  <data name="ConfirmPlayWithoutProxyMessage" xml:space="preserve" id="9b8a7f6e-5d4c-3210-9fed-cba987654321">
+    <value>Proxy is not set up for this game, SteamEcho won't be able to track achievements. Please set it up by clicking on the 'Setup' button.</value>
+    <comment/>
+  </data>
+  <data name="ConfirmLogoutTitle" xml:space="preserve" id="8a7f6e5d-4c3b-2109-8fed-cba987654321">
+    <value>Confirm Logout</value>
+    <comment/>
+  </data>
+  <data name="ConfirmLogoutMessage" xml:space="preserve" id="7f6e5d4c-3b2a-1098-7fed-cba987654321">
+    <value>Are you sure you want to logout from Steam? You'll lose all data related to your Steam account.</value>
+    <comment/>
+  </data>
+  <data name="ConfirmRemoveProxyTitle" xml:space="preserve" id="8a7f6e5d-4c3b-2109-8fed-cba987654321">
+    <value>Disabling Proxy</value>
+    <comment/>
+  </data>
+  <data name="ConfirmRemoveProxyMessage" xml:space="preserve" id="7f6e5d4c-3b2a-1098-7fed-cba987654321">
+    <value>Disabling the proxy will remove achievement tracking for this game until you set it up again. Are you sure you want to continue?</value>
+    <comment/>
+  </data>
+  <!-- Messages -->
+  <data name="MessageNotificationSettingsTitle" xml:space="preserve" id="2e1d0c9b-8a7f-6543-2fed-cba987654321">
+    <value>Success</value>
+    <comment/>
+  </data>
+  <data name="MessageNotificationSettingsMessage" xml:space="preserve" id="1d0c9b8a-7f6e-5432-1fed-cba987654321">
+    <value>Notification settings saved successfully.</value>
+    <comment/>
+  </data>
 </root>

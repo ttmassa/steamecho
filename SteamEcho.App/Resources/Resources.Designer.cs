@@ -147,5 +147,63 @@ namespace SteamEcho.App.Resources {
 		public static string GameSelectionTitle => ResourceManager.GetString("GameSelectionTitle", resourceCulture);
 
 		public static string GameSelectionButton => ResourceManager.GetString("GameSelectionButton", resourceCulture);
+
+		public static string LoadingStatusInitialization => ResourceManager.GetString("LoadingStatusInitialization", resourceCulture);
+
+		public static string LoadingStatusData => ResourceManager.GetString("LoadingStatusSteamCheck", resourceCulture);
+
+		public static string LoadingStatusSetup => ResourceManager.GetString("LoadingStatusSetup", resourceCulture);
+
+		public static string LoadingStatusSteam => ResourceManager.GetString("LoadingStatusSteam", resourceCulture);
+
+		public static string LoadingStatusFinalization => ResourceManager.GetString("LoadingStatusFinalization", resourceCulture);
+
+		public static string ConnectedText => ResourceManager.GetString("ConnectedText", resourceCulture);
+
+		public static string DisconnectedText => ResourceManager.GetString("DisconnectedText", resourceCulture);
+
+		public static string LoginText => ResourceManager.GetString("LoginText", resourceCulture);
+
+		public static string LogoutText => ResourceManager.GetString("LogoutText", resourceCulture);
+
+		public static string ErrorDuplicateGameTitle => ResourceManager.GetString("ErrorDuplicateGameTitle", resourceCulture);
+
+		public static string ErrorDuplicateGameMessage => ResourceManager.GetString("ErrorDuplicateGameMessage", resourceCulture);
+
+		public static string ErrorNoExecutableTitle => ResourceManager.GetString("ErrorNoExecutableTitle", resourceCulture);
+
+		public static string ErrorNoExecutableMessage => ResourceManager.GetString("ErrorNoExecutableMessage", resourceCulture);
+
+		public static string ErrorInvalidExecutableTitle => ResourceManager.GetString("ErrorInvalidExecutableTitle", resourceCulture);
+
+		public static string ErrorInvalidExecutableMessage => ResourceManager.GetString("ErrorInvalidExecutableMessage", resourceCulture);
+
+		public static string ErrorUninstallProxyTitle => ResourceManager.GetString("ErrorUninstallProxyTitle", resourceCulture);
+
+		public static string ErrorUninstallProxyMessage => ResourceManager.GetString("ErrorUninstallProxyMessage", resourceCulture);
+
+		public static string ErrorProxySetupTitle => ResourceManager.GetString("ErrorProxySetupTitle", resourceCulture);
+
+		public static string ErrorProxySetupMessage => ResourceManager.GetString("ErrorProxySetupMessage", resourceCulture);
+
+		public static string ConfirmDeleteGameTitle => ResourceManager.GetString("ConfirmDeleteGameTitle", resourceCulture);
+
+		public static string ConfirmDeleteGameMessage => ResourceManager.GetString("ConfirmDeleteGameMessage", resourceCulture);
+
+		public static string ConfirmPlayWithoutProxyTitle => ResourceManager.GetString("ConfirmPlayWithoutProxyTitle", resourceCulture);
+
+		public static string ConfirmPlayWithoutProxyMessage => ResourceManager.GetString("ConfirmPlayWithoutProxyMessage", resourceCulture);
+
+		public static string ConfirmLogoutTitle => ResourceManager.GetString("ConfirmLogoutTitle", resourceCulture);
+
+		public static string ConfirmLogoutMessage => ResourceManager.GetString("ConfirmLogoutMessage", resourceCulture);
+
+		public static string ConfirmRemoveProxyTitle => ResourceManager.GetString("ConfirmRemoveProxyTitle", resourceCulture);
+
+		public static string ConfirmRemoveProxyMessage => ResourceManager.GetString("ConfirmRemoveProxyMessage", resourceCulture);
+
+		public static string MessageNotificationSettingsTitle => ResourceManager.GetString("MessageNotificationSettingsTitle", resourceCulture);
+
+		public static string MessageNotificationSettingsMessage => ResourceManager.GetString("MessageNotificationSettingsMessage", resourceCulture);
 	}
 }
