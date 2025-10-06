@@ -124,6 +124,7 @@ internal static class DatabaseMigrator
                 IsHidden BOOLEAN NOT NULL DEFAULT 0,
                 IsUnlocked BOOLEAN NOT NULL DEFAULT 0,
                 UnlockDate DATETIME,
+                PRIMARY KEY (GameId, Id),
                 FOREIGN KEY (GameId) REFERENCES Games(Id)
             );
             CREATE TABLE IF NOT EXISTS User (
