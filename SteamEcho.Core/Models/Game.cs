@@ -107,8 +107,8 @@ public class Game(long steamId, string name, string? executablePath = null, stri
         var existing = GetAchievementById(achievement.Id);
         if (existing != null)
         {
-            achievement.Name = existing.Name;
-            achievement.Description = existing.Description;
+            existing.Name = achievement.Name;
+            existing.Description = achievement.Description;
         }
     }
 

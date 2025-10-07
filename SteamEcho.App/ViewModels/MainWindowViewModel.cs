@@ -278,7 +278,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
                     ApplyLanguage(value.CultureName);
                     if (!_isInitializing)
                     {
-                        RefreshData();
+                        RefreshLanguage();
                     }
                 }
             }
@@ -685,7 +685,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             List<Game> updatedGames = [];
 
-            // Get potential new games and Steam games if user is logged in
+            // Get potential new Steam games and and update existing ones
             if (IsUserLoggedIn && CurrentUser != null)
             {
                 // Get owned games and update local data
@@ -693,31 +693,57 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 updatedGames.AddRange(ownedGames);
             }
 
-            // Refresh manually added games
-            var manualGames = Games.Where(g => g.IsLocal).ToList();
-            foreach (var game in manualGames)
+            // Update the games in the db
+            _storageService.SaveGames(updatedGames);
+
+            foreach (var game in updatedGames)
+            {
+                var existing = Games.FirstOrDefault(g => g.SteamId == game.SteamId);
+                if (existing != null)
+                {
+                    existing = game;
+                }
+                else
+                {
+                    Games.Add(game);
+                }
+            }
+
+            SelectedGame = Games.FirstOrDefault();
+        }
+        finally
+        {
+            IsLoadingGames = false;
+        }
+    }
+
+    private async void RefreshLanguage()
+    {
+        IsLoadingGames = true;
+
+        try
+        {
+            foreach (var game in Games)
             {
                 if (game.Achievements.Count == 0) continue;
-                
+
+                // Get new achievements
                 var achievements = await _steamService.GetAchievementsAsync(game.SteamId);
+
+                if (achievements.Count != game.Achievements.Count)
+                {
+                    Console.WriteLine($"Skipping language update for {game.Name} due to achievement count mismatch. Original: {game.Achievements.Count}, New: {achievements.Count}");
+                    continue;
+                }
+
                 foreach (var a in achievements)
                 {
                     game.UpdateAchievementLanguage(a);
                 }
-                updatedGames.Add(game);
             }
 
             // Update the games in the db
-            _storageService.SaveGames(updatedGames);
-
-            // Update the games in the collection
-            Games.Clear();
-            foreach (var game in updatedGames)
-            {
-                Games.Add(game);
-            }
-
-            SelectedGame = Games.FirstOrDefault();
+            _storageService.SaveGames([.. Games]);
         }
         finally
         {

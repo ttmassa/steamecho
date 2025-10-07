@@ -61,8 +61,8 @@ public class StorageService : IStorageService
         using var gameCmd = connection.CreateCommand();
         gameCmd.Transaction = tx;
         gameCmd.CommandText = @"
-            INSERT OR REPLACE INTO Games (Id, Name, ExecutablePath, IconUrl)
-            VALUES (@Id, @Name, @Exe, @Icon);";
+            INSERT OR REPLACE INTO Games (Id, Name, ExecutablePath, IconUrl, IsLocal)
+            VALUES (@Id, @Name, @Exe, @Icon, @IsLocal);";
 
         using var achCmd = connection.CreateCommand();
         achCmd.Transaction = tx;
@@ -77,6 +77,7 @@ public class StorageService : IStorageService
             gameCmd.Parameters.AddWithValue("@Name", g.Name);
             gameCmd.Parameters.AddWithValue("@Exe", g.ExecutablePath);
             gameCmd.Parameters.AddWithValue("@Icon", g.IconUrl ?? (object)DBNull.Value);
+            gameCmd.Parameters.AddWithValue("@IsLocal", g.IsLocal ? 1 : 0);
             gameCmd.ExecuteNonQuery();
 
             foreach (var a in g.Achievements)
@@ -88,7 +89,7 @@ public class StorageService : IStorageService
                 achCmd.Parameters.AddWithValue("@Description", a.Description);
                 achCmd.Parameters.AddWithValue("@Icon", a.Icon ?? (object)DBNull.Value);
                 achCmd.Parameters.AddWithValue("@GrayIcon", a.GrayIcon ?? (object)DBNull.Value);
-                achCmd.Parameters.AddWithValue("@GlobalPercentage", a.GlobalPercentage.HasValue ? a.GlobalPercentage.Value : (object)DBNull.Value);
+                achCmd.Parameters.AddWithValue("@GlobalPercentage", a.GlobalPercentage ?? (object)DBNull.Value);
                 achCmd.Parameters.AddWithValue("@IsHidden", a.IsHidden ? 1 : 0);
                 achCmd.Parameters.AddWithValue("@IsUnlocked", a.IsUnlocked ? 1 : 0);
                 achCmd.Parameters.AddWithValue("@UnlockDate", a.UnlockDate ?? (object)DBNull.Value);
@@ -160,7 +161,7 @@ public class StorageService : IStorageService
         connection.Open();
 
         var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT Id, Name, ExecutablePath, IconUrl FROM Games;";
+        cmd.CommandText = "SELECT Id, Name, ExecutablePath, IconUrl, IsLocal FROM Games;";
         using var r = cmd.ExecuteReader();
         while (r.Read())
         {
@@ -168,7 +169,8 @@ public class StorageService : IStorageService
                 r.GetInt64(0),
                 r.GetString(1),
                 r.GetString(2),
-                r.IsDBNull(3) ? null : r.GetString(3)));
+                r.IsDBNull(3) ? null : r.GetString(3),
+                r.GetInt32(4) == 1));
         }
         if (list.Count == 0) return list;
 
