@@ -133,6 +133,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsUserLoggedIn));
                 OnPropertyChanged(nameof(StatusText));
+                OnPropertyChanged(nameof(LoginText));
             }
         }
     }
@@ -182,7 +183,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     }
     public bool IsUserLoggedIn => CurrentUser != null && !string.IsNullOrEmpty(CurrentUser.SteamId);
     public string StatusText => IsUserLoggedIn ? Resources.Resources.ConnectedText : Resources.Resources.DisconnectedText;
-    public string LoginText => IsUserLoggedIn ? Resources.Resources.LoginText : Resources.Resources.LogoutText;
+    public string LoginText => IsUserLoggedIn ? Resources.Resources.LogoutText : Resources.Resources.LoginText;
     public double NotificationSize
     {
         get => _draftNotificationConfig?.NotificationSize ?? _notificationService.Config.NotificationSize;
@@ -280,6 +281,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
                     {
                         RefreshLanguage();
                     }
+                    OnPropertyChanged(nameof(StatusText));
+                    OnPropertyChanged(nameof(LoginText));
                 }
             }
         }
