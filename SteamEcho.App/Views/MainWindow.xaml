@@ -77,7 +77,7 @@
                         </CollectionViewSource.SortDescriptions>
                     </CollectionViewSource>
                 </Grid.Resources>
-                <ListBox ItemsSource="{Binding GamesView}" SelectedItem="{Binding SelectedGame, Mode=TwoWay}" Background="#2B2B2C" BorderThickness="0" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Hidden" ItemContainerStyle="{StaticResource CustomListBoxItemStyle}">
+                <ListBox ItemsSource="{Binding GamesView}" SelectedItem="{Binding SelectedGame, Mode=TwoWay}" Background="#2B2B2C" BorderThickness="0" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Hidden">
                 
                 <ListBox.ItemTemplate>
                     <DataTemplate>
@@ -85,9 +85,9 @@
                                 <!-- Context menu -->
                                 <Grid.ContextMenu>
                                     <ContextMenu>
-                                        <MenuItem Header="{Binding Loc[DeleteOption], Mode=OneWay}" Command="{Binding PlacementTarget.Tag.DeleteGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource CustomMenuItemStyle}"/>
-                                        <MenuItem Header="{Binding Loc[BrowseFilesOption], Mode=OneWay}" Command="{Binding PlacementTarget.Tag.BrowseFilesCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource CustomMenuItemStyle}"/>
-                                        <MenuItem Header="{Binding Loc[SetExecutableOption], Mode=OneWay}" Command="{Binding PlacementTarget.Tag.SetExecutableCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource CustomMenuItemStyle}"/>
+                                        <MenuItem Header="{Binding PlacementTarget.Tag.Loc[DeleteOption], RelativeSource={RelativeSource AncestorType=ContextMenu}, Mode=OneWay}" Command="{Binding PlacementTarget.Tag.DeleteGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
+                                        <MenuItem Header="{Binding PlacementTarget.Tag.Loc[BrowseFilesOption], RelativeSource={RelativeSource AncestorType=ContextMenu}, Mode=OneWay}" Command="{Binding PlacementTarget.Tag.BrowseFilesCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
+                                        <MenuItem Header="{Binding PlacementTarget.Tag.Loc[SetExecutableOption], RelativeSource={RelativeSource AncestorType=ContextMenu}, Mode=OneWay}" Command="{Binding PlacementTarget.Tag.SetExecutableCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
                                     </ContextMenu>
                                 </Grid.ContextMenu>
 
@@ -341,69 +341,27 @@
                             </StackPanel>
 
                             <!-- Achievement List -->
-                            <ListBox Grid.Row="1" ItemsSource="{Binding Source={StaticResource SortedAchievements}}" Background="#E63946" BorderThickness="0" Margin="0,10,0,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch">
+                            <ListBox Grid.Row="1" ItemsSource="{Binding Source={StaticResource SortedAchievements}}" Background="#E63946" BorderThickness="0" Margin="0,10,0,0" Padding="0,0,0,8" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch">
+                                <!-- Add space between list items -->
                                 <ListBox.ItemContainerStyle>
-                                    <Style TargetType="ListBoxItem">
-                                        <Setter Property="Background" Value="Transparent"/>
-                                        <Setter Property="ClipToBounds" Value="False"/>
-                                        <Setter Property="Padding" Value="5,5,0,5"/>
-                                        <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                        <!-- Context menu -->
-                                        <Setter Property="ContextMenu">
-                                            <Setter.Value>
-                                                <ContextMenu>
-                                                    <ContextMenu.Resources>
-                                                        <Style x:Key="UnlockMenuItemStyle" TargetType="MenuItem" BasedOn="{StaticResource CustomMenuItemStyle}">
-                                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsUnlocked}" Value="False">
-                                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                        <Style x:Key="LockMenuItemStyle" TargetType="MenuItem" BasedOn="{StaticResource CustomMenuItemStyle}">
-                                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsUnlocked}" Value="True">
-                                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </ContextMenu.Resources>
-                                                    <MenuItem Header="{Binding Loc[AchievementUnlockOption], Mode=OneWay}" Command="{Binding PlacementTarget.Tag.UnlockAchievementCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource UnlockMenuItemStyle}"/>
-                                                    <MenuItem Header="{Binding Loc[AchievementLockOption], Mode=OneWay}" Command="{Binding PlacementTarget.Tag.LockAchievementCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Style="{StaticResource LockMenuItemStyle}"/>
-                                                </ContextMenu>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <!-- Template to remove default blue glow effect -->
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="ListBoxItem">
-                                                    <ContentPresenter Margin="{TemplateBinding Padding}" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" HorizontalAlignment="Stretch"/>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
+                                    <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                                        <Setter Property="Margin" Value="2.5"/>
                                     </Style>
                                 </ListBox.ItemContainerStyle>
-
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid Margin="0" VerticalAlignment="Center">
+                                        <Grid Margin="0" Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}" VerticalAlignment="Center">
                                             <Grid.ColumnDefinitions>
-                                                <!-- Achievement Icon -->
                                                 <ColumnDefinition Width="Auto"/>
-                                                <!-- Achievement Details -->
                                                 <ColumnDefinition Width="*"/>
-                                                <!-- Achievement Global Percentage -->
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
 
                                             <!-- Container for Icon and Glow Effect -->
                                             <Grid Width="34" Height="34" Margin="0,0,10,0" ClipToBounds="False">
-                                                <!-- Glow Effect Border -->
-                                                <Border x:Name="GlowBorder" CornerRadius="5" />
-                                                    
-                                                <!-- Achievement Icon -->
+                                                <!-- Transparent Border for layout only -->
+                                                <Border x:Name="GlowBorder" Background="Transparent"/>
+                                                <!-- Achievement Icon with possible glow -->
                                                 <Image x:Name="AchievementIcon" Source="{Binding Icon}" VerticalAlignment="Center" Width="34" Cursor="Hand"/>
                                             </Grid>
                                                 
@@ -412,10 +370,15 @@
                                                 <TextBlock x:Name="AchievementName" Text="{Binding Name}" FontWeight="Medium" ToolTip="{Binding Name}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Stretch"/>
                                                 <TextBlock x:Name="AchievementDesc" Text="{Binding Description}" FontSize="10" FontWeight="Regular" TextWrapping="NoWrap" ToolTip="{Binding Description}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" HorizontalAlignment="Stretch"/>
                                             </StackPanel>
-                                            <!-- Achievement Global Percentage -->
                                             <TextBlock x:Name="AchievementGlobalPercentage" Text="{Binding GlobalPercentage, StringFormat='{}{0:F1}%'}" FontWeight="Regular" VerticalAlignment="Center" Grid.Column="2" HorizontalAlignment="Right" Margin="10,0,0,0"/>
+
+                                            <Grid.ContextMenu>
+                                                <ContextMenu>
+                                                    <MenuItem Header="{Binding PlacementTarget.Tag.Loc[AchievementLockOption], RelativeSource={RelativeSource AncestorType=ContextMenu}, Mode=OneWay}" Command="{Binding PlacementTarget.Tag.LockAchievementCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Visibility="{Binding IsUnlocked, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                                    <MenuItem Header="{Binding PlacementTarget.Tag.Loc[AchievementUnlockOption], RelativeSource={RelativeSource AncestorType=ContextMenu}, Mode=OneWay}" Command="{Binding PlacementTarget.Tag.UnlockAchievementCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Visibility="{Binding IsUnlocked, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+                                                </ContextMenu>
+                                            </Grid.ContextMenu>
                                         </Grid>
-                                        <!-- Change color and icon based on achievement's completude -->
                                         <DataTemplate.Triggers>
                                             <DataTrigger Binding="{Binding IsUnlocked}" Value="False">
                                                 <Setter TargetName="AchievementIcon" Property="Source" Value="{Binding GrayIcon}"/>
@@ -430,19 +393,11 @@
                                                     <Condition Binding="{Binding IsUnlocked}" Value="True" />
                                                     <Condition Binding="{Binding GlobalPercentage, Converter={StaticResource RarityConverter}}" Value="Uncommon" />
                                                 </MultiDataTrigger.Conditions>
-                                                <MultiDataTrigger.EnterActions>
-                                                    <BeginStoryboard>
-                                                        <Storyboard>
-                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="AchievementIcon" Storyboard.TargetProperty="Effect">
-                                                                <DiscreteObjectKeyFrame KeyTime="0">
-                                                                    <DiscreteObjectKeyFrame.Value>
-                                                                        <DropShadowEffect ShadowDepth="0" Color="#00FFFF" Opacity="1" BlurRadius="15" />
-                                                                    </DiscreteObjectKeyFrame.Value>
-                                                                </DiscreteObjectKeyFrame>
-                                                            </ObjectAnimationUsingKeyFrames>
-                                                        </Storyboard>
-                                                    </BeginStoryboard>
-                                                </MultiDataTrigger.EnterActions>
+                                                <Setter TargetName="AchievementIcon" Property="Effect">
+                                                    <Setter.Value>
+                                                        <DropShadowEffect Color="#00FFFF" BlurRadius="18" Opacity="0.9" ShadowDepth="0"/>
+                                                    </Setter.Value>
+                                                </Setter>
                                             </MultiDataTrigger>
 
                                             <!-- Rare Achievement Glow -->
@@ -451,19 +406,11 @@
                                                     <Condition Binding="{Binding IsUnlocked}" Value="True" />
                                                     <Condition Binding="{Binding GlobalPercentage, Converter={StaticResource RarityConverter}}" Value="Rare" />
                                                 </MultiDataTrigger.Conditions>
-                                                <MultiDataTrigger.EnterActions>
-                                                    <BeginStoryboard>
-                                                        <Storyboard>
-                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="AchievementIcon" Storyboard.TargetProperty="Effect">
-                                                                <DiscreteObjectKeyFrame KeyTime="0">
-                                                                    <DiscreteObjectKeyFrame.Value>
-                                                                        <DropShadowEffect ShadowDepth="0" Color="#BF00FF" Opacity="1" BlurRadius="20" />
-                                                                    </DiscreteObjectKeyFrame.Value>
-                                                                </DiscreteObjectKeyFrame>
-                                                            </ObjectAnimationUsingKeyFrames>
-                                                        </Storyboard>
-                                                    </BeginStoryboard>
-                                                </MultiDataTrigger.EnterActions>
+                                                <Setter TargetName="AchievementIcon" Property="Effect">
+                                                    <Setter.Value>
+                                                        <DropShadowEffect Color="#BF00FF" BlurRadius="18" Opacity="0.9" ShadowDepth="0"/>
+                                                    </Setter.Value>
+                                                </Setter>
                                             </MultiDataTrigger>
 
                                             <!-- Ultra Rare Glow -->
@@ -472,19 +419,11 @@
                                                     <Condition Binding="{Binding IsUnlocked}" Value="True" />
                                                     <Condition Binding="{Binding GlobalPercentage, Converter={StaticResource RarityConverter}}" Value="UltraRare" />
                                                 </MultiDataTrigger.Conditions>
-                                                <MultiDataTrigger.EnterActions>
-                                                    <BeginStoryboard>
-                                                        <Storyboard>
-                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="AchievementIcon" Storyboard.TargetProperty="Effect">
-                                                                <DiscreteObjectKeyFrame KeyTime="0">
-                                                                    <DiscreteObjectKeyFrame.Value>
-                                                                        <DropShadowEffect ShadowDepth="0" Color="#FFFF00" Opacity="1" BlurRadius="30" />
-                                                                    </DiscreteObjectKeyFrame.Value>
-                                                                </DiscreteObjectKeyFrame>
-                                                            </ObjectAnimationUsingKeyFrames>
-                                                        </Storyboard>
-                                                    </BeginStoryboard>
-                                                </MultiDataTrigger.EnterActions>
+                                                <Setter TargetName="AchievementIcon" Property="Effect">
+                                                    <Setter.Value>
+                                                        <DropShadowEffect Color="#FFFF00" BlurRadius="18" Opacity="0.9" ShadowDepth="0"/>
+                                                    </Setter.Value>
+                                                </Setter>
                                             </MultiDataTrigger>
                                         </DataTemplate.Triggers>
                                     </DataTemplate>

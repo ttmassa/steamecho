@@ -36,7 +36,7 @@
         <TextBlock Grid.Row="0" Text="{Binding Path=[GameSelectionTitle], Source={x:Static services:LocalizationService.Instance}, Mode=OneWay}" FontSize="26" FontWeight="Medium" HorizontalAlignment="Center" Margin="20,20,20,10"/>
 
         <!-- Game List -->
-        <ListBox Grid.Row="1" x:Name="GamesListBox" Background="#2B2B2C" BorderThickness="0" Margin="20,0,20,0" ItemsSource="{Binding Games}" SelectedItem="{Binding SelectedGame, Mode=TwoWay}" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Style="{StaticResource GameListBoxStyle}" ItemContainerStyle="{StaticResource CustomListBoxItemStyle}">
+        <ListBox Grid.Row="1" x:Name="GamesListBox" Background="#2B2B2C" BorderThickness="0" Margin="20,0,20,0" ItemsSource="{Binding Games}" SelectedItem="{Binding SelectedGame, Mode=TwoWay}" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Style="{StaticResource GameListBoxStyle}">
             
             <ListBox.ItemTemplate>
                 <DataTemplate>
