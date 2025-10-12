@@ -243,7 +243,11 @@
     <value>Initialisation des services...</value>
     <comment/>
   </data>
-    <data name="LoadingStatusData" xml:space="preserve" id="c1d2e3f4-5a6b-7c8d-9e0f-1a2b3c4d5e6f">
+  <data name="LoadingStatusInternet" xml:space="preserve" id="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d">
+    <value>Connexion au réseau...</value>
+    <comment/>
+  </data>
+  <data name="LoadingStatusData" xml:space="preserve" id="c1d2e3f4-5a6b-7c8d-9e0f-1a2b3c4d5e6f">
     <value>Chargement de vos données...</value>
     <comment/>
   </data>
@@ -354,6 +358,15 @@
   </data>
   <data name="MessageNotificationSettingsMessage" xml:space="preserve" id="1d0c9b8a-7f6e-5432-1fed-cba987654321">
     <value>Les paramètres de notification ont été enregistrés avec succès.</value>
+    <comment/>
+  </data>
+  <!-- UI Notification messages -->
+  <data name="UINotificationOfflineMode" xml:space="preserve" id="0c9b8a7f-6e5d-4321-0fed-cba987654321">
+    <value>Mode hors ligne. Certaines fonctionnalités peuvent être indisponibles. (503)</value>
+    <comment/>
+  </data>
+  <data name="UINotificationOnlineMode" xml:space="preserve" id="9b8a7f6e-5d4c-3210-9fed-cba987654321">
+    <value>Connecté à Internet.</value>
     <comment/>
   </data>
 </root>

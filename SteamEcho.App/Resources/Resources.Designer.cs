@@ -150,6 +150,8 @@ namespace SteamEcho.App.Resources {
 
 		public static string LoadingStatusInitialization => ResourceManager.GetString("LoadingStatusInitialization", resourceCulture);
 
+		public static string LoadingStatusInternet => ResourceManager.GetString("LoadingStatusInternet", resourceCulture);
+
 		public static string LoadingStatusData => ResourceManager.GetString("LoadingStatusSteamCheck", resourceCulture);
 
 		public static string LoadingStatusSetup => ResourceManager.GetString("LoadingStatusSetup", resourceCulture);
@@ -205,5 +207,9 @@ namespace SteamEcho.App.Resources {
 		public static string MessageNotificationSettingsTitle => ResourceManager.GetString("MessageNotificationSettingsTitle", resourceCulture);
 
 		public static string MessageNotificationSettingsMessage => ResourceManager.GetString("MessageNotificationSettingsMessage", resourceCulture);
+
+		public static string UINotificationOfflineMode => ResourceManager.GetString("UINotificationOfflineMode", resourceCulture);
+
+		public static string UINotificationOnlineMode => ResourceManager.GetString("UINotificationOnlineMode", resourceCulture);
 	}
 }

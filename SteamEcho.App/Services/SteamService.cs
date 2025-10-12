@@ -99,7 +99,6 @@ public class SteamService : ISteamService
         return sb.ToString();
     }
 
-    // Search for Steam games by name and return a list
     public async Task<List<GameInfo>> SearchSteamGamesAsync(string gameName)
     {
         string url = BuildUrl("/search", ("term", gameName));
@@ -257,7 +256,8 @@ public class SteamService : ISteamService
         return achievements;
     }
 
-    public async Task<SteamUserInfo?> LogToSteamAsync()
+    public async Task<SteamUserInfo?> 
+    LogToSteamAsync()
     {
         // OpenId authentication to Steam with system browser + local listener
         string redirectUrl = "http://localhost:54321/steam-auth/";
@@ -374,7 +374,6 @@ public class SteamService : ISteamService
         return null;
     }
 
-    // Get owned Steam owned games with achievements (full game objects)
     public async Task<List<Game>> GetOwnedGamesAsync(SteamUserInfo user)
     {
         string url = BuildUrl("/ownedgames", ("steamid", user.SteamId));

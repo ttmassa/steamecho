@@ -20,6 +20,22 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
+        <!-- Notification Bar -->
+        <Border Grid.ColumnSpan="2" Background="#E63946" Height="32" HorizontalAlignment="Center" VerticalAlignment="Top" CornerRadius="5" Panel.ZIndex="2" Margin="0,10,0,0" Visibility="{Binding IsNotificationVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <!-- Notification Message -->
+                <TextBlock Text="{Binding UINotificationMessage}" VerticalAlignment="Center" Margin="10,0"/>
+                <!-- Dismiss Button -->
+                <Button Grid.Column="1" Command="{Binding DismissUINotificationCommand}" Style="{StaticResource NoHoverButton}" Margin="0,0,10,0">
+                    <Image Source="/SteamEcho.App;component/Assets/Images/cross_icon.png" Width="12"/>
+                </Button>
+            </Grid>
+        </Border>
+
         <!-- Menu Column -->
         <Grid Grid.Column="0" Background="#2B2B2C">
             <Grid.RowDefinitions>

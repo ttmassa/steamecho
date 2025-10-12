@@ -13,6 +13,7 @@ using SteamEcho.App.Views;
 using SteamEcho.App.Models;
 using System.Windows.Data;
 using System.Globalization;
+using System.Net.NetworkInformation;
 
 namespace SteamEcho.App.ViewModels;
 
@@ -57,6 +58,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand PreviousScreenshotCommand { get; }
     public ICommand NextScreenshotCommand { get; }
     public ICommand ViewScreenshotCommand { get; }
+    public ICommand DismissUINotificationCommand { get; }
 
     // Services
     private readonly SteamService _steamService;
@@ -66,6 +68,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     private StorageService _storageService;
     private NotificationService _notificationService;
     private NotificationConfig? _draftNotificationConfig;
+    public static LocalizationService Loc => LocalizationService.Instance;
 
     // Properties
     private Game? _selectedGame;
@@ -287,7 +290,37 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
         }
     }
-    public static LocalizationService Loc => LocalizationService.Instance;
+    private bool _hasInternet = true;
+    public bool HasInternet
+    {
+        get => _hasInternet;
+        set
+        {
+            if (_hasInternet != value)
+            {
+                _hasInternet = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+    private bool _isCheckingInternet = false;
+    private System.Timers.Timer? _internetCheckTimer;
+    private string? _UINotificationMessage;
+    public string? UINotificationMessage
+    {
+        get => _UINotificationMessage;
+        set
+        {
+            if (_UINotificationMessage != value)
+            {
+                _UINotificationMessage = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsNotificationVisible));
+            }
+        }
+    }
+    public bool IsNotificationVisible => !string.IsNullOrEmpty(UINotificationMessage);
+    private System.Timers.Timer? _UINotificationTimer;
     private bool _isInitializing = false;
 
     public MainWindowViewModel()
@@ -305,6 +338,12 @@ public class MainWindowViewModel : INotifyPropertyChanged
         _gamesView.Filter = FilterGames;
         // Sort games alphabetically
         _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.Name), ListSortDirection.Ascending));
+
+        // Initialize connectivity check timer (checks every 30 seconds)
+        _internetCheckTimer = new System.Timers.Timer(5000);
+        _internetCheckTimer.Elapsed += async (s, e) => await CheckInternetConnectionAsync();
+        _internetCheckTimer.AutoReset = true;
+        _internetCheckTimer.Start();
 
         // Initialize commands
         AddGameCommand = new RelayCommand(AddGame);
@@ -327,6 +366,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         PreviousScreenshotCommand = new RelayCommand(PreviousScreenshot);
         NextScreenshotCommand = new RelayCommand(NextScreenshot);
         ViewScreenshotCommand = new RelayCommand<Screenshot>(ViewScreenshot);
+        DismissUINotificationCommand = new RelayCommand(DismissUINotification);
     }
 
     // Background initialization during loading screen
@@ -338,36 +378,41 @@ public class MainWindowViewModel : INotifyPropertyChanged
             LoadingStatus.Update(Resources.Resources.LoadingStatusInitialization);
             // Initialize storage service
             string dbPath;
-            #if DEBUG
-                dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steamecho.db");
-            #else
+#if DEBUG
+            dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steamecho.db");
+#else
                 string appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SteamEcho");
                 if (!Directory.Exists(appDataPath))
                 {
                     Directory.CreateDirectory(appDataPath);
                 }
                 dbPath = Path.Combine(appDataPath, "steamecho.db");
-            #endif
+#endif
             _storageService = new StorageService(dbPath);
 
             // Initialize notification service (needs to load notification sound)
             _notificationService = new NotificationService();
 
+            // Check internet connection
+            LoadingStatus.Update(Resources.Resources.LoadingStatusInternet);
+            HasInternet = await CheckInternetConnectivityAsync();
+
+            // Load data from db
             LoadingStatus.Update(Resources.Resources.LoadingStatusData);
             var user = _storageService.LoadUser();
             var games = _storageService.LoadGames();
             var cultureCode = _storageService.LoadLanguage();
 
-            LoadingStatus.Update(Resources.Resources.LoadingStatusSetup);
             // Set language
+            LoadingStatus.Update(Resources.Resources.LoadingStatusSetup);
             SelectedLanguage = AvailableLanguages.FirstOrDefault(lang => lang.CultureName == cultureCode)
                                   ?? AvailableLanguages.First(lang => lang.CultureName == "en-US");
             _steamService.ApiLanguage = SelectedLanguage.SteamCode;
 
-            if (user != null)
+            if (user != null && HasInternet)
             {
-                LoadingStatus.Update(Resources.Resources.LoadingStatusSteam);
                 // Sync with Steam data
+                LoadingStatus.Update(Resources.Resources.LoadingStatusSteam);
                 var steamGames = await _steamService.GetOwnedGamesAsync(user);
                 _storageService.SyncGames(steamGames, games);
 
@@ -390,17 +435,25 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 OnPropertyChanged(nameof(NotificationTime));
                 OnPropertyChanged(nameof(NotificationColor));
 
+                // Start timers
                 _gameProcessService.Start();
+                _internetCheckTimer?.Start();
+                // Subscribtions
                 _achievementListener.AchievementUnlocked += OnAchievementUnlocked;
                 _gameProcessService.RunningGameChanged += OnRunningGameChanged;
                 _screenshotService.ScreenshotTaken += OnScreenshotTaken;
+                NetworkChange.NetworkAvailabilityChanged += OnNetworkAvailabilityChanged;
+                NetworkChange.NetworkAddressChanged += OnNetworkAddressChanged;
             });
-        _isInitializing = false;
+            _isInitializing = false;
         });
     }
 
+    #region Command Methods
     private async void AddGame()
     {
+        if (!HasInternet) return;
+
         var dialog = new OpenFileDialog
         {
             Filter = "Executable Files (*.exe)|*.exe",
@@ -453,7 +506,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
             SelectedGame = game;
         }
     }
-
 
     private void DeleteGame(Game game)
     {
@@ -539,35 +591,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
             achievement.Unlock();
             _storageService.UpdateAchievement(SelectedGame.SteamId, achievement.Id, true, achievement.UnlockDate);
         }
-    }
-
-    private void OnAchievementUnlocked(string achievementApiName)
-    {
-        Application.Current.Dispatcher.Invoke(() =>
-        {
-            bool achievementFound = false;
-            foreach (var game in Games)
-            {
-                var achievement = game.GetAchievementById(achievementApiName);
-                if (achievement != null && !achievement.IsUnlocked)
-                {
-                    achievementFound = true;
-                    achievement.Unlock();
-
-                    // Show notification
-                    _notificationService.ShowNotification(achievement);
-
-                    // Update the game in the database
-                    _storageService.UpdateAchievement(game.SteamId, achievement.Id, true, achievement.UnlockDate);
-
-                    break;
-                }
-            }
-            if (!achievementFound)
-            {
-                return;
-            }
-        });
     }
 
     private void TogglePlayState(Game game)
@@ -682,6 +705,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
     private async void RefreshData()
     {
+        if (!HasInternet) return;
+
         IsLoadingGames = true;
 
         try
@@ -773,22 +798,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
-    private void OnRunningGameChanged(Game? runningGame)
-    {
-        if (runningGame != null && !string.IsNullOrEmpty(runningGame.ExecutablePath) && File.Exists(runningGame.ExecutablePath))
-        {
-            // Start achievement listener for the running game
-            _achievementListener.Start(runningGame.ExecutablePath);
-            _screenshotService.StartMonitoring(CurrentUser, runningGame);
-        }
-        else
-        {
-            // Stop achievement listener if no game is running or executable path is invalid
-            _achievementListener.Stop();
-            _screenshotService.StopMonitoring();
-        }
-    }
-
     private void ToggleProxy()
     {
         if (SelectedGame == null) return;
@@ -850,7 +859,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 }
                 else
                 {
-                    var dialog = new MessageDialog(Resources.Resources.ErrorProxySetupMessage,Resources.Resources.ErrorProxySetupTitle);
+                    var dialog = new MessageDialog(Resources.Resources.ErrorProxySetupMessage, Resources.Resources.ErrorProxySetupTitle);
                     dialog.ShowDialog();
                 }
             }
@@ -864,6 +873,170 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
         }
     }
+
+    private void TestNotification()
+    {
+        // Create dummy achievement for testing
+        _notificationService.TestNotification(NotificationSize, NotificationColor);
+    }
+
+    private void SaveNotificationSettings()
+    {
+        if (_draftNotificationConfig != null)
+        {
+            _notificationService.Config.NotificationSize = _draftNotificationConfig.NotificationSize;
+            _notificationService.Config.NotificationTime = _draftNotificationConfig.NotificationTime;
+            _notificationService.Config.NotificationColor = _draftNotificationConfig.NotificationColor;
+            _notificationService.SaveConfig();
+
+            // After saving, update the draft to match the saved config
+            _draftNotificationConfig.NotificationSize = _notificationService.Config.NotificationSize;
+            _draftNotificationConfig.NotificationTime = _notificationService.Config.NotificationTime;
+            _draftNotificationConfig.NotificationColor = _notificationService.Config.NotificationColor;
+
+            OnPropertyChanged(nameof(NotificationSize));
+            OnPropertyChanged(nameof(NotificationTime));
+            OnPropertyChanged(nameof(NotificationColor));
+            OnPropertyChanged(nameof(IsNotificationSaved));
+
+            var dialog = new MessageDialog(Resources.Resources.MessageNotificationSettingsMessage, Resources.Resources.MessageNotificationSettingsTitle);
+            dialog.ShowDialog();
+        }
+    }
+    
+    private void PreviousStatPage()
+    {
+        CurrentStatPage = (CurrentStatPage - 1 + TotalStatPages) % TotalStatPages;
+    }
+
+    private void NextStatPage()
+    {
+        CurrentStatPage = (CurrentStatPage + 1) % TotalStatPages;
+    }
+
+        private void PreviousScreenshot()
+    {
+        if (SelectedGame == null || SelectedGame.Screenshots.Count == 0) return;
+        CurrentScreenshotIndex = (CurrentScreenshotIndex + 1) % SelectedGame.Screenshots.Count;
+    }
+
+    private void NextScreenshot()
+    {
+        if (SelectedGame == null || SelectedGame.Screenshots.Count == 0) return;
+        CurrentScreenshotIndex = (CurrentScreenshotIndex + 1) % SelectedGame.Screenshots.Count;
+    }
+
+    private void ViewScreenshot(Screenshot screenshot)
+    {
+        if (!File.Exists(screenshot.FilePath)) return;
+
+        var viewer = new ScreenshotViewer(this)
+        {
+            Owner = Application.Current.MainWindow
+        };
+        viewer.PreviousRequested += PreviousScreenshot;
+        viewer.NextRequested += NextScreenshot;
+
+        viewer.Show();
+    }
+
+    private void DismissUINotification()
+    {
+        UINotificationMessage = null;
+        _UINotificationTimer?.Stop();
+        _UINotificationTimer?.Dispose();
+        _UINotificationTimer = null;
+    }
+
+
+    #endregion
+
+
+    #region Event Handlers
+    private void OnAchievementUnlocked(string achievementApiName)
+    {
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            bool achievementFound = false;
+            foreach (var game in Games)
+            {
+                var achievement = game.GetAchievementById(achievementApiName);
+                if (achievement != null && !achievement.IsUnlocked)
+                {
+                    achievementFound = true;
+                    achievement.Unlock();
+
+                    // Show notification
+                    _notificationService.ShowNotification(achievement);
+
+                    // Update the game in the database
+                    _storageService.UpdateAchievement(game.SteamId, achievement.Id, true, achievement.UnlockDate);
+
+                    break;
+                }
+            }
+            if (!achievementFound)
+            {
+                return;
+            }
+        });
+    }
+
+
+    private void OnRunningGameChanged(Game? runningGame)
+    {
+        if (runningGame != null && !string.IsNullOrEmpty(runningGame.ExecutablePath) && File.Exists(runningGame.ExecutablePath))
+        {
+            // Start achievement listener for the running game
+            _achievementListener.Start(runningGame.ExecutablePath);
+            _screenshotService.StartMonitoring(CurrentUser, runningGame);
+        }
+        else
+        {
+            // Stop achievement listener if no game is running or executable path is invalid
+            _achievementListener.Stop();
+            _screenshotService.StopMonitoring();
+        }
+    }
+
+    private void OnScreenshotTaken(Screenshot screenshot)
+    {
+        var runningGame = _gameProcessService.GetRunningGame();
+        if (runningGame == null) return;
+
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            runningGame.Screenshots.Add(screenshot);
+        });
+    }
+
+    private void OnNetworkAddressChanged(object? sender, EventArgs e)
+    {
+        // Network configuration changed
+        _ = CheckInternetConnectionAsync();
+    }
+
+    private void OnNetworkAvailabilityChanged(object? sender, NetworkAvailabilityEventArgs e)
+    {
+        if (!e.IsAvailable)
+        {
+            // Network unavailable
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                HasInternet = false;
+                ShowUINotification(Resources.Resources.UINotificationOfflineMode);
+            });
+        }
+        else
+        {
+            // Verify actual internet connectivity
+            _ = CheckInternetConnectionAsync();
+        }
+    }
+
+    #endregion
+
+    #region Helper Methods
 
     private static void CheckProxyStatus(Game game)
     {
@@ -912,6 +1085,51 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
         }
     }
+
+    private bool FilterGames(object? obj)
+    {
+        if (obj is not Game game) return false;
+
+        var query = _searchText?.Trim().ToLower();
+        if (string.IsNullOrEmpty(query)) return true;
+
+        // Match by name
+        return game.Name.Contains(query, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void ApplyLanguage(string cultureCode)
+    {
+        if (string.IsNullOrEmpty(cultureCode)) return;
+        try
+        {
+            var culture = new CultureInfo(cultureCode);
+            Thread.CurrentThread.CurrentCulture = culture;
+            Thread.CurrentThread.CurrentUICulture = culture;
+            Resources.Resources.Culture = culture;
+
+            // Save language in db
+            _storageService.SaveLanguage(cultureCode);
+
+            Loc.Refresh();
+        }
+        catch (CultureNotFoundException)
+        {
+            // Fallback to english
+            var culture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentCulture = culture;
+            Thread.CurrentThread.CurrentUICulture = culture;
+            Resources.Resources.Culture = culture;
+
+            // Save language in db
+            _storageService.SaveLanguage("en-US");
+
+            Loc.Refresh();
+        }
+    }
+
+    #endregion
+    
+    #region Proxy Handling
 
     private static bool ProcessSteamApiDll(string gameDirectory, string bitness) {
         if (bitness != "x86" && bitness != "x64")
@@ -1005,124 +1223,86 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
-    private void TestNotification()
+    #endregion
+
+    #region Internet Connection Methods
+
+    private async Task CheckInternetConnectionAsync()
     {
-        // Create dummy achievement for testing
-        _notificationService.TestNotification(NotificationSize, NotificationColor);
-    }
+        if (_isCheckingInternet || _isInitializing) return;
 
-    private void SaveNotificationSettings()
-    {
-        if (_draftNotificationConfig != null)
-        {
-            _notificationService.Config.NotificationSize = _draftNotificationConfig.NotificationSize;
-            _notificationService.Config.NotificationTime = _draftNotificationConfig.NotificationTime;
-            _notificationService.Config.NotificationColor = _draftNotificationConfig.NotificationColor;
-            _notificationService.SaveConfig();
-
-            // After saving, update the draft to match the saved config
-            _draftNotificationConfig.NotificationSize = _notificationService.Config.NotificationSize;
-            _draftNotificationConfig.NotificationTime = _notificationService.Config.NotificationTime;
-            _draftNotificationConfig.NotificationColor = _notificationService.Config.NotificationColor;
-
-            OnPropertyChanged(nameof(NotificationSize));
-            OnPropertyChanged(nameof(NotificationTime));
-            OnPropertyChanged(nameof(NotificationColor));
-            OnPropertyChanged(nameof(IsNotificationSaved));
-
-            var dialog = new MessageDialog(Resources.Resources.MessageNotificationSettingsMessage, Resources.Resources.MessageNotificationSettingsTitle);
-            dialog.ShowDialog();
-         }
-    }
-
-    private bool FilterGames(object? obj)
-    {
-        if (obj is not Game game) return false;
-
-        var query = _searchText?.Trim().ToLower();
-        if (string.IsNullOrEmpty(query)) return true;
-
-        // Match by name
-        return game.Name.Contains(query, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private void PreviousStatPage()
-    {
-        CurrentStatPage = (CurrentStatPage - 1 + TotalStatPages) % TotalStatPages;
-    }
-
-    private void NextStatPage()
-    {
-        CurrentStatPage = (CurrentStatPage + 1) % TotalStatPages;
-    }
-
-    private void OnScreenshotTaken(Screenshot screenshot)
-    {
-        var runningGame = _gameProcessService.GetRunningGame();
-        if (runningGame == null) return;
-
-        Application.Current.Dispatcher.Invoke(() =>
-        {
-            runningGame.Screenshots.Add(screenshot);
-        });
-    }
-
-    private void PreviousScreenshot()
-    {
-        if (SelectedGame == null || SelectedGame.Screenshots.Count == 0) return;
-        CurrentScreenshotIndex = (CurrentScreenshotIndex + 1) % SelectedGame.Screenshots.Count;
-    }
-
-    private void NextScreenshot()
-    {
-        if (SelectedGame == null || SelectedGame.Screenshots.Count == 0) return;
-        CurrentScreenshotIndex = (CurrentScreenshotIndex + 1) % SelectedGame.Screenshots.Count;
-    }
-
-    private void ViewScreenshot(Screenshot screenshot)
-    {
-        if (!File.Exists(screenshot.FilePath)) return;
-
-        var viewer = new ScreenshotViewer(this)
-        {
-            Owner = Application.Current.MainWindow
-        };
-        viewer.PreviousRequested += PreviousScreenshot;
-        viewer.NextRequested += NextScreenshot;
-
-        viewer.Show();
-    }
-
-    private void ApplyLanguage(string cultureCode)
-    {
-        if (string.IsNullOrEmpty(cultureCode)) return;
         try
         {
-            var culture = new CultureInfo(cultureCode);
-            Thread.CurrentThread.CurrentCulture = culture;
-            Thread.CurrentThread.CurrentUICulture = culture;
-            Resources.Resources.Culture = culture;
+            _isCheckingInternet = true;
+            bool previousStatus = HasInternet;
 
-            // Save language in db
-            _storageService.SaveLanguage(cultureCode);
-
-            Loc.Refresh();
+            // Get current internet status
+            HasInternet = await CheckInternetConnectivityAsync();
+            
+            if (previousStatus != HasInternet)
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    if (!HasInternet)
+                    {
+                        ShowUINotification(Resources.Resources.UINotificationOfflineMode);
+                    }
+                    else
+                    {
+                        ShowUINotification(Resources.Resources.UINotificationOnlineMode);
+                    }
+                });
+            }
         }
-        catch (CultureNotFoundException)
+        finally
         {
-            // Fallback to english
-            var culture = new CultureInfo("en-US");
-            Thread.CurrentThread.CurrentCulture = culture;
-            Thread.CurrentThread.CurrentUICulture = culture;
-            Resources.Resources.Culture = culture;
-
-            // Save language in db
-            _storageService.SaveLanguage("en-US");
-
-            Loc.Refresh();
+            _isCheckingInternet = false;
         }
     }
 
+    private async Task<bool> CheckInternetConnectivityAsync()
+    {
+        // Network interface availability
+        if (!NetworkInterface.GetIsNetworkAvailable())
+        {
+            return false;
+        }
+
+        // Ping Google DNS
+        try
+        {
+            using var ping = new Ping();
+            var reply = await ping.SendPingAsync("8.8.8.8", 3000);
+            return reply.Status == IPStatus.Success;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    #endregion
+    
+    // Show temporary UI notification message
+    private void ShowUINotification(string message, int durationSeconds = 5)
+    {
+        UINotificationMessage = message;
+
+        _UINotificationTimer?.Stop();
+        _UINotificationTimer?.Dispose();
+
+        _UINotificationTimer = new System.Timers.Timer(durationSeconds * 1000);
+        _UINotificationTimer.Elapsed += (s, e) =>
+        {
+            UINotificationMessage = null;
+            _UINotificationTimer?.Stop();
+            _UINotificationTimer?.Dispose();
+            _UINotificationTimer = null;
+        };
+        _UINotificationTimer.AutoReset = false;
+        _UINotificationTimer.Start();
+    }
+    
     public event PropertyChangedEventHandler? PropertyChanged;
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
