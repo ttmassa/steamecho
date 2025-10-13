@@ -343,7 +343,7 @@
     <comment/>
   </data>
   <data name="ConfirmLogoutMessage" xml:space="preserve" id="7f6e5d4c-3b2a-1098-7fed-cba987654321">
-    <value>Are you sure you want to logout from Steam? You'll lose all data related to your Steam account.</value>
+    <value>Are you sure you want to logout from Steam? You will need to log in again to synchronize your library and your achievements progress.</value>
     <comment/>
   </data>
   <data name="ConfirmRemoveProxyTitle" xml:space="preserve" id="8a7f6e5d-4c3b-2109-8fed-cba987654321">

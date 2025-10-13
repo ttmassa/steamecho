@@ -899,8 +899,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(NotificationColor));
             OnPropertyChanged(nameof(IsNotificationSaved));
 
-            var dialog = new MessageDialog(Resources.Resources.MessageNotificationSettingsMessage, Resources.Resources.MessageNotificationSettingsTitle);
-            dialog.ShowDialog();
+            // Show UI notification
+            ShowUINotification(Resources.Resources.MessageNotificationSettingsMessage);
         }
     }
     

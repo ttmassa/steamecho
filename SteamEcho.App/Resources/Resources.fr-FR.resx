@@ -343,6 +343,14 @@
     <value>Le proxy n'est pas configuré pour ce jeu, SteamEcho ne pourra pas afficher les succès. Veuillez le configurer en cliquant sur le bouton « Setup ».</value>
     <comment/>
   </data>
+  <data name="ConfirmLogoutTitle" xml:space="preserve" id="8a7f6e5d-4c3b-2109-8fed-cba987654321">
+    <value>Déconnexion</value>
+    <comment/>
+  </data>
+  <data name="ConfirmLogoutMessage" xml:space="preserve" id="7f6e5d4c-3b2a-1098-7fed-cba987654321">
+    <value>Êtes-vous sûr de vouloir vous déconnecter ? Vous devrez vous reconnecter pour synchroniser votre bibliothèque et votre progression dans les succès.</value>
+    <comment/>
+  </data>
   <data name="ConfirmRemoveProxyTitle" xml:space="preserve" id="8a7f6e5d-4c3b-2109-8fed-cba987654321">
     <value>Désactivation du proxy</value>
     <comment/>

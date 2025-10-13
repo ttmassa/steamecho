@@ -15,7 +15,7 @@
     <PackageIcon>Assets\Logo\steamecho_logo.png</PackageIcon>
     <ApplicationIcon>Assets\Logo\steamecho_logo.ico</ApplicationIcon>
     <PackageReadMeFile>README.md</PackageReadMeFile>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <TargetFramework>net9.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
