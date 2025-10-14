@@ -5,29 +5,32 @@ using SteamEcho.Core.Services;
 
 namespace SteamEcho.App.Services;
 
-public class GameProcessService : IGameProcessService
+public class GameProcessService(ObservableCollection<Game> games) : IGameProcessService
 {
-    private readonly ObservableCollection<Game> _games;
+    private readonly ObservableCollection<Game> _games = games;
     private Timer? _timer;
     private Game? _lastRunningGame;
 
     public event Action<Game?>? RunningGameChanged;
 
-    public GameProcessService(ObservableCollection<Game> games)
-    {
-        _games = games;
-    }
-
-    public void Start()
+    public void StartMonitoring()
     {
         _timer?.Change(Timeout.Infinite, 0);
         _timer = new Timer(CheckProcesses, null, 0, 2000);
     }
 
-    public void Stop()
+    public void StopMonitoring()
     {
         _timer?.Change(Timeout.Infinite, 0);
     }
+
+    public Game? GetRunningGame()
+    {
+        return _lastRunningGame;
+    }
+
+
+    # region Helper methods
 
     private void CheckProcesses(object? state)
     {
@@ -62,8 +65,5 @@ public class GameProcessService : IGameProcessService
         }
     }
 
-    public Game? GetRunningGame()
-    {
-        return _lastRunningGame;
-    }
+    #endregion
 }

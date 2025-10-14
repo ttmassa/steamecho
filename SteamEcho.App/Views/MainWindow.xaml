@@ -21,7 +21,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- Notification Bar -->
-        <Border Grid.ColumnSpan="2" Background="#E63946" Height="32" HorizontalAlignment="Center" VerticalAlignment="Top" CornerRadius="5" Panel.ZIndex="2" Margin="0,10,0,0" Visibility="{Binding IsNotificationVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+        <Border Grid.ColumnSpan="2" Background="#E63946" Height="32" HorizontalAlignment="Center" VerticalAlignment="Top" CornerRadius="5" Panel.ZIndex="2" Margin="0,10,0,0" Visibility="{Binding IsUINotificationVisible, Converter={StaticResource BoolToVisibilityConverter}}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>

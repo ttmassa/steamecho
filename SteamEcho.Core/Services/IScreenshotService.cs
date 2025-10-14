@@ -5,7 +5,19 @@ namespace SteamEcho.Core.Services;
 
 public interface IScreenshotService
 {
-    void StartMonitoring(SteamUserInfo? user, Game game);
-    void StopMonitoring();
+    /// <summary>
+    /// Event fired when a screenshot is taken.
+    /// </summary>
     event Action<Screenshot> ScreenshotTaken;
+
+    /// <summary>
+    /// Starts monitoring for screenshots taken in the specified game by the specified user.
+    /// </summary>
+    void StartMonitoring(SteamUserInfo? user, Game game);
+
+    /// <summary>
+    /// Stops monitoring for screenshots.
+    /// </summary>
+    void StopMonitoring();
+  
 }

@@ -3,12 +3,12 @@ namespace SteamEcho.Core.Services;
 public interface IAchievementListener
 {
     /// <summary>
-    /// Call this when a game starts running. Pass the game's executable path.
+    /// Starts listening for achievements.
     /// </summary>
     public void Start(string? gameExePath);
 
     /// <summary>
-    /// Call this to stop listening for achievements.
+    /// Stops listening for achievements.
     /// </summary>
     public void Stop();
 

@@ -13,7 +13,6 @@ using SteamEcho.App.Views;
 using SteamEcho.App.Models;
 using System.Windows.Data;
 using System.Globalization;
-using System.Net.NetworkInformation;
 
 namespace SteamEcho.App.ViewModels;
 
@@ -65,6 +64,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
     private readonly GameProcessService _gameProcessService;
     private readonly AchievementListener _achievementListener;
     private readonly ScreenshotService _screenshotService;
+    private readonly UINotificationService _uiNotificationService;
+    private readonly ProxyService _proxyService;
+    private readonly InternetService _internetService;
     private StorageService _storageService;
     private NotificationService _notificationService;
     private NotificationConfig? _draftNotificationConfig;
@@ -82,7 +84,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 _selectedGame = value;
                 if (_selectedGame != null)
                 {
-                    CheckProxyStatus(_selectedGame);
+                    _proxyService.CheckProxyStatus(_selectedGame);
                     LoadLocalScreenshots(_selectedGame);
                 }
                 OnPropertyChanged();
@@ -290,6 +292,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
         }
     }
+    public bool IsUINotificationVisible => _uiNotificationService.IsUINotificationVisible;
+    public string? UINotificationMessage => _uiNotificationService.UINotificationMessage;
     private bool _hasInternet = true;
     public bool HasInternet
     {
@@ -303,24 +307,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
         }
     }
-    private bool _isCheckingInternet = false;
-    private System.Timers.Timer? _internetCheckTimer;
-    private string? _UINotificationMessage;
-    public string? UINotificationMessage
-    {
-        get => _UINotificationMessage;
-        set
-        {
-            if (_UINotificationMessage != value)
-            {
-                _UINotificationMessage = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(IsNotificationVisible));
-            }
-        }
-    }
-    public bool IsNotificationVisible => !string.IsNullOrEmpty(UINotificationMessage);
-    private System.Timers.Timer? _UINotificationTimer;
     private bool _isInitializing = false;
 
     public MainWindowViewModel()
@@ -332,18 +318,15 @@ public class MainWindowViewModel : INotifyPropertyChanged
         _gameProcessService = new GameProcessService(Games);
         _achievementListener = new AchievementListener();
         _screenshotService = new ScreenshotService();
+        _uiNotificationService = new UINotificationService();
+        _proxyService = new ProxyService();
+        _internetService = new InternetService();
 
         // Setup collection view for filtering
         _gamesView = CollectionViewSource.GetDefaultView(Games);
         _gamesView.Filter = FilterGames;
         // Sort games alphabetically
         _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.Name), ListSortDirection.Ascending));
-
-        // Initialize connectivity check timer (checks every 30 seconds)
-        _internetCheckTimer = new System.Timers.Timer(5000);
-        _internetCheckTimer.Elapsed += async (s, e) => await CheckInternetConnectionAsync();
-        _internetCheckTimer.AutoReset = true;
-        _internetCheckTimer.Start();
 
         // Initialize commands
         AddGameCommand = new RelayCommand(AddGame);
@@ -358,7 +341,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         HideSettingsCommand = new RelayCommand(() => IsSettingsVisible = false);
         RefreshDataCommand = new RelayCommand(RefreshData);
         SetExecutableCommand = new RelayCommand<Game>(SetExecutable);
-        ToggleProxyCommand = new RelayCommand(ToggleProxy);
+        ToggleProxyCommand = new RelayCommand<Game>(_proxyService.ToggleProxy);
         TestNotificationCommand = new RelayCommand(TestNotification);
         SaveNotificationSettingsCommand = new RelayCommand(SaveNotificationSettings);
         PreviousStatPageCommand = new RelayCommand(PreviousStatPage);
@@ -366,7 +349,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         PreviousScreenshotCommand = new RelayCommand(PreviousScreenshot);
         NextScreenshotCommand = new RelayCommand(NextScreenshot);
         ViewScreenshotCommand = new RelayCommand<Screenshot>(ViewScreenshot);
-        DismissUINotificationCommand = new RelayCommand(DismissUINotification);
+        DismissUINotificationCommand = new RelayCommand(_uiNotificationService.DismissUINotification);
     }
 
     // Background initialization during loading screen
@@ -395,7 +378,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
             // Check internet connection
             LoadingStatus.Update(Resources.Resources.LoadingStatusInternet);
-            HasInternet = await CheckInternetConnectivityAsync();
+            HasInternet = await _internetService.CheckInternetConnectivityAsync();
 
             // Load data from db
             LoadingStatus.Update(Resources.Resources.LoadingStatusData);
@@ -436,14 +419,14 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 OnPropertyChanged(nameof(NotificationColor));
 
                 // Start timers
-                _gameProcessService.Start();
-                _internetCheckTimer?.Start();
+                _gameProcessService.StartMonitoring();
+                _internetService.StartMonitoring();
                 // Subscribtions
                 _achievementListener.AchievementUnlocked += OnAchievementUnlocked;
                 _gameProcessService.RunningGameChanged += OnRunningGameChanged;
                 _screenshotService.ScreenshotTaken += OnScreenshotTaken;
-                NetworkChange.NetworkAvailabilityChanged += OnNetworkAvailabilityChanged;
-                NetworkChange.NetworkAddressChanged += OnNetworkAddressChanged;
+                _uiNotificationService.PropertyChanged += (s, e) => OnUINotificationServicePropertyChanged(s, e);
+                _internetService.InternetStatusChanged += OnInternetStatusChanged;
             });
             _isInitializing = false;
         });
@@ -798,82 +781,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
-    private void ToggleProxy()
-    {
-        if (SelectedGame == null) return;
-
-        if (string.IsNullOrEmpty(SelectedGame.ExecutablePath) || !File.Exists(SelectedGame.ExecutablePath))
-        {
-            var dialog = new MessageDialog(Resources.Resources.ErrorNoExecutableMessage, Resources.Resources.ErrorNoExecutableTitle);
-            dialog.ShowDialog();
-            return;
-        }
-
-        var gameDirectory = Path.GetDirectoryName(SelectedGame.ExecutablePath);
-        if (gameDirectory == null || !Directory.Exists(gameDirectory))
-        {
-            var dialog = new MessageDialog(Resources.Resources.ErrorInvalidExecutableMessage, Resources.Resources.ErrorInvalidExecutableTitle);
-            dialog.ShowDialog();
-            return;
-        }
-
-        if (SelectedGame.IsProxyReady)
-        {
-            // Ask for confirmation before disabling the proxy
-            var confirmDialog = new ConfirmDialog(
-                Resources.Resources.ConfirmRemoveProxyMessage,
-                Resources.Resources.ConfirmRemoveProxyTitle
-            );
-            var result = confirmDialog.ShowDialog();
-            if (result != true) return;
-
-            // Disable the proxy
-            try
-            {
-                UnprocessSteamApiDll(gameDirectory, "x86");
-                UnprocessSteamApiDll(gameDirectory, "x64");
-
-                SelectedGame.IsProxyReady = false;
-            }
-            catch (Exception ex)
-            {
-                var dialog = new MessageDialog(
-                    string.Format(Resources.Resources.ErrorUninstallProxyMessage, ex.Message),
-                    Resources.Resources.ErrorUninstallProxyTitle
-                );
-                dialog.ShowDialog();
-            }
-        }
-        else
-        {
-            // Setup the proxy
-            try
-            {
-                bool setupDone = false;
-                setupDone |= ProcessSteamApiDll(gameDirectory, "x86");
-                setupDone |= ProcessSteamApiDll(gameDirectory, "x64");
-
-                if (setupDone)
-                {
-                    SelectedGame.IsProxyReady = true;
-                }
-                else
-                {
-                    var dialog = new MessageDialog(Resources.Resources.ErrorProxySetupMessage, Resources.Resources.ErrorProxySetupTitle);
-                    dialog.ShowDialog();
-                }
-            }
-            catch (Exception ex)
-            {
-                var dialog = new MessageDialog(
-                    string.Format(Resources.Resources.ErrorProxySetupMessage, ex.Message),
-                    Resources.Resources.ErrorProxySetupTitle
-                );
-                dialog.ShowDialog();
-            }
-        }
-    }
-
     private void TestNotification()
     {
         // Create dummy achievement for testing
@@ -900,7 +807,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(IsNotificationSaved));
 
             // Show UI notification
-            ShowUINotification(Resources.Resources.MessageNotificationSettingsMessage);
+            _uiNotificationService.ShowUINotification(Resources.Resources.MessageNotificationSettingsMessage);
         }
     }
     
@@ -939,15 +846,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         viewer.Show();
     }
-
-    private void DismissUINotification()
-    {
-        UINotificationMessage = null;
-        _UINotificationTimer?.Stop();
-        _UINotificationTimer?.Dispose();
-        _UINotificationTimer = null;
-    }
-
 
     #endregion
 
@@ -1010,64 +908,33 @@ public class MainWindowViewModel : INotifyPropertyChanged
         });
     }
 
-    private void OnNetworkAddressChanged(object? sender, EventArgs e)
+    private void OnInternetStatusChanged(bool isOnline)
     {
-        // Network configuration changed
-        _ = CheckInternetConnectionAsync();
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            HasInternet = isOnline;
+            if (isOnline)
+                _uiNotificationService.ShowUINotification(Resources.Resources.UINotificationOnlineMode);
+            else
+                _uiNotificationService.ShowUINotification(Resources.Resources.UINotificationOfflineMode);
+        });
     }
 
-    private void OnNetworkAvailabilityChanged(object? sender, NetworkAvailabilityEventArgs e)
+    private void OnUINotificationServicePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (!e.IsAvailable)
+        if (e.PropertyName == nameof(_uiNotificationService.IsUINotificationVisible))
         {
-            // Network unavailable
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                HasInternet = false;
-                ShowUINotification(Resources.Resources.UINotificationOfflineMode);
-            });
+            OnPropertyChanged(nameof(IsUINotificationVisible));
         }
-        else
+        if (e.PropertyName == nameof(_uiNotificationService.UINotificationMessage))
         {
-            // Verify actual internet connectivity
-            _ = CheckInternetConnectionAsync();
+            OnPropertyChanged(nameof(UINotificationMessage));
         }
-    }
+    } 
 
     #endregion
 
     #region Helper Methods
-
-    private static void CheckProxyStatus(Game game)
-    {
-        if (string.IsNullOrEmpty(game.ExecutablePath) || !File.Exists(game.ExecutablePath))
-        {
-            game.IsProxyReady = false;
-            return;
-        }
-
-        var gameDirectory = Path.GetDirectoryName(game.ExecutablePath);
-        if (string.IsNullOrEmpty(gameDirectory) || !Directory.Exists(gameDirectory))
-        {
-            game.IsProxyReady = false;
-            return;
-        }
-
-        // Search all subdirectories for proxy DLL pairs
-        bool foundProxy = false;
-        foreach (var dir in Directory.GetDirectories(gameDirectory, "*", SearchOption.AllDirectories).Prepend(gameDirectory))
-        {
-            bool isProxyReady32 = File.Exists(Path.Combine(dir, "steam_api_o.dll")) && File.Exists(Path.Combine(dir, "steam_api.dll")) && File.Exists(Path.Combine(dir, "SmokeAPI.config.json"));
-            bool isProxyReady64 = File.Exists(Path.Combine(dir, "steam_api64_o.dll")) && File.Exists(Path.Combine(dir, "steam_api64.dll")) && File.Exists(Path.Combine(dir, "SmokeAPI.config.json"));
-            if (isProxyReady32 || isProxyReady64)
-            {
-                foundProxy = true;
-                break;
-            }
-        }
-
-        game.IsProxyReady = foundProxy;
-    }
 
     private void LoadLocalScreenshots(Game game)
     {
@@ -1128,180 +995,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
     }
 
     #endregion
-    
-    #region Proxy Handling
-
-    private static bool ProcessSteamApiDll(string gameDirectory, string bitness) {
-        if (bitness != "x86" && bitness != "x64")
-        {
-            throw new ArgumentException("Bitness must be either 'x86' or 'x64'.");
-        }
-
-        string dllName = bitness == "x86" ? "steam_api.dll" : "steam_api64.dll";
-        string renamedDllName = bitness == "x86" ? "steam_api_o.dll" : "steam_api64_o.dll";
-        
-        // Look for both original and already-renamed DLLs
-        var originalDllPaths = Directory.GetFiles(gameDirectory, dllName, SearchOption.AllDirectories);
-        var renamedDllPaths = Directory.GetFiles(gameDirectory, renamedDllName, SearchOption.AllDirectories);
-
-        // Combine all unique directories where DLLs were found
-        var directoriesToProcess = originalDllPaths.Concat(renamedDllPaths)
-            .Select(Path.GetDirectoryName)
-            .Where(d => d != null)
-            .Distinct()
-            .ToList();
-
-        if (directoriesToProcess.Count == 0) return false;
-
-        foreach (var dllDirectory in directoriesToProcess)
-        {
-            var originalDllPath = Path.Combine(dllDirectory!, dllName);
-            var renamedDllPath = Path.Combine(dllDirectory!, renamedDllName);
-
-            // Rename original dll
-            if (File.Exists(originalDllPath) && !File.Exists(renamedDllPath))
-            {
-                File.Move(originalDllPath, renamedDllPath);
-            }
-
-            // Copy proxy dll
-            string proxyDllSourcePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ThirdParty", "SmokeAPI", bitness, dllName);
-            if (File.Exists(proxyDllSourcePath) && !File.Exists(originalDllPath))
-            {
-                File.Copy(proxyDllSourcePath, originalDllPath);
-            }
-
-            // Copy config file
-            string configSourcePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ThirdParty", "SmokeAPI", "SmokeAPI.config.json");
-            string configDestPath = Path.Combine(dllDirectory!, "SmokeAPI.config.json");
-            if (File.Exists(configSourcePath) && !File.Exists(configDestPath))
-            {
-                File.Copy(configSourcePath, configDestPath);
-            }
-        }
-        return true;
-    }
-
-    private static void UnprocessSteamApiDll(string gameDirectory, string bitness)
-    {
-        if (bitness != "x86" && bitness != "x64")
-        {
-            throw new ArgumentException("Bitness must be either 'x86' or 'x64'.");
-        }
-
-        string dllName = bitness == "x86" ? "steam_api.dll" : "steam_api64.dll";
-        string renamedDllName = bitness == "x86" ? "steam_api_o.dll" : "steam_api64_o.dll";
-
-        // Find all directories where the original DLL was renamed.
-        var renamedDllPaths = Directory.GetFiles(gameDirectory, renamedDllName, SearchOption.AllDirectories);
-
-        foreach (var renamedDllPath in renamedDllPaths)
-        {
-            var dllDirectory = Path.GetDirectoryName(renamedDllPath);
-            if (dllDirectory == null) continue;
-
-            var originalDllPath = Path.Combine(dllDirectory, dllName);
-            var configPath = Path.Combine(dllDirectory, "SmokeAPI.config.json");
-
-            // Delete the proxy DLL (which has the original name)
-            if (File.Exists(originalDllPath))
-            {
-                File.Delete(originalDllPath);
-            }
-
-            // Delete the config file
-            if (File.Exists(configPath))
-            {
-                File.Delete(configPath);
-            }
-
-            // Rename the original DLL back
-            if (File.Exists(renamedDllPath))
-            {
-                File.Move(renamedDllPath, originalDllPath);
-            }
-        }
-    }
-
-    #endregion
-
-    #region Internet Connection Methods
-
-    private async Task CheckInternetConnectionAsync()
-    {
-        if (_isCheckingInternet || _isInitializing) return;
-
-        try
-        {
-            _isCheckingInternet = true;
-            bool previousStatus = HasInternet;
-
-            // Get current internet status
-            HasInternet = await CheckInternetConnectivityAsync();
-            
-            if (previousStatus != HasInternet)
-            {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    if (!HasInternet)
-                    {
-                        ShowUINotification(Resources.Resources.UINotificationOfflineMode);
-                    }
-                    else
-                    {
-                        ShowUINotification(Resources.Resources.UINotificationOnlineMode);
-                    }
-                });
-            }
-        }
-        finally
-        {
-            _isCheckingInternet = false;
-        }
-    }
-
-    private async Task<bool> CheckInternetConnectivityAsync()
-    {
-        // Network interface availability
-        if (!NetworkInterface.GetIsNetworkAvailable())
-        {
-            return false;
-        }
-
-        // Ping Google DNS
-        try
-        {
-            using var ping = new Ping();
-            var reply = await ping.SendPingAsync("8.8.8.8", 3000);
-            return reply.Status == IPStatus.Success;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    #endregion
-    
-    // Show temporary UI notification message
-    private void ShowUINotification(string message, int durationSeconds = 5)
-    {
-        UINotificationMessage = message;
-
-        _UINotificationTimer?.Stop();
-        _UINotificationTimer?.Dispose();
-
-        _UINotificationTimer = new System.Timers.Timer(durationSeconds * 1000);
-        _UINotificationTimer.Elapsed += (s, e) =>
-        {
-            UINotificationMessage = null;
-            _UINotificationTimer?.Stop();
-            _UINotificationTimer?.Dispose();
-            _UINotificationTimer = null;
-        };
-        _UINotificationTimer.AutoReset = false;
-        _UINotificationTimer.Start();
-    }
     
     public event PropertyChangedEventHandler? PropertyChanged;
 
