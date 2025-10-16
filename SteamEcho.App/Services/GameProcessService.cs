@@ -5,13 +5,18 @@ using SteamEcho.Core.Services;
 
 namespace SteamEcho.App.Services;
 
-public class GameProcessService(ObservableCollection<Game> games) : IGameProcessService
+public class GameProcessService : IGameProcessService
 {
-    private readonly ObservableCollection<Game> _games = games;
+    private ObservableCollection<Game>? _games;
     private Timer? _timer;
     private Game? _lastRunningGame;
 
     public event Action<Game?>? RunningGameChanged;
+
+    public void SetGamesCollection(ObservableCollection<Game> games)
+    {
+        _games = games;
+    }
 
     public void StartMonitoring()
     {
@@ -35,7 +40,7 @@ public class GameProcessService(ObservableCollection<Game> games) : IGameProcess
     private void CheckProcesses(object? state)
     {
         var runningProcesses = Process.GetProcesses();
-        var gamesCopy = _games.ToList();
+        var gamesCopy = _games?.ToList() ?? new List<Game>();
         Game? runningGame = null;
 
         foreach (var game in gamesCopy)

@@ -1,6 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
+using Microsoft.Extensions.DependencyInjection;
+using SteamEcho.App.Services;
+using SteamEcho.App.ViewModels;
 using SteamEcho.App.Views;
 
 namespace SteamEcho.App;
@@ -8,6 +11,7 @@ namespace SteamEcho.App;
 public partial class App : Application
 {
     private static Mutex? _singleInstanceMutex;
+    public static IServiceProvider? ServiceProvider { get; private set; }
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -24,12 +28,17 @@ public partial class App : Application
 
         base.OnStartup(e);
 
+        // Setup DI
+        var serviceCollection = new ServiceCollection();
+        serviceCollection.ConfigureServices();
+        ServiceProvider = serviceCollection.BuildServiceProvider();
+
         // Show splash window
-        var splashWindow = new SplashWindow();
+        var splashWindow = ServiceProvider.GetRequiredService<SplashWindow>();
         splashWindow.Show();
 
         // Create main window
-        var mainWindow = new MainWindow();
+        var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
 
         // Asynchronously initialize the ViewModel
         await mainWindow.InitializeViewModelAsync();

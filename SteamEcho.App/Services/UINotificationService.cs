@@ -4,7 +4,7 @@ using SteamEcho.Core.Services;
 
 namespace SteamEcho.App.Services;
 
-class UINotificationService : IUINotificationService, INotifyPropertyChanged {
+class UINotificationService : IUINotificationService {
     private string? _uiNotificationMessage;
     public string? UINotificationMessage
     {

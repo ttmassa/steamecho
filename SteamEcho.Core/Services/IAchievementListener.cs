@@ -1,7 +1,13 @@
+
 namespace SteamEcho.Core.Services;
 
 public interface IAchievementListener
 {
+    /// <summary>
+    /// Event triggered when an achievement is unlocked.
+    /// </summary>
+    public event Action<string>? AchievementUnlocked;
+
     /// <summary>
     /// Starts listening for achievements.
     /// </summary>

@@ -9,7 +9,7 @@ public partial class SplashWindow : Window
     {
         InitializeComponent();
         LoadingStatus.StatusChanged += OnStatusChanged;
-        this.Unloaded += (s, e) => LoadingStatus.StatusChanged -= OnStatusChanged;
+        Unloaded += (s, e) => LoadingStatus.StatusChanged -= OnStatusChanged;
     }
 
     private void OnStatusChanged(string message)

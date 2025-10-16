@@ -13,6 +13,7 @@ using SteamEcho.App.Views;
 using SteamEcho.App.Models;
 using System.Windows.Data;
 using System.Globalization;
+using SteamEcho.Core.Services;
 
 namespace SteamEcho.App.ViewModels;
 
@@ -60,15 +61,15 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand DismissUINotificationCommand { get; }
 
     // Services
-    private readonly SteamService _steamService;
-    private readonly GameProcessService _gameProcessService;
-    private readonly AchievementListener _achievementListener;
-    private readonly ScreenshotService _screenshotService;
-    private readonly UINotificationService _uiNotificationService;
-    private readonly ProxyService _proxyService;
-    private readonly InternetService _internetService;
-    private StorageService _storageService;
-    private NotificationService _notificationService;
+    private readonly ISteamService _steamService;
+    private readonly IGameProcessService _gameProcessService;
+    private readonly IAchievementListener _achievementListener;
+    private readonly IScreenshotService _screenshotService;
+    private readonly IUINotificationService _uiNotificationService;
+    private readonly IProxyService _proxyService;
+    private readonly IInternetService _internetService;
+    private readonly IStorageService _storageService;
+    private readonly INotificationService _notificationService;
     private NotificationConfig? _draftNotificationConfig;
     public static LocalizationService Loc => LocalizationService.Instance;
 
@@ -309,18 +310,30 @@ public class MainWindowViewModel : INotifyPropertyChanged
     }
     private bool _isInitializing = false;
 
-    public MainWindowViewModel()
+    public MainWindowViewModel(
+        ISteamService steamService,
+        IStorageService storageService,
+        INotificationService notificationService,
+        IGameProcessService gameProcessService,
+        IAchievementListener achievementListener,
+        IScreenshotService screenshotService,
+        IUINotificationService uiNotificationService,
+        IProxyService proxyService,
+        IInternetService internetService)
     {
-        // Initialize services
-        _storageService = null!;
-        _notificationService = null!;
-        _steamService = new SteamService();
-        _gameProcessService = new GameProcessService(Games);
-        _achievementListener = new AchievementListener();
-        _screenshotService = new ScreenshotService();
-        _uiNotificationService = new UINotificationService();
-        _proxyService = new ProxyService();
-        _internetService = new InternetService();
+        // Assign injected services
+        _steamService = steamService;
+        _storageService = storageService;
+        _notificationService = notificationService;
+        _gameProcessService = gameProcessService;
+        _achievementListener = achievementListener;
+        _screenshotService = screenshotService;
+        _uiNotificationService = uiNotificationService;
+        _proxyService = proxyService;
+        _internetService = internetService;
+
+        // Pass the games collection to the service
+        _gameProcessService.SetGamesCollection(Games);
 
         // Setup collection view for filtering
         _gamesView = CollectionViewSource.GetDefaultView(Games);
@@ -356,82 +369,71 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public async Task InitializeAsync()
     {
         _isInitializing = true;
-        await Task.Run(async () =>
+
+        await Application.Current.Dispatcher.InvokeAsync(() =>
+            LoadingStatus.Update(Resources.Resources.LoadingStatusInitialization));
+
+        // Storage and notification services are already initialized via DI
+
+        // Check internet connection
+        await Application.Current.Dispatcher.InvokeAsync(() =>
+            LoadingStatus.Update(Resources.Resources.LoadingStatusInternet));
+        HasInternet = await _internetService.CheckInternetConnectivityAsync();
+
+        // Load data from db
+        await Application.Current.Dispatcher.InvokeAsync(() =>
+            LoadingStatus.Update(Resources.Resources.LoadingStatusData));
+        var user = _storageService.LoadUser();
+        var games = _storageService.LoadGames();
+        var cultureCode = _storageService.LoadLanguage();
+
+        // Set language
+        await Application.Current.Dispatcher.InvokeAsync(() =>
+            LoadingStatus.Update(Resources.Resources.LoadingStatusSetup));
+        SelectedLanguage = AvailableLanguages.FirstOrDefault(lang => lang.CultureName == cultureCode)
+                        ?? AvailableLanguages.First(lang => lang.CultureName == "en-US");
+        _steamService.ApiLanguage = SelectedLanguage.SteamCode;
+
+        if (user != null && HasInternet)
         {
-            LoadingStatus.Update(Resources.Resources.LoadingStatusInitialization);
-            // Initialize storage service
-            string dbPath;
-#if DEBUG
-            dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steamecho.db");
-#else
-                string appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SteamEcho");
-                if (!Directory.Exists(appDataPath))
-                {
-                    Directory.CreateDirectory(appDataPath);
-                }
-                dbPath = Path.Combine(appDataPath, "steamecho.db");
-#endif
-            _storageService = new StorageService(dbPath);
+            // Sync with Steam data
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+                LoadingStatus.Update(Resources.Resources.LoadingStatusSteam));
+            var steamGames = await _steamService.GetOwnedGamesAsync(user);
+            _storageService.SyncGames(steamGames, games);
 
-            // Initialize notification service (needs to load notification sound)
-            _notificationService = new NotificationService();
+            // Reload games from db after sync
+            games = _storageService.LoadGames();
+        }
 
-            // Check internet connection
-            LoadingStatus.Update(Resources.Resources.LoadingStatusInternet);
-            HasInternet = await _internetService.CheckInternetConnectivityAsync();
+        await Application.Current.Dispatcher.InvokeAsync(() =>
+            LoadingStatus.Update(Resources.Resources.LoadingStatusFinalization));
 
-            // Load data from db
-            LoadingStatus.Update(Resources.Resources.LoadingStatusData);
-            var user = _storageService.LoadUser();
-            var games = _storageService.LoadGames();
-            var cultureCode = _storageService.LoadLanguage();
+        CurrentUser = user;
+        foreach (var game in games)
+        {
+            Games.Add(game);
+        }
+        SelectedGame = Games.FirstOrDefault();
 
-            // Set language
-            LoadingStatus.Update(Resources.Resources.LoadingStatusSetup);
-            SelectedLanguage = AvailableLanguages.FirstOrDefault(lang => lang.CultureName == cultureCode)
-                                  ?? AvailableLanguages.First(lang => lang.CultureName == "en-US");
-            _steamService.ApiLanguage = SelectedLanguage.SteamCode;
+        // Notify the UI that the NotificationSize property has been loaded
+        OnPropertyChanged(nameof(NotificationSize));
+        OnPropertyChanged(nameof(NotificationTime));
+        OnPropertyChanged(nameof(NotificationColor));
 
-            if (user != null && HasInternet)
-            {
-                // Sync with Steam data
-                LoadingStatus.Update(Resources.Resources.LoadingStatusSteam);
-                var steamGames = await _steamService.GetOwnedGamesAsync(user);
-                _storageService.SyncGames(steamGames, games);
+        // Start timers
+        _gameProcessService.StartMonitoring();
+        _internetService.StartMonitoring();
+        // Subscriptions
+        _achievementListener.AchievementUnlocked += OnAchievementUnlocked;
+        _gameProcessService.RunningGameChanged += OnRunningGameChanged;
+        _screenshotService.ScreenshotTaken += OnScreenshotTaken;
+        _uiNotificationService.PropertyChanged += OnUINotificationServicePropertyChanged;
+        _internetService.InternetStatusChanged += OnInternetStatusChanged;
 
-                // Reload games from db after sync
-                games = _storageService.LoadGames();
-            }
-
-            LoadingStatus.Update(Resources.Resources.LoadingStatusFinalization);
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                CurrentUser = user;
-                foreach (var game in games)
-                {
-                    Games.Add(game);
-                }
-                SelectedGame = Games.FirstOrDefault();
-
-                // Notify the UI that the NotificationSize property has been loaded
-                OnPropertyChanged(nameof(NotificationSize));
-                OnPropertyChanged(nameof(NotificationTime));
-                OnPropertyChanged(nameof(NotificationColor));
-
-                // Start timers
-                _gameProcessService.StartMonitoring();
-                _internetService.StartMonitoring();
-                // Subscribtions
-                _achievementListener.AchievementUnlocked += OnAchievementUnlocked;
-                _gameProcessService.RunningGameChanged += OnRunningGameChanged;
-                _screenshotService.ScreenshotTaken += OnScreenshotTaken;
-                _uiNotificationService.PropertyChanged += (s, e) => OnUINotificationServicePropertyChanged(s, e);
-                _internetService.InternetStatusChanged += OnInternetStatusChanged;
-            });
-            _isInitializing = false;
-        });
+        _isInitializing = false;
     }
-
+    
     #region Command Methods
     private async void AddGame()
     {
@@ -477,7 +479,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
 
             // Get achievements for the game
-            List<Achievement> achievements = await _steamService.GetAchievementsAsync(steamId);
+            List<Achievement> achievements = await _steamService.GetAchievementsAsync(steamId, null);
 
             // Create game instance
             Game game = new(steamId, gameName, achievements, dialog.FileName, iconUrl, true);
@@ -739,7 +741,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 if (game.Achievements.Count == 0) continue;
 
                 // Get new achievements
-                var achievements = await _steamService.GetAchievementsAsync(game.SteamId);
+                var achievements = await _steamService.GetAchievementsAsync(game.SteamId, null);
 
                 if (achievements.Count != game.Achievements.Count)
                 {
@@ -821,7 +823,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         CurrentStatPage = (CurrentStatPage + 1) % TotalStatPages;
     }
 
-        private void PreviousScreenshot()
+    private void PreviousScreenshot()
     {
         if (SelectedGame == null || SelectedGame.Screenshots.Count == 0) return;
         CurrentScreenshotIndex = (CurrentScreenshotIndex + 1) % SelectedGame.Screenshots.Count;

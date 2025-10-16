@@ -6,6 +6,11 @@ namespace SteamEcho.Core.Services;
 public interface ISteamService
 {
     /// <summary>
+    /// The language code for API responses.<br/>
+    /// </summary>
+    public string ApiLanguage { get; set; }
+
+    /// <summary>
     /// Searches for Steam games by name.
     /// </summary>
     public Task<List<GameInfo>> SearchSteamGamesAsync(string gameName);

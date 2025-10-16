@@ -1,6 +1,8 @@
+using System.ComponentModel;
+
 namespace SteamEcho.Core.Services;
 
-public interface IUINotificationService
+public interface IUINotificationService : INotifyPropertyChanged
 {
     /// <summary>
     /// The current UI notification message, or null if none is visible.
