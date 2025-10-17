@@ -16,6 +16,7 @@ public class SteamService : ISteamService
     private readonly HttpClient _client;
     private readonly string _backendBaseUrl;
     public string ApiLanguage { get; set; } = "english";
+    private bool _isLoggingIn = false;
 
     public SteamService()
     {
@@ -259,119 +260,134 @@ public class SteamService : ISteamService
     public async Task<SteamUserInfo?> 
     LogToSteamAsync()
     {
-        // OpenId authentication to Steam with system browser + local listener
-        string redirectUrl = "http://localhost:54321/steam-auth/";
-        string openIdUrl = "https://steamcommunity.com/openid/login" +
-        "?openid.ns=http://specs.openid.net/auth/2.0" +
-        "&openid.mode=checkid_setup" +
-        "&openid.return_to=" + WebUtility.UrlEncode(redirectUrl) +
-        "&openid.realm=" + Uri.EscapeDataString("http://localhost:54321/") +
-        "&openid.identity=http://specs.openid.net/auth/2.0/identifier_select" +
-        "&openid.claimed_id=http://specs.openid.net/auth/2.0/identifier_select";
-
-        // Start HTTP listener
-        using var listener = new HttpListener();
-        listener.Prefixes.Add(redirectUrl);
-        listener.Start();
-
-        // Open browser
-        Process.Start(new ProcessStartInfo
+        if (_isLoggingIn)
         {
-            FileName = openIdUrl,
-            UseShellExecute = true
-        });
-
-        // Wait for redirection
-        var context = await listener.GetContextAsync();
-        var request = context.Request;
-
-        // Send a response to the browser
-        var response = context.Response;
-        string responseString = @"
-            <html>
-                <head>
-                    <title>Steam Echo</title>
-                    <meta http-equiv='refresh' content='0;url=steamecho://auth'>
-                    <style>
-                        body {
-                            margin: 0;
-                            display: flex;
-                            justify-content: center;
-                            align-items: center;
-                            height: 100vh;
-                            background-color: #323234;
-                            color: #F0F0F0;
-                        }
-                        .container {
-                            display: flex;
-                            flex-direction: column;
-                            align-items: center;
-                            justify-content: center;
-                        }
-                        h1 {
-                            font-size: 2em;
-                            margin-bottom: 20px;
-                        }
-                        p {
-                            font-size: 1.2em;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class='container'>
-                        <h1>Authentication successful!</h1>
-                        <p>You can close this window and return to the application.</p>
-                    </div>
-                </body>
-            </html>";
-        var buffer = Encoding.UTF8.GetBytes(responseString);
-        response.ContentLength64 = buffer.Length;
-        var responseOutput = response.OutputStream;
-        await responseOutput.WriteAsync(buffer);
-        responseOutput.Close();
-        listener.Stop();
-
-        // Extract Steam ID from OpenID response
-        var query = request.QueryString;
-        string? claimedId = query["openid.claimed_id"];
-
-        // Validate Steam ID
-        using var client = new HttpClient();
-        var values = new List<KeyValuePair<string, string>>();
-        foreach (string? key in query.AllKeys)
-        {
-            if (key != null)
-            {
-                if (key == "openid.mode")
-                {
-                    values.Add(new KeyValuePair<string, string>(key, "check_authentication"));
-                }
-                else
-                {
-                    values.Add(new KeyValuePair<string, string>(key, query[key]!));
-                }
-            }
-        }
-        var content = new FormUrlEncodedContent(values);
-
-        var verifyResponse = await client.PostAsync("https://steamcommunity.com/openid/login", content);
-        string verifyString = await verifyResponse.Content.ReadAsStringAsync();
-        if (!verifyString.Contains("is_valid:true"))
-        {
-            Console.WriteLine("Error: Invalid OpenID response from Steam.");
+            Console.WriteLine("[SteamService][Warning] Login already in progress. Port 54321 is already being used.");
             return null;
         }
 
-        // Extract Steam ID from the OpenID URL
-        if (!string.IsNullOrEmpty(claimedId))
-        {
-            var parts = claimedId.Split('/');
-            string steamId = parts.Last();
-            return new SteamUserInfo(steamId);
-        }
+        _isLoggingIn = true;
 
-        Console.WriteLine("Error: No Steam ID found in OpenID response.");
-        return null;
+        try
+        {
+            
+            // OpenId authentication to Steam with system browser + local listener
+            string redirectUrl = "http://localhost:54321/steam-auth/";
+            string openIdUrl = "https://steamcommunity.com/openid/login" +
+            "?openid.ns=http://specs.openid.net/auth/2.0" +
+            "&openid.mode=checkid_setup" +
+            "&openid.return_to=" + WebUtility.UrlEncode(redirectUrl) +
+            "&openid.realm=" + Uri.EscapeDataString("http://localhost:54321/") +
+            "&openid.identity=http://specs.openid.net/auth/2.0/identifier_select" +
+            "&openid.claimed_id=http://specs.openid.net/auth/2.0/identifier_select";
+
+            // Start HTTP listener
+            using var listener = new HttpListener();
+            listener.Prefixes.Add(redirectUrl);
+            listener.Start();
+
+            // Open browser
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = openIdUrl,
+                UseShellExecute = true
+            });
+
+            // Wait for redirection
+            var context = await listener.GetContextAsync();
+            var request = context.Request;
+
+            // Send a response to the browser
+            var response = context.Response;
+            string responseString = @"
+                <html>
+                    <head>
+                        <title>Steam Echo</title>
+                        <meta http-equiv='refresh' content='0;url=steamecho://auth'>
+                        <style>
+                            body {
+                                margin: 0;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                height: 100vh;
+                                background-color: #323234;
+                                color: #F0F0F0;
+                            }
+                            .container {
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                            }
+                            h1 {
+                                font-size: 2em;
+                                margin-bottom: 20px;
+                            }
+                            p {
+                                font-size: 1.2em;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class='container'>
+                            <h1>Authentication successful!</h1>
+                            <p>You can close this window and return to the application.</p>
+                        </div>
+                    </body>
+                </html>";
+            var buffer = Encoding.UTF8.GetBytes(responseString);
+            response.ContentLength64 = buffer.Length;
+            var responseOutput = response.OutputStream;
+            await responseOutput.WriteAsync(buffer);
+            responseOutput.Close();
+            listener.Stop();
+
+            // Extract Steam ID from OpenID response
+            var query = request.QueryString;
+            string? claimedId = query["openid.claimed_id"];
+
+            // Validate Steam ID
+            using var client = new HttpClient();
+            var values = new List<KeyValuePair<string, string>>();
+            foreach (string? key in query.AllKeys)
+            {
+                if (key != null)
+                {
+                    if (key == "openid.mode")
+                    {
+                        values.Add(new KeyValuePair<string, string>(key, "check_authentication"));
+                    }
+                    else
+                    {
+                        values.Add(new KeyValuePair<string, string>(key, query[key]!));
+                    }
+                }
+            }
+            var content = new FormUrlEncodedContent(values);
+
+            var verifyResponse = await client.PostAsync("https://steamcommunity.com/openid/login", content);
+            string verifyString = await verifyResponse.Content.ReadAsStringAsync();
+            if (!verifyString.Contains("is_valid:true"))
+            {
+                Console.WriteLine("[SteamService][Error] Invalid OpenID response from Steam.");
+                return null;
+            }
+
+            // Extract Steam ID from the OpenID URL
+            if (!string.IsNullOrEmpty(claimedId))
+            {
+                var parts = claimedId.Split('/');
+                string steamId = parts.Last();
+                return new SteamUserInfo(steamId);
+            }
+
+            Console.WriteLine("[SteamService][Error] No Steam ID found in OpenID response.");
+            return null;
+        } finally
+        {
+            _isLoggingIn = false;
+        }
     }
 
     public async Task<List<Game>> GetOwnedGamesAsync(SteamUserInfo user)
