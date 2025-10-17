@@ -10,9 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Diagnostics;
 using SteamEcho.App.Views;
-using SteamEcho.App.Models;
 using System.Windows.Data;
-using System.Globalization;
 using SteamEcho.Core.Services;
 
 namespace SteamEcho.App.ViewModels;
@@ -21,19 +19,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
 {
     // Collections
     public ObservableCollection<Game> Games { get; } = [];
-    public ObservableCollection<string> NotificationColors { get; } =
-    [
-        "#4A4A4D",
-        "#000044",
-        "#000000",
-        "#C02222",
-        "#19680b",
-        "#BF00FF"
-    ];
-    public ObservableCollection<LanguageOption> AvailableLanguages { get; } = [
-        new LanguageOption { DisplayName = "English", CultureName = "en-US", SteamCode = "english", FlagPath = "/SteamEcho.App;component/Assets/Images/us_flag_icon.png"},
-        new LanguageOption { DisplayName = "Français", CultureName = "fr-FR", SteamCode = "french", FlagPath = "/SteamEcho.App;component/Assets/Images/french_flag_icon.png"}
-    ];
     private readonly ICollectionView _gamesView;
     public ICollectionView GamesView => _gamesView;
 
@@ -46,13 +31,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand TogglePlayStateCommand { get; }
     public ICommand LogToSteamCommand { get; }
     public ICommand LogOutFromSteamCommand { get; }
-    public ICommand ShowSettingsCommand { get; }
-    public ICommand HideSettingsCommand { get; }
     public ICommand RefreshDataCommand { get; }
     public ICommand SetExecutableCommand { get; }
     public ICommand ToggleProxyCommand { get; }
-    public ICommand TestNotificationCommand { get; }
-    public ICommand SaveNotificationSettingsCommand { get; }
     public ICommand PreviousStatPageCommand { get; }
     public ICommand NextStatPageCommand { get; }
     public ICommand PreviousScreenshotCommand { get; }
@@ -70,8 +51,10 @@ public class MainWindowViewModel : INotifyPropertyChanged
     private readonly IInternetService _internetService;
     private readonly IStorageService _storageService;
     private readonly INotificationService _notificationService;
-    private NotificationConfig? _draftNotificationConfig;
     public static LocalizationService Loc => LocalizationService.Instance;
+
+    // View models
+    public SettingsViewModel SettingsViewModel { get; }
 
     // Properties
     private Game? _selectedGame;
@@ -156,83 +139,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
         }
     }
-    private bool _isSettingsVisible;
-    public bool IsSettingsVisible
-    {
-        get => _isSettingsVisible;
-        set
-        {
-            if (_isSettingsVisible != value)
-            {
-                _isSettingsVisible = value;
-                if (_isSettingsVisible)
-                {
-                    // Create a draft copy when opening settings
-                    _draftNotificationConfig = new NotificationConfig
-                    {
-                        NotificationSize = _notificationService.Config.NotificationSize,
-                        NotificationColor = _notificationService.Config.NotificationColor
-                    };
-                    OnPropertyChanged(nameof(NotificationSize));
-                    OnPropertyChanged(nameof(NotificationColor));
-                    OnPropertyChanged(nameof(IsNotificationSaved));
-                }
-                else
-                {
-                    // Discard draft when closing settings
-                    _draftNotificationConfig = null;
-                    OnPropertyChanged(nameof(IsNotificationSaved));
-                }
-                OnPropertyChanged();
-            }
-        }
-    }
     public bool IsUserLoggedIn => CurrentUser != null && !string.IsNullOrEmpty(CurrentUser.SteamId);
     public string StatusText => IsUserLoggedIn ? Resources.Resources.ConnectedText : Resources.Resources.DisconnectedText;
     public string LoginText => IsUserLoggedIn ? Resources.Resources.LogoutText : Resources.Resources.LoginText;
-    public double NotificationSize
-    {
-        get => _draftNotificationConfig?.NotificationSize ?? _notificationService.Config.NotificationSize;
-        set
-        {
-            if (_draftNotificationConfig != null && _draftNotificationConfig.NotificationSize != value)
-            {
-                _draftNotificationConfig.NotificationSize = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(IsNotificationSaved));
-            }
-        }
-    }
-    public int NotificationTime
-    {
-        get => _draftNotificationConfig?.NotificationTime ?? _notificationService.Config.NotificationTime;
-        set
-        {
-            if (_draftNotificationConfig != null && _draftNotificationConfig.NotificationTime != value)
-            {
-                _draftNotificationConfig.NotificationTime = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(IsNotificationSaved));
-            }
-        }
-    }
-    public string NotificationColor
-    {
-        get => _draftNotificationConfig?.NotificationColor ?? _notificationService.Config.NotificationColor;
-        set
-        {
-            if (_draftNotificationConfig != null && _draftNotificationConfig.NotificationColor != value)
-            {
-                _draftNotificationConfig.NotificationColor = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(IsNotificationSaved));
-            }
-        }
-    }
-    public bool IsNotificationSaved => _draftNotificationConfig != null &&
-        (_draftNotificationConfig.NotificationSize != _notificationService.Config.NotificationSize ||
-         _draftNotificationConfig.NotificationColor != _notificationService.Config.NotificationColor ||
-         _draftNotificationConfig.NotificationTime != _notificationService.Config.NotificationTime);
     private const int TotalStatPages = 4;
     private int _currentStatPage = 0;
     public int CurrentStatPage
@@ -268,31 +177,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public string ScreenshotCounterText => SelectedGame?.Screenshots.Count > 0
         ? $"{CurrentScreenshotIndex + 1} / {SelectedGame.Screenshots.Count}"
         : "0 / 0";
-    private LanguageOption? _selectedLanguage;
-    public LanguageOption? SelectedLanguage
-    {
-        get => _selectedLanguage;
-        set
-        {
-            if (_selectedLanguage != value)
-            {
-                _selectedLanguage = value;
-                OnPropertyChanged();
-                if (value != null)
-                {
-                    // Propagate to Steam Service for data language
-                    _steamService.ApiLanguage = value.SteamCode;
-                    ApplyLanguage(value.CultureName);
-                    if (!_isInitializing)
-                    {
-                        RefreshLanguage();
-                    }
-                    OnPropertyChanged(nameof(StatusText));
-                    OnPropertyChanged(nameof(LoginText));
-                }
-            }
-        }
-    }
     public bool IsUINotificationVisible => _uiNotificationService.IsUINotificationVisible;
     public string? UINotificationMessage => _uiNotificationService.UINotificationMessage;
     private bool _hasInternet = true;
@@ -308,8 +192,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
         }
     }
-    private bool _isInitializing = false;
-
+    
     public MainWindowViewModel(
         ISteamService steamService,
         IStorageService storageService,
@@ -319,7 +202,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
         IScreenshotService screenshotService,
         IUINotificationService uiNotificationService,
         IProxyService proxyService,
-        IInternetService internetService)
+        IInternetService internetService,
+        SettingsViewModel settingsViewModel)
     {
         // Assign injected services
         _steamService = steamService;
@@ -331,6 +215,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
         _uiNotificationService = uiNotificationService;
         _proxyService = proxyService;
         _internetService = internetService;
+
+        // Assign view models
+        SettingsViewModel = settingsViewModel;
 
         // Pass the games collection to the service
         _gameProcessService.SetGamesCollection(Games);
@@ -350,13 +237,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
         TogglePlayStateCommand = new RelayCommand<Game>(TogglePlayState);
         LogToSteamCommand = new RelayCommand(LogToSteam);
         LogOutFromSteamCommand = new RelayCommand(LogOutFromSteam);
-        ShowSettingsCommand = new RelayCommand(() => IsSettingsVisible = true);
-        HideSettingsCommand = new RelayCommand(() => IsSettingsVisible = false);
         RefreshDataCommand = new RelayCommand(RefreshData);
         SetExecutableCommand = new RelayCommand<Game>(SetExecutable);
         ToggleProxyCommand = new RelayCommand<Game>(_proxyService.ToggleProxy);
-        TestNotificationCommand = new RelayCommand(TestNotification);
-        SaveNotificationSettingsCommand = new RelayCommand(SaveNotificationSettings);
         PreviousStatPageCommand = new RelayCommand(PreviousStatPage);
         NextStatPageCommand = new RelayCommand(NextStatPage);
         PreviousScreenshotCommand = new RelayCommand(PreviousScreenshot);
@@ -368,8 +251,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
     // Background initialization during loading screen
     public async Task InitializeAsync()
     {
-        _isInitializing = true;
-
         await Application.Current.Dispatcher.InvokeAsync(() =>
             LoadingStatus.Update(Resources.Resources.LoadingStatusInitialization));
 
@@ -386,13 +267,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
         var user = _storageService.LoadUser();
         var games = _storageService.LoadGames();
         var cultureCode = _storageService.LoadLanguage();
-
-        // Set language
-        await Application.Current.Dispatcher.InvokeAsync(() =>
-            LoadingStatus.Update(Resources.Resources.LoadingStatusSetup));
-        SelectedLanguage = AvailableLanguages.FirstOrDefault(lang => lang.CultureName == cultureCode)
-                        ?? AvailableLanguages.First(lang => lang.CultureName == "en-US");
-        _steamService.ApiLanguage = SelectedLanguage.SteamCode;
 
         if (user != null && HasInternet)
         {
@@ -416,11 +290,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
         SelectedGame = Games.FirstOrDefault();
 
-        // Notify the UI that the NotificationSize property has been loaded
-        OnPropertyChanged(nameof(NotificationSize));
-        OnPropertyChanged(nameof(NotificationTime));
-        OnPropertyChanged(nameof(NotificationColor));
-
         // Start timers
         _gameProcessService.StartMonitoring();
         _internetService.StartMonitoring();
@@ -430,8 +299,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         _screenshotService.ScreenshotTaken += OnScreenshotTaken;
         _uiNotificationService.PropertyChanged += OnUINotificationServicePropertyChanged;
         _internetService.InternetStatusChanged += OnInternetStatusChanged;
-
-        _isInitializing = false;
+        SettingsViewModel.LanguageChanged += OnLanguageChanged;
     }
     
     #region Command Methods
@@ -782,36 +650,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(Games));
         }
     }
-
-    private void TestNotification()
-    {
-        // Create dummy achievement for testing
-        _notificationService.TestNotification(NotificationSize, NotificationColor);
-    }
-
-    private void SaveNotificationSettings()
-    {
-        if (_draftNotificationConfig != null)
-        {
-            _notificationService.Config.NotificationSize = _draftNotificationConfig.NotificationSize;
-            _notificationService.Config.NotificationTime = _draftNotificationConfig.NotificationTime;
-            _notificationService.Config.NotificationColor = _draftNotificationConfig.NotificationColor;
-            _notificationService.SaveConfig();
-
-            // After saving, update the draft to match the saved config
-            _draftNotificationConfig.NotificationSize = _notificationService.Config.NotificationSize;
-            _draftNotificationConfig.NotificationTime = _notificationService.Config.NotificationTime;
-            _draftNotificationConfig.NotificationColor = _notificationService.Config.NotificationColor;
-
-            OnPropertyChanged(nameof(NotificationSize));
-            OnPropertyChanged(nameof(NotificationTime));
-            OnPropertyChanged(nameof(NotificationColor));
-            OnPropertyChanged(nameof(IsNotificationSaved));
-
-            // Show UI notification
-            _uiNotificationService.ShowUINotification(Resources.Resources.MessageNotificationSettingsMessage);
-        }
-    }
     
     private void PreviousStatPage()
     {
@@ -932,7 +770,14 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             OnPropertyChanged(nameof(UINotificationMessage));
         }
-    } 
+    }
+
+    private void OnLanguageChanged()
+    {
+        OnPropertyChanged(nameof(StatusText));
+        OnPropertyChanged(nameof(LoginText));
+        RefreshLanguage();
+    }
 
     #endregion
 
@@ -964,36 +809,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         // Match by name
         return game.Name.Contains(query, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private void ApplyLanguage(string cultureCode)
-    {
-        if (string.IsNullOrEmpty(cultureCode)) return;
-        try
-        {
-            var culture = new CultureInfo(cultureCode);
-            Thread.CurrentThread.CurrentCulture = culture;
-            Thread.CurrentThread.CurrentUICulture = culture;
-            Resources.Resources.Culture = culture;
-
-            // Save language in db
-            _storageService.SaveLanguage(cultureCode);
-
-            Loc.Refresh();
-        }
-        catch (CultureNotFoundException)
-        {
-            // Fallback to english
-            var culture = new CultureInfo("en-US");
-            Thread.CurrentThread.CurrentCulture = culture;
-            Thread.CurrentThread.CurrentUICulture = culture;
-            Resources.Resources.Culture = culture;
-
-            // Save language in db
-            _storageService.SaveLanguage("en-US");
-
-            Loc.Refresh();
-        }
     }
 
     #endregion

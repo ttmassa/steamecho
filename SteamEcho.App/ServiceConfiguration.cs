@@ -40,6 +40,7 @@ public static class ServiceConfiguration
 
         // Register ViewModels
         services.AddSingleton<MainWindowViewModel>();
+        services.AddSingleton<SettingsViewModel>();
 
         // Register Views
         services.AddTransient<MainWindow>();

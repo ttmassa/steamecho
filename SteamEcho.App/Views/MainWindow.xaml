@@ -52,7 +52,7 @@
                     <Image Source="/SteamEcho.App;component/Assets/Images/add_icon.png" Width="16"/>
                 </Button>
                 <!-- Settings Button -->
-                <Button Padding="0" Margin="0,10,10,10" Command="{Binding ShowSettingsCommand}" Style="{StaticResource NoHoverButton}" ToolTip="{Binding Loc[SettingsButtonTooltip], Mode=OneWay}">
+                <Button Padding="0" Margin="0,10,10,10" Command="{Binding SettingsViewModel.ShowSettingsCommand}" Style="{StaticResource NoHoverButton}" ToolTip="{Binding Loc[SettingsButtonTooltip], Mode=OneWay}">
                     <Image Source="/SteamEcho.App;component/Assets/Images/settings_icon.png" Width="18"/>
                 </Button>
             </StackPanel>
@@ -134,7 +134,7 @@
                             <MultiDataTrigger>
                                 <MultiDataTrigger.Conditions>
                                     <Condition Binding="{Binding SelectedGame}" Value="{x:Null}"/>
-                                    <Condition Binding="{Binding IsSettingsVisible}" Value="False"/>
+                                    <Condition Binding="{Binding SettingsViewModel.IsSettingsVisible}" Value="False"/>
                                 </MultiDataTrigger.Conditions>
                                 <Setter Property="Visibility" Value="Visible"/>
                             </MultiDataTrigger>
@@ -197,7 +197,7 @@
                     <Style TargetType="Grid">
                         <Setter Property="Visibility" Value="Visible"/>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsSettingsVisible}" Value="True">
+                            <DataTrigger Binding="{Binding SettingsViewModel.IsSettingsVisible}" Value="True">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                             </DataTrigger>
                             <DataTrigger Binding="{Binding SelectedGame}" Value="{x:Null}">
@@ -695,7 +695,7 @@
             </Grid>
 
             <!-- Settings Content -->
-            <Grid x:Name="SettingsContentGrid">
+            <Grid x:Name="SettingsContentGrid" DataContext="{Binding SettingsViewModel}">
                 <Grid.Style>
                     <Style TargetType="Grid">
                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -734,7 +734,7 @@
                             <!-- Steam Section -->
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,10">
                                 <TextBlock Text="Steam" FontSize="16" FontWeight="Medium" VerticalAlignment="Center"/>
-                                <Button Command="{Binding RefreshDataCommand}" Style="{StaticResource NoHoverButton}" Margin="10,0,0,0" ToolTip="{Binding Loc[SettingsSteamRefreshButton], Mode=OneWay}">
+                                <Button Command="{Binding DataContext.RefreshDataCommand, RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource NoHoverButton}" Margin="10,0,0,0" ToolTip="{Binding Loc[SettingsSteamRefreshButton], Mode=OneWay}">
                                     <Image Source="/SteamEcho.App;component/Assets/Images/refresh_icon.png" Width="16"/>
                                 </Button>
                             </StackPanel>
@@ -742,18 +742,7 @@
                             <!-- Status -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                 <TextBlock Text="{Binding Loc[SettingsSteamStatus], Mode=OneWay}" FontWeight="Regular" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding StatusText}" Foreground="#E63946" FontWeight="Medium" VerticalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#E63946"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsUserLoggedIn}" Value="True">
-                                                    <Setter Property="Foreground" Value="#A1E8AF"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                <TextBlock Text="{Binding DataContext.StatusText, RelativeSource={RelativeSource AncestorType=Window}}" Foreground="#E63946" FontWeight="Medium" VerticalAlignment="Center"/>
                             </StackPanel>
 
                             <!-- Login/Logout -->
@@ -761,16 +750,16 @@
                                 <Button Background="#E63946">
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-                                            <Setter Property="Command" Value="{Binding LogToSteamCommand}"/>
+                                            <Setter Property="Command" Value="{Binding DataContext.LogToSteamCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsUserLoggedIn}" Value="True">
-                                                    <Setter Property="Command" Value="{Binding LogOutFromSteamCommand}"/>
+                                                <DataTrigger Binding="{Binding DataContext.IsUserLoggedIn, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                    <Setter Property="Command" Value="{Binding DataContext.LogOutFromSteamCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
                                     </Button.Style>
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding LoginText}" FontWeight="Regular" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                        <TextBlock Text="{Binding DataContext.LoginText, RelativeSource={RelativeSource AncestorType=Window}}" FontWeight="Regular" VerticalAlignment="Center" Margin="0,0,5,0"/>
                                         <Image Source="/SteamEcho.App;component/Assets/Images/steam_icon.png" Width="18"/>
                                     </StackPanel>
                                 </Button>
