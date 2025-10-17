@@ -198,11 +198,17 @@ public class StorageService : IStorageService
 
     public void SyncGames(List<Game> steamGames, List<Game> localGames)
     {
+        // Create a list of games to upsert
         var toUpsert = steamGames.Where(g =>
         {
             var local = localGames.FirstOrDefault(l => l.SteamId == g.SteamId);
+            // Keep executable paths
+            if (local != null && !string.IsNullOrEmpty(local.ExecutablePath))
+            {
+                g.ExecutablePath = local.ExecutablePath;
+            }
             return local == null || !g.Achievements.SequenceEqual(local.Achievements);
-        }).ToList();
+        }).ToList();        
 
         if (toUpsert.Count > 0)
             SaveGames(toUpsert);
