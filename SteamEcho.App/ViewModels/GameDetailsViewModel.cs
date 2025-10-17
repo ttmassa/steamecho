@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
+using SteamEcho.App.Services;
 using SteamEcho.App.Views;
 using SteamEcho.Core.Models;
 using SteamEcho.Core.Services;
@@ -13,11 +14,11 @@ public class GameDetailsViewModel : INotifyPropertyChanged
 {
     private readonly Game _game;
     public Game Game => _game;
-    private readonly MainWindowViewModel _parentViewModel;
 
     // Services
     private readonly IStorageService _storageService;
-
+    public static LocalizationService Loc => LocalizationService.Instance;
+    
     // Commands
     public ICommand LockAchievementCommand { get; }
     public ICommand UnlockAchievementCommand { get; }
@@ -65,12 +66,11 @@ public class GameDetailsViewModel : INotifyPropertyChanged
         : "0 / 0";
 
 
-    public GameDetailsViewModel(Game game, IStorageService storageService, MainWindowViewModel parentViewModel)
+    public GameDetailsViewModel(Game game, IStorageService storageService)
     {
         // Initialize services
         _game = game;
         _storageService = storageService;
-        _parentViewModel = parentViewModel;
 
         // Commands
         LockAchievementCommand = new RelayCommand<Achievement>(LockAchievement);
@@ -114,7 +114,7 @@ public class GameDetailsViewModel : INotifyPropertyChanged
     private void PreviousScreenshot()
     {
         if (_game == null || _game.Screenshots.Count == 0) return;
-        CurrentScreenshotIndex = (CurrentScreenshotIndex + 1) % _game.Screenshots.Count;
+        CurrentScreenshotIndex = (CurrentScreenshotIndex - 1) % _game.Screenshots.Count;
     }
 
     private void NextScreenshot()

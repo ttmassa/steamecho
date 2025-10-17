@@ -281,6 +281,14 @@
     <comment/>
   </data>
   <!-- Error messages -->
+  <data name="ErrorNoSearchResultsTitle" xml:space="preserve" id="0f1e2d3c-4b5a-6978-0f1e-2d3c4b5a6978">
+    <value>Game Not Found</value>
+    <comment/>
+  </data>
+  <data name="ErrorNoSearchResultsMessage" xml:space="preserve" id="8e7d6c5b-4a3f-2109-8fed-cba987654321">
+    <value>No matching games found. Please check the file name or try again.</value>
+    <comment/>
+  </data>
   <data name="ErrorDuplicateGameTitle" xml:space="preserve" id="12345678-90ab-cdef-1234-567890abcdef">
     <value>Duplicate Game</value>
     <comment/>

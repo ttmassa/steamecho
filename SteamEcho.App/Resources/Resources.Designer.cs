@@ -168,6 +168,10 @@ namespace SteamEcho.App.Resources {
 
 		public static string LogoutText => ResourceManager.GetString("LogoutText", resourceCulture);
 
+		public static string ErrorNoSearchResultsTitle => ResourceManager.GetString("ErrorNoSearchResultsTitle", resourceCulture);
+
+		public static string ErrorNoSearchResultsMessage => ResourceManager.GetString("ErrorNoSearchResultsMessage", resourceCulture);
+
 		public static string ErrorDuplicateGameTitle => ResourceManager.GetString("ErrorDuplicateGameTitle", resourceCulture);
 
 		public static string ErrorDuplicateGameMessage => ResourceManager.GetString("ErrorDuplicateGameMessage", resourceCulture);

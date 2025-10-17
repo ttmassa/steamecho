@@ -37,25 +37,16 @@
 
         <!-- Game List -->
         <ListBox Grid.Row="1" x:Name="GamesListBox" Background="#2B2B2C" BorderThickness="0" Margin="20,0,20,0" ItemsSource="{Binding Games}" SelectedItem="{Binding SelectedGame, Mode=TwoWay}" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Style="{StaticResource GameListBoxStyle}">
-            
+            <ListBox.Resources>
+                <Style x:Key="GameIconStyle" TargetType="Image">
+                    <EventSetter Event="ImageFailed" Handler="GameIcon_ImageFailed"/>
+                </Style>
+            </ListBox.Resources>
+
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal" Margin="0,8,0,8" VerticalAlignment="Center" Width="340">
-                        <Image Width="56" Height="84" Margin="0,0,16,0">
-                            <Image.Style>
-                                <Style TargetType="Image">
-                                    <Setter Property="Source" Value="{Binding IconUrl}"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IconUrl}" Value="{x:Null}">
-                                            <Setter Property="Source" Value="/SteamEcho.App;component/Assets/Images/library_placeholder.png"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding IconUrl}" Value="">
-                                            <Setter Property="Source" Value="/SteamEcho.App;component/Assets/Images/library_placeholder.png"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Image.Style>
-                        </Image>
+                        <Image Source="{Binding IconUrl}" Width="56" Height="84" Margin="0,0,16,0" Style="{StaticResource GameIconStyle}"/>
                         <StackPanel Orientation="Vertical" VerticalAlignment="Center" Width="260">
                             <TextBlock Text="{Binding Name}" FontSize="16" Margin="0,0,0,2" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Width="250"/>
                         </StackPanel>

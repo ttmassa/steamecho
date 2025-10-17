@@ -98,25 +98,30 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Grid Margin="5" Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}" ToolTip="{Binding Name}">
-                                <!-- Context menu -->
-                                <Grid.ContextMenu>
-                                    <ContextMenu>
-                                        <MenuItem Header="{Binding PlacementTarget.Tag.Loc[DeleteOption], RelativeSource={RelativeSource AncestorType=ContextMenu}, Mode=OneWay}" Command="{Binding PlacementTarget.Tag.DeleteGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
-                                        <MenuItem Header="{Binding PlacementTarget.Tag.Loc[BrowseFilesOption], RelativeSource={RelativeSource AncestorType=ContextMenu}, Mode=OneWay}" Command="{Binding PlacementTarget.Tag.BrowseFilesCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
-                                        <MenuItem Header="{Binding PlacementTarget.Tag.Loc[SetExecutableOption], RelativeSource={RelativeSource AncestorType=ContextMenu}, Mode=OneWay}" Command="{Binding PlacementTarget.Tag.SetExecutableCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
-                                    </ContextMenu>
-                                </Grid.ContextMenu>
+                            <Grid.Resources>
+                                <Style x:Key="GameIconStyle" TargetType="Image">
+                                    <EventSetter Event="ImageFailed" Handler="GameIcon_ImageFailed"/>
+                                </Style>
+                            </Grid.Resources>
+                            <!-- Context menu -->
+                            <Grid.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="{Binding PlacementTarget.Tag.Loc[DeleteOption], RelativeSource={RelativeSource AncestorType=ContextMenu}, Mode=OneWay}" Command="{Binding PlacementTarget.Tag.DeleteGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
+                                    <MenuItem Header="{Binding PlacementTarget.Tag.Loc[BrowseFilesOption], RelativeSource={RelativeSource AncestorType=ContextMenu}, Mode=OneWay}" Command="{Binding PlacementTarget.Tag.BrowseFilesCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
+                                    <MenuItem Header="{Binding PlacementTarget.Tag.Loc[SetExecutableOption], RelativeSource={RelativeSource AncestorType=ContextMenu}, Mode=OneWay}" Command="{Binding PlacementTarget.Tag.SetExecutableCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
+                                </ContextMenu>
+                            </Grid.ContextMenu>
 
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <Image Grid.Column="0" Source="{Binding IconUrl}" VerticalAlignment="Center" Width="28" Margin="0,0,10,0"/>
-                                <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" FontSize="14" FontWeight="Medium" Margin="0,0,10,0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
-                                <TextBlock Grid.Column="2" Text="{Binding AchievementsSummary}" VerticalAlignment="Center" Foreground="#C4C4C6"/>
-                            </Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <Image Grid.Column="0" Source="{Binding IconUrl}" VerticalAlignment="Center" Width="28" Margin="0,0,10,0" Style="{StaticResource GameIconStyle}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" FontSize="14" FontWeight="Medium" Margin="0,0,10,0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                            <TextBlock Grid.Column="2" Text="{Binding AchievementsSummary}" VerticalAlignment="Center" Foreground="#C4C4C6"/>
+                        </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
@@ -239,7 +244,7 @@
                                 </Setter>
                                 <!-- Default state: Setup Required -->
                                 <Setter Property="Background" Value="#4A4A4D"/>
-                                <Setter Property="ToolTip" Value="{Binding DataContext.Loc[SetupButton1], RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"/>
+                                <Setter Property="ToolTip" Value="{Binding Loc[SetupButton1], Mode=OneWay}"/>
                                 <Setter Property="Content">
                                     <Setter.Value>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -251,7 +256,7 @@
                                 <Style.Triggers>
                                     <!-- When proxy is setup: Ready -->
                                     <DataTrigger Binding="{Binding Game.IsProxyReady}" Value="True">
-                                        <Setter Property="ToolTip" Value="{Binding DataContext.Loc[SetupButton2], RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"/>
+                                        <Setter Property="ToolTip" Value="{Binding Loc[SetupButton2], Mode=OneWay}"/>
                                         <Setter Property="Content">
                                             <Setter.Value>
                                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -375,10 +380,17 @@
 
                                             <!-- Container for Icon and Glow Effect -->
                                             <Grid Width="34" Height="34" Margin="0,0,10,0" ClipToBounds="False">
+                                                <Grid.Resources>
+                                                    <Style x:Key="AchievementIconStyle" TargetType="Image">
+                                                        <EventSetter Event="ImageFailed" Handler="AchievementIcon_ImageFailed"/>
+                                                    </Style>
+                                                </Grid.Resources>
+
+
                                                 <!-- Transparent Border for layout only -->
                                                 <Border x:Name="GlowBorder" Background="Transparent"/>
                                                 <!-- Achievement Icon with possible glow -->
-                                                <Image x:Name="AchievementIcon" Source="{Binding Icon}" VerticalAlignment="Center" Width="34" Cursor="Hand"/>
+                                                <Image x:Name="AchievementIcon" Source="{Binding Icon}" VerticalAlignment="Center" Width="34" Cursor="Hand" Style="{StaticResource AchievementIconStyle}"/>
                                             </Grid>
                                                 
                                             <!-- Achievement Details -->
@@ -471,7 +483,7 @@
                                 <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="10">
                                     <!-- Stats Icon -->
                                     <Image Source="/SteamEcho.App;component/Assets/Images/stats_icon.png" Width="25" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                    <TextBlock Text="{Binding DataContext.Loc[StatsTitle], RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Loc[StatsTitle], Mode=OneWay}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                 </StackPanel>
 
                                 <!-- Achievement Stats Content -->
@@ -540,12 +552,12 @@
                                                     <Run Text='"'/>
                                                     <Run Text="{Binding Game.RarestAchievement.Name, Mode=OneWay}"/>
                                                     <Run Text='" '/>
-                                                    <Run Text="{Binding DataContext.Loc[StatsRarestAchievement], RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"/>
+                                                    <Run Text="{Binding Loc[StatsRarestAchievement], Mode=OneWay}"/>
                                                 </TextBlock>
                                             </StackPanel>
 
                                             <!-- Content for when there is NO rarest achievement -->
-                                            <TextBlock Text="{Binding DataContext.Loc[StatsNoRarestAchievement], RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#F0F0F0" FontWeight="Medium" TextWrapping="Wrap" TextAlignment="Center">
+                                            <TextBlock Text="{Binding Loc[StatsNoRarestAchievement], Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#F0F0F0" FontWeight="Medium" TextWrapping="Wrap" TextAlignment="Center">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -572,7 +584,7 @@
                                                 </Style>
                                             </StackPanel.Style>
                                             <TextBlock Text="{Binding Game.AverageRarity, StringFormat='{}{0:F1}%', Mode=OneWay}" HorizontalAlignment="Center" FontSize="18" Margin="0,0,5,0"/>
-                                            <TextBlock Text="{Binding DataContext.Loc[StatsRarity], RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" HorizontalAlignment="Center" FontSize="10" TextWrapping="Wrap" TextAlignment="Center"/>
+                                            <TextBlock Text="{Binding Loc[StatsRarity], Mode=OneWay}" HorizontalAlignment="Center" FontSize="10" TextWrapping="Wrap" TextAlignment="Center"/>
                                         </StackPanel>
 
                                         <!-- Page 4: Completion Percentile -->
@@ -589,9 +601,9 @@
                                             </StackPanel.Style>
                                             <TextBlock Text="{Binding Game.CompletionPercentile, StringFormat='{}{0:F1}%', Mode=OneWay}" HorizontalAlignment="Center" FontSize="18" Margin="0,0,5,0"/>
                                             <TextBlock HorizontalAlignment="Center" FontSize="10" TextWrapping="Wrap" TextAlignment="Center">
-                                                <Run Text="{Binding DataContext.Loc[StatsPercentile1], RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"/>
+                                                <Run Text="{Binding Loc[StatsPercentile1], Mode=OneWay}"/>
                                                 <Run Text="{Binding Game.CompletionPercentile, StringFormat='{}{0:F1}%', Mode=OneWay}"/>
-                                                <Run Text="{Binding DataContext.Loc[StatsPercentile2], RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"/>
+                                                <Run Text="{Binding Loc[StatsPercentile2], Mode=OneWay}"/>
                                             </TextBlock>
                                         </StackPanel>
                                     </Grid>
@@ -674,7 +686,7 @@
                                 </Grid>
 
                                 <!-- Placeholder for no screenshots -->
-                                <TextBlock Grid.Row="1" Text="{Binding DataContext.Loc[NoScreenshotText], RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Foreground="#F0F0F0" FontWeight="Medium" TextAlignment="Center"> 
+                                <TextBlock Grid.Row="1" Text="{Binding Loc[NoScreenshotText], Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Foreground="#F0F0F0" FontWeight="Medium" TextAlignment="Center"> 
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Visibility" Value="Collapsed"/>

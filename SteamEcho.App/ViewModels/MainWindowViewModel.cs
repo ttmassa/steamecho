@@ -64,7 +64,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
                 if (_selectedGame != null)
                 {
-                    GameDetailsViewModel = new GameDetailsViewModel(_selectedGame, _storageService, this);
+                    GameDetailsViewModel = new GameDetailsViewModel(_selectedGame, _storageService);
                     _proxyService.CheckProxyStatus(_selectedGame);
                     LoadLocalScreenshots(_selectedGame);
                 }
@@ -277,7 +277,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
             List<GameInfo> gamesInfo = await _steamService.SearchSteamGamesAsync(fileName);
             if (gamesInfo == null || gamesInfo.Count == 0)
             {
-                MessageBox.Show("No matching games found. Please check the name or try again.", "Game Not Found", MessageBoxButton.OK, MessageBoxImage.Warning);
+                var errorDialog = new MessageDialog(Resources.Resources.ErrorNoSearchResultsMessage, Resources.Resources.ErrorNoSearchResultsTitle);
+                errorDialog.ShowDialog();
                 return;
             }
 
