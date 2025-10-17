@@ -192,15 +192,15 @@
             </Grid>
 
             <!-- Game Content (Visible when a game is selected) -->
-            <Grid>
+            <Grid DataContext="{Binding GameDetailsViewModel}">
                 <Grid.Style>
                     <Style TargetType="Grid">
                         <Setter Property="Visibility" Value="Visible"/>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding SettingsViewModel.IsSettingsVisible}" Value="True">
+                            <DataTrigger Binding="{Binding DataContext.SettingsViewModel.IsSettingsVisible, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                             </DataTrigger>
-                            <DataTrigger Binding="{Binding SelectedGame}" Value="{x:Null}">
+                            <DataTrigger Binding="{Binding DataContext.SelectedGame, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                             </DataTrigger>
                         </Style.Triggers>
@@ -222,10 +222,10 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Game title -->
-                    <TextBlock Grid.Column="0" Text="{Binding SelectedGame.Name}" FontSize="20" FontWeight="SemiBold" Margin="10"/>
+                    <TextBlock Grid.Column="0" Text="{Binding Game.Name}" FontSize="20" FontWeight="SemiBold" Margin="10"/>
 
                     <!-- Setup Button -->
-                    <Button Grid.Column="1" Command="{Binding ToggleProxyCommand}" CommandParameter="{Binding SelectedGame}" Margin="0,10,20,10">
+                    <Button Grid.Column="1" Command="{Binding DataContext.ToggleProxyCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Game}" Margin="0,10,20,10">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource NoHoverButton}">
                                 <Setter Property="Template">
@@ -239,7 +239,7 @@
                                 </Setter>
                                 <!-- Default state: Setup Required -->
                                 <Setter Property="Background" Value="#4A4A4D"/>
-                                <Setter Property="ToolTip" Value="{Binding Loc[SetupButton1], Mode=OneWay}"/>
+                                <Setter Property="ToolTip" Value="{Binding DataContext.Loc[SetupButton1], RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"/>
                                 <Setter Property="Content">
                                     <Setter.Value>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -250,8 +250,8 @@
                                 </Setter>
                                 <Style.Triggers>
                                     <!-- When proxy is setup: Ready -->
-                                    <DataTrigger Binding="{Binding SelectedGame.IsProxyReady}" Value="True">
-                                        <Setter Property="ToolTip" Value="{Binding Loc[SetupButton2], Mode=OneWay}"/>
+                                    <DataTrigger Binding="{Binding Game.IsProxyReady}" Value="True">
+                                        <Setter Property="ToolTip" Value="{Binding DataContext.Loc[SetupButton2], RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"/>
                                         <Setter Property="Content">
                                             <Setter.Value>
                                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -262,7 +262,7 @@
                                         </Setter>
                                     </DataTrigger>
                                     <!-- When no game is selected -->
-                                    <DataTrigger Binding="{Binding SelectedGame}" Value="{x:Null}">
+                                    <DataTrigger Binding="{Binding Game}" Value="{x:Null}">
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -271,7 +271,7 @@
                     </Button>
 
                     <!-- Play/Stop button -->
-                    <Button Grid.Column="2" Command="{Binding TogglePlayStateCommand}" CommandParameter="{Binding SelectedGame}" Foreground="#F0F0F0" Margin="0,10,20,10">
+                    <Button Grid.Column="2" Command="{Binding DataContext.TogglePlayStateCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Game}" Foreground="#F0F0F0" Margin="0,10,20,10">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource NoHoverButton}">
                                 <Setter Property="Template">
@@ -295,7 +295,7 @@
                                 </Setter>
                                 <Style.Triggers>
                                     <!-- When game is running: Stop -->
-                                    <DataTrigger Binding="{Binding SelectedGame.IsRunning}" Value="True">
+                                    <DataTrigger Binding="{Binding Game.IsRunning}" Value="True">
                                         <Setter Property="Background" Value="#E63946"/>
                                         <Setter Property="Content">
                                             <Setter.Value>
@@ -307,7 +307,7 @@
                                         </Setter>
                                     </DataTrigger>
                                     <!-- When no game is selected -->
-                                    <DataTrigger Binding="{Binding SelectedGame}" Value="{x:Null}">
+                                    <DataTrigger Binding="{Binding Game}" Value="{x:Null}">
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -329,7 +329,7 @@
                     <Border Grid.Column="0" Background="#E63946" Margin="10" CornerRadius="12">
                         <!-- Sort the achievements -->
                         <Border.Resources>
-                            <CollectionViewSource x:Key="SortedAchievements" Source="{Binding SelectedGame.Achievements}" IsLiveSortingRequested="True">
+                            <CollectionViewSource x:Key="SortedAchievements" Source="{Binding Game.Achievements}" IsLiveSortingRequested="True">
                                 <CollectionViewSource.SortDescriptions>
                                     <componentModel:SortDescription PropertyName="IsUnlocked" Direction="Descending"/>
                                     <componentModel:SortDescription PropertyName="UnlockDate" Direction="Descending"/>
@@ -471,7 +471,7 @@
                                 <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="10">
                                     <!-- Stats Icon -->
                                     <Image Source="/SteamEcho.App;component/Assets/Images/stats_icon.png" Width="25" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                    <TextBlock Text="{Binding Loc[StatsTitle], Mode=OneWay}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding DataContext.Loc[StatsTitle], RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                 </StackPanel>
 
                                 <!-- Achievement Stats Content -->
@@ -503,10 +503,10 @@
                                             </Grid.Style>
                                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                                 <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,5" FontSize="18">
-                                                    <Run Text="{Binding SelectedGame.UnlockedAchievementsCount, Mode=OneWay}"/><Run Text="/"/>
-                                                    <Run Text="{Binding SelectedGame.TotalAchievementsCount, Mode=OneWay}"/>
+                                                    <Run Text="{Binding Game.UnlockedAchievementsCount, Mode=OneWay}"/><Run Text="/"/>
+                                                    <Run Text="{Binding Game.TotalAchievementsCount, Mode=OneWay}"/>
                                                 </TextBlock>
-                                                <ProgressBar Value="{Binding SelectedGame.CompletionPercentage, Mode=OneWay}" Maximum="100" Width="120" Height="10"/>
+                                                <ProgressBar Value="{Binding Game.CompletionPercentage, Mode=OneWay}" Maximum="100" Width="120" Height="10"/>
                                             </StackPanel>
                                         </Grid>
 
@@ -529,28 +529,28 @@
                                                     <Style TargetType="StackPanel">
                                                         <Setter Property="Visibility" Value="Visible"/>
                                                         <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding SelectedGame.RarestAchievement}" Value="{x:Null}">
+                                                            <DataTrigger Binding="{Binding Game.RarestAchievement}" Value="{x:Null}">
                                                                 <Setter Property="Visibility" Value="Collapsed"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
                                                 </StackPanel.Style>
-                                                <Image Source="{Binding SelectedGame.RarestAchievement.Icon, Mode=OneWay}" Width="50" Margin="0,0,0,4"/>
+                                                <Image Source="{Binding Game.RarestAchievement.Icon, Mode=OneWay}" Width="50" Margin="0,0,0,4"/>
                                                 <TextBlock HorizontalAlignment="Center" FontSize="10" TextWrapping="Wrap" TextAlignment="Center">
                                                     <Run Text='"'/>
-                                                    <Run Text="{Binding SelectedGame.RarestAchievement.Name, Mode=OneWay}"/>
+                                                    <Run Text="{Binding Game.RarestAchievement.Name, Mode=OneWay}"/>
                                                     <Run Text='" '/>
-                                                    <Run Text="{Binding Loc[StatsRarestAchievement], Mode=OneWay}"/>
+                                                    <Run Text="{Binding DataContext.Loc[StatsRarestAchievement], RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"/>
                                                 </TextBlock>
                                             </StackPanel>
 
                                             <!-- Content for when there is NO rarest achievement -->
-                                            <TextBlock Text="{Binding Loc[StatsNoRarestAchievement], Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#F0F0F0" FontWeight="Medium" TextWrapping="Wrap" TextAlignment="Center">
+                                            <TextBlock Text="{Binding DataContext.Loc[StatsNoRarestAchievement], RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#F0F0F0" FontWeight="Medium" TextWrapping="Wrap" TextAlignment="Center">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Visibility" Value="Collapsed"/>
                                                         <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding SelectedGame.RarestAchievement}" Value="{x:Null}">
+                                                            <DataTrigger Binding="{Binding Game.RarestAchievement}" Value="{x:Null}">
                                                                 <Setter Property="Visibility" Value="Visible"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
@@ -571,8 +571,8 @@
                                                     </Style.Triggers>
                                                 </Style>
                                             </StackPanel.Style>
-                                            <TextBlock Text="{Binding SelectedGame.AverageRarity, StringFormat='{}{0:F1}%', Mode=OneWay}" HorizontalAlignment="Center" FontSize="18" Margin="0,0,5,0"/>
-                                            <TextBlock Text="{Binding Loc[StatsRarity], Mode=OneWay}" HorizontalAlignment="Center" FontSize="10" TextWrapping="Wrap" TextAlignment="Center"/>
+                                            <TextBlock Text="{Binding Game.AverageRarity, StringFormat='{}{0:F1}%', Mode=OneWay}" HorizontalAlignment="Center" FontSize="18" Margin="0,0,5,0"/>
+                                            <TextBlock Text="{Binding DataContext.Loc[StatsRarity], RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" HorizontalAlignment="Center" FontSize="10" TextWrapping="Wrap" TextAlignment="Center"/>
                                         </StackPanel>
 
                                         <!-- Page 4: Completion Percentile -->
@@ -587,11 +587,11 @@
                                                     </Style.Triggers>
                                                 </Style>
                                             </StackPanel.Style>
-                                            <TextBlock Text="{Binding SelectedGame.CompletionPercentile, StringFormat='{}{0:F1}%', Mode=OneWay}" HorizontalAlignment="Center" FontSize="18" Margin="0,0,5,0"/>
+                                            <TextBlock Text="{Binding Game.CompletionPercentile, StringFormat='{}{0:F1}%', Mode=OneWay}" HorizontalAlignment="Center" FontSize="18" Margin="0,0,5,0"/>
                                             <TextBlock HorizontalAlignment="Center" FontSize="10" TextWrapping="Wrap" TextAlignment="Center">
-                                                <Run Text="{Binding Loc[StatsPercentile1], Mode=OneWay}"/>
-                                                <Run Text="{Binding SelectedGame.CompletionPercentile, StringFormat='{}{0:F1}%', Mode=OneWay}"/>
-                                                <Run Text="{Binding Loc[StatsPercentile2], Mode=OneWay}"/>
+                                                <Run Text="{Binding DataContext.Loc[StatsPercentile1], RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"/>
+                                                <Run Text="{Binding Game.CompletionPercentile, StringFormat='{}{0:F1}%', Mode=OneWay}"/>
+                                                <Run Text="{Binding DataContext.Loc[StatsPercentile2], RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"/>
                                             </TextBlock>
                                         </StackPanel>
                                     </Grid>
@@ -627,7 +627,7 @@
                                         <Style TargetType="Grid">
                                             <Setter Property="Visibility" Value="Visible"/>
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedGame.Screenshots.Count}" Value="0">
+                                                <DataTrigger Binding="{Binding Game.Screenshots.Count}" Value="0">
                                                     <Setter Property="Visibility" Value="Collapsed"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
@@ -674,12 +674,12 @@
                                 </Grid>
 
                                 <!-- Placeholder for no screenshots -->
-                                <TextBlock Grid.Row="1" Text="{Binding Loc[NoScreenshotText], Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Foreground="#F0F0F0" FontWeight="Medium" TextAlignment="Center"> 
+                                <TextBlock Grid.Row="1" Text="{Binding DataContext.Loc[NoScreenshotText], RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Foreground="#F0F0F0" FontWeight="Medium" TextAlignment="Center"> 
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Visibility" Value="Collapsed"/>
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedGame.Screenshots.Count}" Value="0">
+                                                <DataTrigger Binding="{Binding Game.Screenshots.Count}" Value="0">
                                                     <Setter Property="Visibility" Value="Visible"/>
                                                 </DataTrigger>
                                             </Style.Triggers>

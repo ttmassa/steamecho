@@ -141,7 +141,7 @@ public class SettingsViewModel : INotifyPropertyChanged
 
     public SettingsViewModel(INotificationService notificationService, IUINotificationService uINotificationService, IStorageService storageService, ISteamService steamService)
     {
-        // Initializating services
+        // Initialize services
         _notificationService = notificationService;
         _uiNotificationService = uINotificationService;
         _storageService = storageService;

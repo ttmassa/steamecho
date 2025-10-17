@@ -26,19 +26,12 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand AddGameCommand { get; }
     public ICommand DeleteGameCommand { get; }
     public ICommand BrowseFilesCommand { get; }
-    public ICommand LockAchievementCommand { get; }
-    public ICommand UnlockAchievementCommand { get; }
     public ICommand TogglePlayStateCommand { get; }
     public ICommand LogToSteamCommand { get; }
     public ICommand LogOutFromSteamCommand { get; }
     public ICommand RefreshDataCommand { get; }
     public ICommand SetExecutableCommand { get; }
     public ICommand ToggleProxyCommand { get; }
-    public ICommand PreviousStatPageCommand { get; }
-    public ICommand NextStatPageCommand { get; }
-    public ICommand PreviousScreenshotCommand { get; }
-    public ICommand NextScreenshotCommand { get; }
-    public ICommand ViewScreenshotCommand { get; }
     public ICommand DismissUINotificationCommand { get; }
 
     // Services
@@ -54,6 +47,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public static LocalizationService Loc => LocalizationService.Instance;
 
     // View models
+    public GameDetailsViewModel? GameDetailsViewModel { get; private set; }
     public SettingsViewModel SettingsViewModel { get; }
 
     // Properties
@@ -66,15 +60,19 @@ public class MainWindowViewModel : INotifyPropertyChanged
             if (_selectedGame != value)
             {
                 _selectedGame = value;
+                OnPropertyChanged();
+
                 if (_selectedGame != null)
                 {
+                    GameDetailsViewModel = new GameDetailsViewModel(_selectedGame, _storageService, this);
                     _proxyService.CheckProxyStatus(_selectedGame);
                     LoadLocalScreenshots(_selectedGame);
                 }
-                OnPropertyChanged();
-                CurrentScreenshotIndex = 0;
-                OnPropertyChanged(nameof(CurrentScreenshot));
-                OnPropertyChanged(nameof(ScreenshotCounterText));
+                else
+                {
+                    GameDetailsViewModel = null;
+                }
+                OnPropertyChanged(nameof(GameDetailsViewModel));
             }
         }
     }
@@ -142,41 +140,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public bool IsUserLoggedIn => CurrentUser != null && !string.IsNullOrEmpty(CurrentUser.SteamId);
     public string StatusText => IsUserLoggedIn ? Resources.Resources.ConnectedText : Resources.Resources.DisconnectedText;
     public string LoginText => IsUserLoggedIn ? Resources.Resources.LogoutText : Resources.Resources.LoginText;
-    private const int TotalStatPages = 4;
-    private int _currentStatPage = 0;
-    public int CurrentStatPage
-    {
-        get => _currentStatPage;
-        set
-        {
-            if (_currentStatPage != value)
-            {
-                _currentStatPage = value;
-                OnPropertyChanged();
-            }
-        }
-    }
-    private int _currentScreenshotIndex = 0;
-    public int CurrentScreenshotIndex
-    {
-        get => _currentScreenshotIndex;
-        set
-        {
-            if (_currentScreenshotIndex != value)
-            {
-                _currentScreenshotIndex = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(CurrentScreenshot));
-                OnPropertyChanged(nameof(ScreenshotCounterText));
-            }
-        }
-    }
-    public Screenshot? CurrentScreenshot => SelectedGame?.Screenshots.Count > 0 && CurrentScreenshotIndex >= 0 && CurrentScreenshotIndex < SelectedGame.Screenshots.Count
-        ? SelectedGame.Screenshots[CurrentScreenshotIndex]
-        : null;
-    public string ScreenshotCounterText => SelectedGame?.Screenshots.Count > 0
-        ? $"{CurrentScreenshotIndex + 1} / {SelectedGame.Screenshots.Count}"
-        : "0 / 0";
     public bool IsUINotificationVisible => _uiNotificationService.IsUINotificationVisible;
     public string? UINotificationMessage => _uiNotificationService.UINotificationMessage;
     private bool _hasInternet = true;
@@ -218,9 +181,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         // Assign view models
         SettingsViewModel = settingsViewModel;
-
+    
         // Pass the games collection to the service
-        _gameProcessService.SetGamesCollection(Games);
+        (_gameProcessService as GameProcessService)?.SetGamesCollection(Games);
 
         // Setup collection view for filtering
         _gamesView = CollectionViewSource.GetDefaultView(Games);
@@ -232,19 +195,12 @@ public class MainWindowViewModel : INotifyPropertyChanged
         AddGameCommand = new RelayCommand(AddGame);
         DeleteGameCommand = new RelayCommand<Game>(DeleteGame);
         BrowseFilesCommand = new RelayCommand<Game>(BrowseFiles);
-        LockAchievementCommand = new RelayCommand<Achievement>(LockAchievement);
-        UnlockAchievementCommand = new RelayCommand<Achievement>(UnlockAchievement);
         TogglePlayStateCommand = new RelayCommand<Game>(TogglePlayState);
         LogToSteamCommand = new RelayCommand(LogToSteam);
         LogOutFromSteamCommand = new RelayCommand(LogOutFromSteam);
         RefreshDataCommand = new RelayCommand(RefreshData);
         SetExecutableCommand = new RelayCommand<Game>(SetExecutable);
         ToggleProxyCommand = new RelayCommand<Game>(_proxyService.ToggleProxy);
-        PreviousStatPageCommand = new RelayCommand(PreviousStatPage);
-        NextStatPageCommand = new RelayCommand(NextStatPage);
-        PreviousScreenshotCommand = new RelayCommand(PreviousScreenshot);
-        NextScreenshotCommand = new RelayCommand(NextScreenshot);
-        ViewScreenshotCommand = new RelayCommand<Screenshot>(ViewScreenshot);
         DismissUINotificationCommand = new RelayCommand(_uiNotificationService.DismissUINotification);
     }
 
@@ -424,25 +380,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
         catch (Exception ex)
         {
             Console.WriteLine("Error opening file explorer: " + ex.Message);
-        }
-    }
-
-    private void LockAchievement(Achievement achievement)
-    {
-        if (achievement != null && achievement.IsUnlocked && SelectedGame != null)
-        {
-            achievement.IsUnlocked = false;
-            achievement.UnlockDate = null;
-            _storageService.UpdateAchievement(SelectedGame.SteamId, achievement.Id, false, null);
-        }
-    }
-
-    private void UnlockAchievement(Achievement achievement)
-    {
-        if (achievement != null && !achievement.IsUnlocked && SelectedGame != null)
-        {
-            achievement.Unlock();
-            _storageService.UpdateAchievement(SelectedGame.SteamId, achievement.Id, true, achievement.UnlockDate);
         }
     }
 
@@ -651,42 +588,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
     
-    private void PreviousStatPage()
-    {
-        CurrentStatPage = (CurrentStatPage - 1 + TotalStatPages) % TotalStatPages;
-    }
-
-    private void NextStatPage()
-    {
-        CurrentStatPage = (CurrentStatPage + 1) % TotalStatPages;
-    }
-
-    private void PreviousScreenshot()
-    {
-        if (SelectedGame == null || SelectedGame.Screenshots.Count == 0) return;
-        CurrentScreenshotIndex = (CurrentScreenshotIndex + 1) % SelectedGame.Screenshots.Count;
-    }
-
-    private void NextScreenshot()
-    {
-        if (SelectedGame == null || SelectedGame.Screenshots.Count == 0) return;
-        CurrentScreenshotIndex = (CurrentScreenshotIndex + 1) % SelectedGame.Screenshots.Count;
-    }
-
-    private void ViewScreenshot(Screenshot screenshot)
-    {
-        if (!File.Exists(screenshot.FilePath)) return;
-
-        var viewer = new ScreenshotViewer(this)
-        {
-            Owner = Application.Current.MainWindow
-        };
-        viewer.PreviousRequested += PreviousScreenshot;
-        viewer.NextRequested += NextScreenshot;
-
-        viewer.Show();
-    }
-
     #endregion
 
 

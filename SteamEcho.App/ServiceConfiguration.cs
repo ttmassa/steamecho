@@ -41,6 +41,7 @@ public static class ServiceConfiguration
         // Register ViewModels
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<SettingsViewModel>();
+        services.AddTransient<GameDetailsViewModel>();
 
         // Register Views
         services.AddTransient<MainWindow>();
